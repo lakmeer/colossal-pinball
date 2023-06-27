@@ -48,19 +48,25 @@
       vec2 uv = gl_FragCoord.xy / u_resolution.xy * u_world - u_world/2.0;
       float px = 2.0 / u_resolution.x * u_world.x;
 
+      vec3 bg = vec3(0.1); // mix(vec3(0.3), vec3(0.1), 1.0 - smoothstep(u_world.x/2.0, u_world.x/2.0 + px, length(uv)));
       vec3 c = vec3(0.0);
+      vec3 bloom = vec3(0.0);
+      float mask = 0.0;
 
       for (int i = 0; i < MAX_BALLS; i++) {
         vec3 ball = u_balls[i];
         vec3 col = u_colors[i].xyz;
-        float intensity =
-          exp(-pow(length(uv - ball.xy) / ball.z, 2.0))
-          + 1.0 - smoothstep(ball.z, ball.z + px, length(uv - ball.xy));
 
-        c += col * intensity;
+        float a = 1.0 - smoothstep(ball.z - px, ball.z + px, length(uv - ball.xy));
+        mask = clamp(mask + a, 0.0, 1.0);
+        c += col * a;
+
+        bloom += exp(-pow(length(uv - ball.xy) / ball.z, 4.0)) * col * (1.0 - mask);
       }
 
-      gl_FragColor = vec4(c, 1.0);
+      vec3 base = mix(bg, c, mask);
+
+      gl_FragColor = vec4(base, 1.0);
     }
   </script>
 </Vader>

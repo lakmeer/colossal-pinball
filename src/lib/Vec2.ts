@@ -60,7 +60,7 @@ export default class Vec2 extends Array {
   }
 
   angle (v:Vec2):Scalar {
-    return Math.acos(this.dot(v) / (this.len() * v.len()));
+    return Math.atan2(this.y, this.x);
   }
 
   rotate (a:Scalar):Vec2 {

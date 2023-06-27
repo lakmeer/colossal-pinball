@@ -23,13 +23,12 @@
 
   const MODE = 'canvas' as 'canvas' | 'shader';
   const GRAVITY = 1000;
-  const TIME_SCALE = 1.1;
-  const BOUNCE_DAMPING = 1;
-  const ROLL_DAMPING = 0.99;
-  const SUBSTEP_FACTOR = 0.5; // Use no more than half the frame time
-  const MAX_BALLS = 20;
+  const TIME_SCALE = 0.5;
+  const SUBSTEP_FACTOR = 0.8; // Use no more than half the frame time
+  const MAX_BALLS = 1;
   const BOUNDARY_FRICTION = 0.9;
   const COLLISION_FRICTION = 0.98;
+  const MAX_VEL = 1000;
 
 
   // World
@@ -41,6 +40,12 @@
   for (let i = 0; i < MAX_BALLS; i++) {
     balls.push(Ball.random(world));
   }
+
+  let lines = [{
+    a: Vec2.from(-10, -10),
+    b: Vec2.from(10, 10),
+    r: 5
+  }]
 
 
   // Physics
@@ -60,69 +65,82 @@
     return new Vec2( a[0] + ab[0] * t, a[1] + ab[1] * t);
   }
 
-  const updateVertlet = (ball:Ball, dt:number) => {
+
+  const updateVertlet = (dt:number) => {
 
     // Gravity
-    ball.acc.addSelf(Vec2.from(0, -GRAVITY * ball.mass));
-
-    // Friction
-    let friction = 1;
+    for (let ball of balls) {
+      ball.acc.addSelf(Vec2.from(0, -GRAVITY));
+      ball.friction = 1;
+    }
 
     // Collisions
-    for (let i in balls) {
-      const other = balls[i];
-      if (other === ball) continue;
+    for (let a of balls) {
+      for (let b of balls) {
+        if (a === b) continue;
 
-      let axis = other.pos.sub(ball.pos);
-      let dist = axis.len();
-      axis.normSelf();
+        let axis = a.pos.sub(b.pos);
+        let dist = axis.len();
+        axis.normSelf();
 
-      if (dist < ball.rad + other.rad) {
-        let delta = (ball.rad + other.rad) - dist;
-        ball.pos.addSelf(axis.scale(-delta/2));
-        other.pos.addSelf(axis.scale(delta/2));
+        if (dist < a.rad + b.rad) {
+          let delta = (a.rad + b.rad) - dist;
+          a.pos.addSelf(axis.scale(delta/2));
+          b.pos.subSelf(axis.scale(delta/2));
+          a.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
+          b.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
+        }
+      }
+
+      for (let b of lines) {
+
+        // Capsule intersection
+        let closest = closestPointOnLine(a.pos, b.a, b.b);
+        let axis = a.pos.sub(closest);
+        let dist = axis.len();
+        axis.normSelf();
+
+        if (dist < a.rad + b.r) {
+          let delta = (a.rad + b.r) - dist;
+          a.pos.addSelf(axis.scale(delta));
+          a.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
+        }
+
       }
     }
 
     // Circular boundary
-    if (ball.pos.len() > boundary - ball.rad) {
-      ball.pos.set(ball.pos.norm().scale(boundary - ball.rad));
-      friction *= pow(1 - (1 - BOUNDARY_FRICTION), 1/substeps);
-    }
-
-    // Update
-    const displacement = ball.pos.sub(ball.pos_);
-    ball.pos_.set(ball.pos.clone());
-    ball.vel.set(displacement.add(ball.acc.scale(dt * dt)).scale(friction));
-    ball.pos.addSelf(ball.vel);
-    ball.acc.set2(0, 0);
-
-    // Recangular boundary
     /*
-    // Left collision
-    if (ball.pos.x < world.left + ball.rad) {
-      ball.pos.x = world.left + ball.rad;
-      ball.vel.x *= -BOUNCE_DAMPING;
-    }
-
-    // Right collision
-    if (ball.pos.x > world.right - ball.rad) {
-      ball.pos.x = world.right - ball.rad;
-      ball.vel.x *= -BOUNCE_DAMPING;
-    }
-
-    // Bottom collision
-    if (ball.pos.y < world.bottom + ball.rad) {
-      ball.pos.y = world.bottom + ball.rad;
-      ball.vel.y *= -BOUNCE_DAMPING;
-    }
-
-    // Top collision
-    if (ball.pos.y > world.top - ball.rad) {
-      ball.pos.y = world.top - ball.rad;
-      ball.vel.y *= -BOUNCE_DAMPING;
+    for (let ball of balls) {
+      if (ball.pos.len() > boundary - ball.rad) {
+        ball.pos.set(ball.pos.norm().scale(boundary - ball.rad));
+        ball.friction *= pow(1 - (1 - BOUNDARY_FRICTION), 1/substeps);
+      }
     }
     */
+
+    // Recangular boundary
+
+    for (let ball of balls) {
+      if (ball.pos.x < world.left   + ball.rad) ball.pos.x = world.left   + ball.rad;
+      if (ball.pos.x > world.right  - ball.rad) ball.pos.x = world.right  - ball.rad;
+      if (ball.pos.y < world.bottom + ball.rad) ball.pos.y = world.bottom + ball.rad;
+      if (ball.pos.y > world.top    - ball.rad) ball.pos.y = world.top    - ball.rad;
+    }
+
+    for (let ball of balls) {
+      const displacement = ball.pos.sub(ball.pos_);
+      ball.pos_.set(ball.pos.clone());
+      ball.vel.set(displacement.add(ball.acc.scale(dt * dt)).scale(ball.friction));
+      if (ball.vel.len() > MAX_VEL * dt) ball.vel.normSelf().scaleSelf(MAX_VEL * dt);
+      ball.pos.addSelf(ball.vel);
+    }
+
+    // Reset
+    for (let ball of balls) {
+      ball.acc.set2(0, 0);
+    }
+
   }
 
 
@@ -143,9 +161,7 @@
     const dt = now - lastTime;
 
     for (let i = 0; i < substeps; i++) {
-      for (let ball of balls) {
-        updateVertlet(ball, dt/substeps);
-      }
+      updateVertlet(dt/substeps);
     }
 
     lastTime = now;
@@ -159,16 +175,22 @@
     substeps = max(8, min(100, floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR)));
   }
 
+  let clicked = false;
+
   onMount(() => {
     render();
 
-    document.addEventListener('click', (event) => {
-      let x = event.clientX / innerWidth  * 2;
-      let y = event.clientY / innerHeight * 2;
-      let b = Ball.at(0, 0);
-      balls.push(b);
+    document.addEventListener('mousedown', (event) => { clicked = true; });
+    document.addEventListener('mouseup', (event) => { clicked = false; });
+    document.addEventListener('mousemove', (event) => {
+      if (clicked) {
+        let x = event.clientX / innerWidth  - 0.5;
+        let y = event.clientY / innerHeight - 0.5;
+        let b = Ball.at(world.w * x, world.h * -y);
+        balls.push(b);
+      }
     });
-  
+
     return () => cancelAnimationFrame(rafref);
   });
 
@@ -181,9 +203,9 @@
 <svelte:window bind:innerWidth bind:innerHeight />
 
 
-<CanvasRenderer {balls} {world} bind:width={innerWidth} bind:height={innerHeight} />
+<CanvasRenderer {balls} {lines} {world} bind:width={innerWidth} bind:height={innerHeight} />
 <!--
-<ShaderRenderer {balls} {world} bind:width={innerWidth} bind:height={innerHeight} />
+<ShaderRenderer {balls} {lines} {world} bind:width={innerWidth} bind:height={innerHeight} />
 -->
 
 <pre class="debug">

@@ -20,6 +20,8 @@ export default class Ball {
   pos_  : Vec2;
   acc   : Vec2;
 
+  friction: number = 1;
+
   constructor (pos:Vec2, vel:Vec2, rad:number, mass:number, color:Color) {
     this.pos   = pos;
     this.vel   = vel;

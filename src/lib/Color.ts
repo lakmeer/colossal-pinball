@@ -6,12 +6,17 @@ import { randFrom } from '$lib/utils';
 const { floor } = Math;
 
 const RED    = [ 0.9, 0.2, 0.4, 1 ] as Tuple4;
-const GREEN  = [ 0.2, 0.9, 0.4, 1 ] as Tuple4;
+const ORANGE = [ 0.9, 0.5, 0.2, 1 ] as Tuple4;
+const YELLOW = [ 0.9, 0.8, 0.2, 1 ] as Tuple4;
+const GREEN  = [ 0.2, 0.9, 0.3, 1 ] as Tuple4;
+const CYAN   = [ 0.2, 0.8, 0.8, 1 ] as Tuple4;
 const BLUE   = [ 0.2, 0.4, 0.9, 1 ] as Tuple4;
 const PURPLE = [ 0.8, 0.2, 0.9, 1 ] as Tuple4;
-const YELLOW = [ 0.9, 0.8, 0.2, 1 ] as Tuple4;
+const WHITE  = [ 0.9, 0.9, 0.9, 1 ] as Tuple4;
+const LIGHT  = [ 0.6, 0.6, 0.6, 1 ] as Tuple4;
+const DARK   = [ 0.3, 0.3, 0.3, 1 ] as Tuple4;
 
-const COLORS:Tuple4[] = [ RED, GREEN, BLUE, PURPLE, YELLOW ];
+const COLORS:Tuple4[] = [ RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE ];
 
 
 //
