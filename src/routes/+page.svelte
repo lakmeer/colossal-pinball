@@ -1,225 +1,207 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
 
-  // Renderer
+  import { onMount, afterUpdate } from 'svelte';
 
-  import Vader from '../vader';
+  import Vec2 from "$lib/Vec2";
+  import Ball from "$lib/Ball";
+  import Rect from "$lib/Rect";
 
-  let innerWidth = 0;
-  let innerHeight = 0;
+  import CanvasRenderer from '../components/CanvasRenderer.svelte';
+  import ShaderRenderer from '../components/ShaderRenderer.svelte';
+
+  const { random, min, max, abs, sqrt, floor } = Math;
+
+
+  //
+  // TODO
+  //
+  // - Vector class
+  // - Whole game state as object, pass to renderer, make reactive
+  //
 
 
   // Config
 
-  const GRAVITY = 0.001;
+  const MODE = 'canvas' as 'canvas' | 'shader';
+  const GRAVITY = 0.00;
   const TIME_SCALE = 0.1;
   const BOUNCE_DAMPING = 0.7;
+  const ROLL_DAMPING = 0.99;
+  const SUBSTEP_FACTOR = 0.5; // Use no more than half the frame time
+  const MAX_BALLS = 20;
 
 
   // World
 
-  let world = {
-    height: 100,
-    width: 100,
+  let world = new Rect(0, 0, 100, 100);
+
+
+  // Balls
+
+  let balls:Ball[] = [ ];
+
+  for (let i = 0; i < MAX_BALLS; i++) {
+    balls.push(Ball.random(world));
   }
 
 
-  // Ball
+  // Physics
 
-  let balls = [
-    { x: 10, y: 0,  dx: -1, dy: 0, r: 2,  m: 10 },
-    { x: 20, y: 10, dx: -1, dy: 0, r: 4,  m: 20 },
-    { x: 30, y: 20, dx: -1, dy: 0, r: 6,  m: 30 },
-    { x: 40, y: 20, dx: -1, dy: 0, r: 8,  m: 40 },
-    { x: 50, y: 30, dx: -1, dy: 0, r: 10, m: 50 },
-  ]
+  const closestPointOnLine = (p:Vec2, a:Vec2, b:Vec2):Vec2 => {
+    const ap = p.sub(a);
+    const ab = b.sub(a);
 
+    const ab2 = ab.dot(ab);
+    const ap_ab = ap.dot(ab);
 
-  // Loop
+    const t = ap_ab / ab2;
 
-  let lastTime = performance.now() * TIME_SCALE;
-  let rafref = 0;
+    if (t < 0) return a;
+    if (t > 1) return b;
 
-  const updateBall = (ball, dt) => {
+    return new Vec2( a[0] + ab[0] * t, a[1] + ab[1] * t);
+  }
+
+  const updateBall = (ball:Ball, dt:number) => {
 
     // Physics
-    ball.dy -= GRAVITY * dt * ball.m;
-    ball.x += ball.dx * dt;
-    ball.y += ball.dy * dt;
+    ball.vel.y -= GRAVITY * dt * ball.mass;
+    ball.pos.addSelf(ball.vel.scale(dt));
+    ball.pos.addSelf(ball.vel.scale(dt));
 
     // Left collision
-    if (ball.x < -world.width/2 + ball.r) {
-      ball.x = -world.width/2 + ball.r;
-      ball.dx *= -BOUNCE_DAMPING;
+    if (ball.pos.x < world.left + ball.rad) {
+      ball.pos.x = world.left + ball.rad;
+      ball.vel.x *= -BOUNCE_DAMPING;
     }
 
     // Right collision
-    if (ball.x > world.width/2 - ball.r) {
-      ball.x = world.width/2 - ball.r;
-      ball.dx *= -BOUNCE_DAMPING;
+    if (ball.pos.x > world.right - ball.rad) {
+      ball.pos.x = world.right - ball.rad;
+      ball.vel.x *= -BOUNCE_DAMPING;
     }
 
     // Bottom collision
-    if (ball.y < -world.height/2 + ball.r) {
-      ball.y = -world.height/2 + ball.r;
-      ball.dy *= -BOUNCE_DAMPING;
+    if (ball.pos.y < world.bottom + ball.rad) {
+      ball.pos.y = world.bottom + ball.rad;
+      ball.vel.y *= -BOUNCE_DAMPING;
+    }
+
+    // Top collision
+    if (ball.pos.y > world.top - ball.rad) {
+      ball.pos.y = world.top - ball.rad;
+      ball.vel.y *= -BOUNCE_DAMPING;
     }
 
     // Other balls collision
     for (let other of balls) {
       if (other === ball) continue;
 
-      let dir = { x: other.x - ball.x, y: other.y - ball.y };
-      let d = length(dir);
+      let dir = other.pos.sub(ball.pos);
+      let d = dir.len();
+      dir.normSelf();
 
-      dir = scale(dir, 1/d); // normalize
+      if (d === 0 || d > ball.rad + other.rad) continue;
 
-      if (d === 0 || d > ball.r + other.r) continue;
+      const corr = (ball.rad + other.rad - d) / 2;
 
-      const corr = (ball.r + other.r - d) / 2;
+      ball.pos.x  -= dir[0] * corr;
+      ball.pos.y  -= dir[0] * corr;
+      other.pos.x += dir[1] * corr;
+      other.pos.y += dir[1] * corr;
 
-      ball.x -= dir.x * corr;
-      ball.y -= dir.y * corr;
-      other.x += dir.x * corr;
-      other.y += dir.y * corr;
+      let v1 = ball.vel.dot(dir);
+      let v2 = other.vel.dot(dir);
 
-      let v1 = dot2d({ x: ball.dx, y: ball.dy }, dir);
-      let v2 = dot2d({ x: other.dx, y: other.dy }, dir);
-
-      let m1 = ball.m;
-      let m2 = other.m;
+      let m1 = ball.mass;
+      let m2 = other.mass;
 
       let newV1 = (m1 * v1 + m2 * v2 - m2 * (v2 - v1) * BOUNCE_DAMPING) / (m1 + m2);
       let newV2 = (m1 * v1 + m2 * v2 - m1 * (v2 - v1) * BOUNCE_DAMPING) / (m1 + m2);
 
-      ball.dx += (newV1 - v1) * dir.x;
-      ball.dy += (newV1 - v1) * dir.y;
-      other.dx += (newV2 - v2) * dir.x;
-      other.dy += (newV2 - v2) * dir.y;
+      ball.vel.x  += (newV1 - v1) * dir[0];
+      ball.vel.y  += (newV1 - v1) * dir[1];
+      other.vel.x += (newV2 - v2) * dir[0];
+      other.vel.y += (newV2 - v2) * dir[1];
     }
+
+    // Stop and roll
+    if (GRAVITY > 0) {
+      if (abs(ball.vel.y) < 0.1 && abs(ball.pos.y - (world.bottom + ball.rad)) < 0.1) {
+        ball.vel.y = 0;
+        ball.pos.y = world.bottom + ball.rad;
+        ball.vel.x *= ROLL_DAMPING;
+      }
+    } else { // billiards mode
+      //ball.vel.x *= 0.999999;
+      //ball.vel.y *= 0.999999;
+    }
+
+    if (abs(ball.vel.x) < 0.001) ball.vel.x = 0;
+    if (abs(ball.vel.y) < 0.001) ball.vel.y = 0;
   }
 
+
+  // Render loop
+
+  let running = true;
+  let lastTime = performance.now() * TIME_SCALE;
+  let rafref = 0;
+  let substeps = 100;
+
   const render = () => {
-    cancelAnimationFrame(rafref);
+    let start = performance.now();
+
     rafref = requestAnimationFrame(render);
 
     const now = performance.now() * TIME_SCALE;
     const dt = now - lastTime;
 
-    ctx.fillStyle = '#004';
-    ctx.fillRect(0, 0, innerWidth, innerHeight);
-    ctx.save();
-    ctx.translate(innerWidth/2, innerHeight/2);
-    ctx.scale(innerWidth/world.width, -innerHeight/world.height);
-    ctx.fillStyle = '#ff0';
-
-    for (let ball of balls) {
-      updateBall(ball, dt);
-      ctx.beginPath();
-      ctx.arc(ball.x, ball.y, ball.r + 0.5, 0, 2 * Math.PI);
-      ctx.fill();
+    for (let i = 0; i < substeps; i++) {
+      for (let ball of balls) {
+        updateBall(ball, dt/substeps);
+      }
     }
 
     lastTime = now;
 
-    ctx.restore();
-
     // poke
     balls = balls;
+
+    let delta = performance.now() - start;
+
+    // if delta is the time taken to simulate this whole frame, then
+    // we can calculate how many substeps we can pack into the next frame
+    substeps = floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR);
   }
 
-  const toVec3 = ({ x, y, r }) => [x, y, r];
-  const dot2d  = (a, b) => a.x * b.x + a.y * b.y;
-  const length = (a) => Math.sqrt(a.x * a.x + a.y * a.y);
-  const scale  = (v, a) => ({ x: v.x * a, y: v.y * a });
-
   onMount(() => {
-    cancelAnimationFrame(rafref);
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-    ctx = canvas.getContext('2d');
     render();
+
+    return () => cancelAnimationFrame(rafref);
   });
 
-
-
-  // 2d renderer
-
-  let canvas;
-  let ctx;
+  let innerWidth = 0;
+  let innerHeight = 0;
 
 </script>
 
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<Vader scale={1} pixelated auto aspect={innerWidth/innerHeight}
-  u_world={[ world.width, world.height ]}
-  u_balls={balls.map(toVec3)}
-  u_num_balls={balls.length}
-  >
 
-  <script type="x-shader/fragment+glsl">
-    precision mediump float;
-
-    uniform float u_time;
-    uniform vec2 u_resolution;
-
-    #define PI 3.141592653589
-    #define MAX_BALLS VADER_STATIC(u_num_balls)
-
-    uniform vec2 u_world;
-    uniform int  u_num_balls;
-    uniform vec3 u_balls[MAX_BALLS];
-
-    float nsin (float n) {
-      return 0.5 + 0.5 * sin(n * PI);
-    }
-
-    float limit (float n) {
-      return clamp(n, 0.0, 1.0);
-    }
-
-    void main () {
-      vec2 uv = gl_FragCoord.xy / u_resolution.xy * u_world - u_world/2.0;
-      float px = 2.0 / u_resolution.x * u_world.x;
-
-      float c = 0.0;
-
-      for (int i = 0; i < MAX_BALLS; i++) {
-        vec3 ball = u_balls[i];
-        c += exp(-pow(length(uv - ball.xy) / ball.z, 2.0))
-          + 1.0 - smoothstep(ball.z, ball.z + px, length(uv - ball.xy));
-      }
-
-      gl_FragColor = vec4(c, c, 0.3, 1.0);
-    }
-  </script>
-</Vader>
-
-<canvas bind:this={canvas} class="TwoDee" />
-
+<ShaderRenderer {balls} {world} bind:width={innerWidth} bind:height={innerHeight} />
+<!--
+<CanvasRenderer {balls} {world} bind:width={innerWidth} bind:height={innerHeight} />
+-->
 
 <style>
-
-  .TwoDee,
   :global(.Vader) {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: #212121;
     z-index: 0;
   }
 
-  :global(.Vader) {
-    opacity: 1.0;
-  }
-
-  .TwoDee {
-    opacity: 0.0;
+  :global(.TwoDee) {
     z-index: 1;
   }
-
 </style>
+
