@@ -34,7 +34,7 @@ export default class Ball {
   // Static
 
   static random (bounds:Rect) {
-    const m = rand(1, 1);
+    const m = rand(2, 5);
     return new Ball(
       Vec2.random(...bounds.toRange()),
       Vec2.from(0, 0),

@@ -24,7 +24,7 @@
 
   const MODE = 'canvas' as 'canvas' | 'shader';
   const GRAVITY = 1000;
-  const TIME_SCALE = 0.1;
+  const TIME_SCALE = 1.1;
   const BOUNCE_DAMPING = 1;
   const ROLL_DAMPING = 0.99;
   const SUBSTEP_FACTOR = 0.5; // Use no more than half the frame time
@@ -35,6 +35,7 @@
   // World
 
   let world = new Rect(0, 0, 100, 100);
+  let boundary = world.w/2;
   let balls:Ball[] = [ ];
 
   for (let i = 0; i < MAX_BALLS; i++) {
@@ -62,20 +63,14 @@
   const updateBall = (ball:Ball, dt:number) => {
 
     // Gravity
-    ball.acc.addSelf([ 0, -GRAVITY ]);
+    ball.acc.addSelf([ 0, -GRAVITY * ball.mass ]);
 
     // Collisions
+    // TODO
 
     // Circular boundary
-    const constrainPos = new Vec2(0, 0);
-    const constrainRad = world.w/2;
-
-    let to_obj = ball.pos.sub(constrainPos);
-    let dist = to_obj.len();
-
-    if (dist > constrainRad - ball.rad) {
-      const n = to_obj.scale(1/dist);
-      ball.pos.set(n.scale(constrainRad - ball.rad).add(constrainPos));
+    if (ball.pos.len() > boundary - ball.rad) {
+      ball.pos.set(ball.pos.norm().scale(boundary - ball.rad));
     }
 
     // Update
@@ -148,10 +143,11 @@
   let running = true;
   let lastTime = performance.now()/1000 * TIME_SCALE;
   let rafref = 0;
-  let substeps = 30;
+  let substeps = 8;
+  let delta = 0;
 
   const render = () => {
-    //let start = performance.now();
+    let start = performance.now();
 
     rafref = requestAnimationFrame(render);
 
@@ -169,11 +165,10 @@
     // poke
     balls = balls;
 
-    //let delta = performance.now() - start;
-
     // if delta is the time taken to simulate this whole frame, then
     // we can calculate how many substeps we can pack into the next frame
-    //substeps = floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR);
+    delta = performance.now() - start;
+    substeps = min(4, floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR));
   }
 
   onMount(() => {
@@ -199,6 +194,7 @@
 <pre class="debug">
 Balls: {balls.length}
 Steps: {substeps}
+Time: {delta.toFixed(3)}
 Mntm: {balls.reduce((acc, ball) => acc + ball.vel.len() * ball.mass, 0).toFixed(2)}
 Heat: ??
 </pre>
