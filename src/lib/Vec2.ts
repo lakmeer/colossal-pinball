@@ -87,6 +87,12 @@ export default class Vec2 extends Array {
     return this;
   }
 
+  set2 (x:number, y:number):Vec2 {
+    this[0] = x;
+    this[1] = y;
+    return this;
+  }
+
   addSelf (v:Vec2):Vec2 {
     this[0] += v[0];
     this[1] += v[1];

@@ -17,11 +17,16 @@
   const render = () => {
     if (!canvas || !ctx) return;
 
-    ctx.fillStyle = '#333';
+    ctx.fillStyle = '#555';
     ctx.fillRect(0, 0, width, height);
     ctx.save();
     ctx.translate(width/2, height/2);
     ctx.scale(width/world.w, -height/world.h);
+
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.arc(0, 0, world.w/2, 0, 2 * Math.PI);
+    ctx.fill();
 
     for (let ball of balls) {
       ctx.fillStyle = ball.color.toString()
