@@ -9,13 +9,12 @@
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
   import ShaderRenderer from '../components/ShaderRenderer.svelte';
 
-  const { random, min, max, abs, sqrt, floor } = Math;
+  const { pow, random, min, max, abs, sqrt, floor } = Math;
 
 
   //
   // TODO
   //
-  // - Vector class
   // - Whole game state as object, pass to renderer, make reactive
   //
 
@@ -30,6 +29,7 @@
   const SUBSTEP_FACTOR = 0.5; // Use no more than half the frame time
   const MAX_BALLS = 20;
   const BILLARDS_FRICTION = 0.999999;
+  const BOUNDARY_FRICTION = 0.98;
 
 
   // World
@@ -60,23 +60,73 @@
     return new Vec2( a[0] + ab[0] * t, a[1] + ab[1] * t);
   }
 
-  const updateBall = (ball:Ball, dt:number) => {
+  const updateBasic = (ball:Ball, dt:number) => {
 
     // Gravity
-    ball.acc.addSelf([ 0, -GRAVITY * ball.mass ]);
+    ball.vel.y -= GRAVITY * dt;
+    ball.pos.addSelf(ball.vel.scale(dt));
 
     // Collisions
-    // TODO
+    for (let other of balls) {
+      if (other === ball) continue;
+
+      let dir = other.pos.sub(ball.pos);
+      let d = dir.len();
+      dir.normSelf();
+
+      if (d === 0 || d > ball.rad + other.rad) continue;
+
+      const corr = (ball.rad + other.rad - d) / 2;
+
+      ball.pos.subSelf(dir.scale(corr));
+      other.pos.addSelf(dir.scale(corr));
+
+      let v1 = ball.vel.dot(dir);
+      let v2 = other.vel.dot(dir);
+
+      let m1 = ball.mass;
+      let m2 = other.mass;
+
+      let newV1 = (m1 * v1 + m2 * v2 - m2 * (v2 - v1) * BOUNCE_DAMPING) / (m1 + m2);
+      let newV2 = (m1 * v1 + m2 * v2 - m1 * (v2 - v1) * BOUNCE_DAMPING) / (m1 + m2);
+
+      ball.vel.addSelf(dir.scale(newV1 - v1));
+      other.vel.addSelf(dir.scale(newV2 - v2));
+    }
 
     // Circular boundary
     if (ball.pos.len() > boundary - ball.rad) {
       ball.pos.set(ball.pos.norm().scale(boundary - ball.rad));
+      ball.vel.set(ball.pos.norm().scale(-1).scale(ball.vel.len() * BOUNCE_DAMPING * 0.1));
+    }
+  }
+
+  const updateVertlet = (ball:Ball, dt:number) => {
+
+    // Gravity
+    ball.acc.addSelf([ 0, -GRAVITY * ball.mass ]);
+
+    // Friction
+    let friction = 1;
+
+    // Collisions
+    for (let i in balls) {
+      const other = balls[i];
+      if (other === ball) continue;
+
+    }
+
+    // Circular boundary
+    if (ball.pos.len() > boundary - ball.rad) {
+      ball.pos.set(ball.pos.norm().scale(boundary - ball.rad));
+      friction *= pow(1 - (1 - BOUNDARY_FRICTION), 1/substeps);
     }
 
     // Update
     const displacement = ball.pos.sub(ball.pos_);
     ball.pos_.set(ball.pos.clone());
-    ball.pos.addSelf(displacement.add(ball.acc.scale(dt * dt)));
+    ball.vel.set(displacement.add(ball.acc.scale(dt * dt)).scale(friction));
+    ball.pos.addSelf(ball.vel);
     ball.acc.set([ 0, 0 ]);
 
     // Recangular boundary
@@ -105,36 +155,6 @@
       ball.vel.y *= -BOUNCE_DAMPING;
     }
     */
-
-    // Other balls collision
-    /*
-    for (let other of balls) {
-      if (other === ball) continue;
-
-      let dir = other.pos.sub(ball.pos);
-      let d = dir.len();
-      dir.normSelf();
-
-      if (d === 0 || d > ball.rad + other.rad) continue;
-
-      const corr = (ball.rad + other.rad - d) / 2;
-
-      ball.pos.subSelf(dir.scale(corr));
-      other.pos.addSelf(dir.scale(corr));
-
-      let v1 = ball.vel.dot(dir);
-      let v2 = other.vel.dot(dir);
-
-      let m1 = ball.mass;
-      let m2 = other.mass;
-
-      let newV1 = (m1 * v1 + m2 * v2 - m2 * (v2 - v1) * BOUNCE_DAMPING) / (m1 + m2);
-      let newV2 = (m1 * v1 + m2 * v2 - m1 * (v2 - v1) * BOUNCE_DAMPING) / (m1 + m2);
-
-      ball.vel.addSelf(dir.scale(newV1 - v1));
-      other.vel.addSelf(dir.scale(newV2 - v2));
-    }
-    */
   }
 
 
@@ -156,7 +176,7 @@
 
     for (let i = 0; i < substeps; i++) {
       for (let ball of balls) {
-        updateBall(ball, dt/substeps);
+        updateVertlet(ball, dt/substeps);
       }
     }
 
@@ -168,7 +188,7 @@
     // if delta is the time taken to simulate this whole frame, then
     // we can calculate how many substeps we can pack into the next frame
     delta = performance.now() - start;
-    substeps = min(4, floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR));
+    substeps = max(8, min(100, floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR)));
   }
 
   onMount(() => {
