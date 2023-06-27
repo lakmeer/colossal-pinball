@@ -23,21 +23,18 @@
   // Config
 
   const MODE = 'canvas' as 'canvas' | 'shader';
-  const GRAVITY = 0.00;
+  const GRAVITY = 1000;
   const TIME_SCALE = 0.1;
-  const BOUNCE_DAMPING = 0.7;
+  const BOUNCE_DAMPING = 1;
   const ROLL_DAMPING = 0.99;
   const SUBSTEP_FACTOR = 0.5; // Use no more than half the frame time
   const MAX_BALLS = 20;
+  const BILLARDS_FRICTION = 0.999999;
 
 
   // World
 
   let world = new Rect(0, 0, 100, 100);
-
-
-  // Balls
-
   let balls:Ball[] = [ ];
 
   for (let i = 0; i < MAX_BALLS; i++) {
@@ -64,11 +61,31 @@
 
   const updateBall = (ball:Ball, dt:number) => {
 
-    // Physics
-    ball.vel.y -= GRAVITY * dt * ball.mass;
-    ball.pos.addSelf(ball.vel.scale(dt));
-    ball.pos.addSelf(ball.vel.scale(dt));
+    // Gravity
+    ball.acc.addSelf([ 0, -GRAVITY ]);
 
+    // Collisions
+
+    // Circular boundary
+    const constrainPos = new Vec2(0, 0);
+    const constrainRad = world.w/2;
+
+    let to_obj = ball.pos.sub(constrainPos);
+    let dist = to_obj.len();
+
+    if (dist > constrainRad - ball.rad) {
+      const n = to_obj.scale(1/dist);
+      ball.pos.set(n.scale(constrainRad - ball.rad).add(constrainPos));
+    }
+
+    // Update
+    const displacement = ball.pos.sub(ball.pos_);
+    ball.pos_.set(ball.pos.clone());
+    ball.pos.addSelf(displacement.add(ball.acc.scale(dt * dt)));
+    ball.acc.set([ 0, 0 ]);
+
+    // Recangular boundary
+    /*
     // Left collision
     if (ball.pos.x < world.left + ball.rad) {
       ball.pos.x = world.left + ball.rad;
@@ -92,8 +109,10 @@
       ball.pos.y = world.top - ball.rad;
       ball.vel.y *= -BOUNCE_DAMPING;
     }
+    */
 
     // Other balls collision
+    /*
     for (let other of balls) {
       if (other === ball) continue;
 
@@ -105,10 +124,8 @@
 
       const corr = (ball.rad + other.rad - d) / 2;
 
-      ball.pos.x  -= dir[0] * corr;
-      ball.pos.y  -= dir[0] * corr;
-      other.pos.x += dir[1] * corr;
-      other.pos.y += dir[1] * corr;
+      ball.pos.subSelf(dir.scale(corr));
+      other.pos.addSelf(dir.scale(corr));
 
       let v1 = ball.vel.dot(dir);
       let v2 = other.vel.dot(dir);
@@ -119,42 +136,26 @@
       let newV1 = (m1 * v1 + m2 * v2 - m2 * (v2 - v1) * BOUNCE_DAMPING) / (m1 + m2);
       let newV2 = (m1 * v1 + m2 * v2 - m1 * (v2 - v1) * BOUNCE_DAMPING) / (m1 + m2);
 
-      ball.vel.x  += (newV1 - v1) * dir[0];
-      ball.vel.y  += (newV1 - v1) * dir[1];
-      other.vel.x += (newV2 - v2) * dir[0];
-      other.vel.y += (newV2 - v2) * dir[1];
+      ball.vel.addSelf(dir.scale(newV1 - v1));
+      other.vel.addSelf(dir.scale(newV2 - v2));
     }
-
-    // Stop and roll
-    if (GRAVITY > 0) {
-      if (abs(ball.vel.y) < 0.1 && abs(ball.pos.y - (world.bottom + ball.rad)) < 0.1) {
-        ball.vel.y = 0;
-        ball.pos.y = world.bottom + ball.rad;
-        ball.vel.x *= ROLL_DAMPING;
-      }
-    } else { // billiards mode
-      //ball.vel.x *= 0.999999;
-      //ball.vel.y *= 0.999999;
-    }
-
-    if (abs(ball.vel.x) < 0.001) ball.vel.x = 0;
-    if (abs(ball.vel.y) < 0.001) ball.vel.y = 0;
+    */
   }
 
 
   // Render loop
 
   let running = true;
-  let lastTime = performance.now() * TIME_SCALE;
+  let lastTime = performance.now()/1000 * TIME_SCALE;
   let rafref = 0;
-  let substeps = 100;
+  let substeps = 30;
 
   const render = () => {
-    let start = performance.now();
+    //let start = performance.now();
 
     rafref = requestAnimationFrame(render);
 
-    const now = performance.now() * TIME_SCALE;
+    const now = performance.now()/1000 * TIME_SCALE;
     const dt = now - lastTime;
 
     for (let i = 0; i < substeps; i++) {
@@ -168,11 +169,11 @@
     // poke
     balls = balls;
 
-    let delta = performance.now() - start;
+    //let delta = performance.now() - start;
 
     // if delta is the time taken to simulate this whole frame, then
     // we can calculate how many substeps we can pack into the next frame
-    substeps = floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR);
+    //substeps = floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR);
   }
 
   onMount(() => {
@@ -190,10 +191,18 @@
 <svelte:window bind:innerWidth bind:innerHeight />
 
 
-<ShaderRenderer {balls} {world} bind:width={innerWidth} bind:height={innerHeight} />
-<!--
 <CanvasRenderer {balls} {world} bind:width={innerWidth} bind:height={innerHeight} />
+<!--
+<ShaderRenderer {balls} {world} bind:width={innerWidth} bind:height={innerHeight} />
 -->
+
+<pre class="debug">
+Balls: {balls.length}
+Steps: {substeps}
+Mntm: {balls.reduce((acc, ball) => acc + ball.vel.len() * ball.mass, 0).toFixed(2)}
+Heat: ??
+</pre>
+
 
 <style>
   :global(.Vader) {
@@ -202,6 +211,19 @@
 
   :global(.TwoDee) {
     z-index: 1;
+  }
+
+  pre {
+    position: fixed;
+    top: 0;
+    left: 0;
+    color: white;
+    font-family: monospace;
+    pointer-events: none;
+    z-index: 2;
+    background: rgba(0,0,0,0.3);
+    margin: 0;
+    padding: 1rem;
   }
 </style>
 
