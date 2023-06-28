@@ -1,9 +1,11 @@
 <script lang="ts">
   import type { Circle, Capsule } from "$types";
+  import type Vec2 from '$lib/Vec2';
   import type Ball from '$lib/Ball';
   import type Rect from '$lib/Rect';
+  import type Flipper from '$lib/Flipper';
 
-  import { tick, onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
   const TRACE_BALLS = false;
 
@@ -11,11 +13,30 @@
   export let capsules:Capsule[] = [];
   export let world:Rect;
   export let sink:Circle;
+  export let flippers:Flipper[];
   export let width:number = 100;
   export let height:number = 100;
 
   let canvas:HTMLCanvasElement;
   let ctx:CanvasRenderingContext2D;
+
+
+  const circleAt = (pos:Vec2, rad:number, col:string) => {
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, rad, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+
+  const capsuleAt = (a:Vec2, b:Vec2, rad:number, col:string) => {
+    ctx.lineCap = 'round';
+    ctx.lineWidth = rad * 2;
+    ctx.strokeStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
 
   const render = () => {
     if (!canvas || !ctx) return;
@@ -43,18 +64,11 @@
     ctx.fill();
 
     for (let capsule of capsules) {
-      // Easy version
-      ctx.lineCap = 'round';
-      ctx.lineWidth = capsule.rad * 2;
-      ctx.strokeStyle = '#d37';
-      ctx.beginPath();
-      ctx.moveTo(...capsule.a.spread);
-      ctx.lineTo(...capsule.b.spread);
-      // Fancy stencil version
-      //ctx.moveTo(...capsule.b.add(capsule.a.sub(capsule.b).norm().scale(capsule.rad).rotate(-Math.PI/2)).spread);
-      //ctx.arc(...capsule.a.spread, capsule.rad, capsule.a.sub(capsule.b).angle() - Math.PI/2, capsule.a.sub(capsule.b).angle() + Math.PI/2);
-      //ctx.arc(...capsule.b.spread, capsule.rad, capsule.b.sub(capsule.a).angle() - Math.PI/2, capsule.b.sub(capsule.a).angle() + Math.PI/2);
-      ctx.stroke();
+      //capsuleAt(capsule.a, capsule.b, capsule.rad, '#7d3');
+    }
+
+    for (let flipper of flippers) {
+      capsuleAt(flipper.a, flipper.b, flipper.rad, '#d37');
     }
 
     for (let ball of balls) {

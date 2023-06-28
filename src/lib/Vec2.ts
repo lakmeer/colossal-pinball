@@ -1,15 +1,13 @@
 
 import type { Scalar, Tuple2 } from "$types";
 
+const { cos, sin } = Math;
+
 
 //
 // Vec2
 //
 
-// NOTE: Ignoring:
-// - Types of property 'from' are incompatible.
-// - Target signature provides too few arguments. Expected 2 or more, but got 1.
-// @ts-ignore
 export default class Vec2 extends Array {
 
   constructor (x:number, y:number) {
@@ -129,8 +127,12 @@ export default class Vec2 extends Array {
 
   // Static
 
-  static from (x:number, y:number):Vec2 {
+  static fromXY (x:number, y:number):Vec2 {
     return new Vec2(x, y);
+  }
+
+  static fromAngle (a:Scalar, len:Scalar):Vec2 {
+    return new Vec2(cos(a) * len, sin(a) * len);
   }
 
   static random (minX:Scalar, maxX:Scalar, minY?:Scalar, maxY?:Scalar):Vec2 {

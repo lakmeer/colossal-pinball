@@ -29,8 +29,8 @@ export default class Ball {
     this.mass  = mass;
     this.color = color;
     this.pos_  = pos.clone();
-    this.acc   = Vec2.from(0, 0);
-  }   
+    this.acc   = Vec2.fromXY(0, 0);
+  }
 
 
   // Static
@@ -38,8 +38,8 @@ export default class Ball {
   static at (x:number, y:number) {
     const m = rand(2, 5);
     return new Ball(
-      Vec2.from(x, y),
-      Vec2.from(0, 0),
+      Vec2.fromXY(x, y),
+      Vec2.fromXY(0, 0),
       m,
       m,
       Color.random()
@@ -50,7 +50,7 @@ export default class Ball {
     const m = rand(2, 5);
     return new Ball(
       Vec2.random(...bounds.toRange()),
-      Vec2.from(0, 0),
+      Vec2.fromXY(0, 0),
       m,
       m,
       Color.random()
