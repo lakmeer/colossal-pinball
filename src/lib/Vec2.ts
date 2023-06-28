@@ -74,10 +74,13 @@ export default class Vec2 extends Array {
     return this.add(v.sub(this).scale(t));
   }
 
+  withLen (s:Scalar):Vec2 {
+    return this.norm().scale(s);
+  }
+
   raw ():Float32Array {
     return new Float32Array(this);
   }
-
 
   // Mutable
 
@@ -91,6 +94,10 @@ export default class Vec2 extends Array {
     this[0] = x;
     this[1] = y;
     return this;
+  }
+
+  setLen (s:Scalar):Vec2 {
+    return this.scaleSelf(s / this.len());
   }
 
   addSelf (v:Vec2):Vec2 {

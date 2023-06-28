@@ -7,7 +7,7 @@
   const TRACE_BALLS = false;
 
   export let balls:Ball[] = [];
-  export let lines = [];
+  export let capsules = [];
   export let world:Rect;
   export let width:number = 100;
   export let height:number = 100;
@@ -27,21 +27,25 @@
     ctx.lineCap = 'round';
 
     /*
+    // Circular boundary
     ctx.fillStyle = '#222';
     ctx.beginPath();
     ctx.arc(0, 0, world.w/2, 0, 2 * Math.PI);
     ctx.fill();
     */
 
-    for (let line of lines) {
-      ctx.lineWidth = line.r * 2;
+    for (let capsule of capsules) {
+      // Easy version
+      ctx.lineCap = 'round';
+      ctx.lineWidth = capsule.rad * 2;
       ctx.strokeStyle = '#d37';
       ctx.beginPath();
-      ctx.moveTo(...line.a.spread);
-      ctx.lineTo(...line.b.spread);
-      //ctx.moveTo(...line.b.add(line.a.sub(line.b).norm().scale(line.r).rotate(-Math.PI/2)).spread);
-      //ctx.arc(...line.a.spread, line.r, line.a.sub(line.b).angle() - Math.PI/2, line.a.sub(line.b).angle() + Math.PI/2);
-      //ctx.arc(...line.b.spread, line.r, line.b.sub(line.a).angle() - Math.PI/2, line.b.sub(line.a).angle() + Math.PI/2);
+      ctx.moveTo(...capsule.a.spread);
+      ctx.lineTo(...capsule.b.spread);
+      // Fancy stencil version
+      //ctx.moveTo(...capsule.b.add(capsule.a.sub(capsule.b).norm().scale(capsule.rad).rotate(-Math.PI/2)).spread);
+      //ctx.arc(...capsule.a.spread, capsule.rad, capsule.a.sub(capsule.b).angle() - Math.PI/2, capsule.a.sub(capsule.b).angle() + Math.PI/2);
+      //ctx.arc(...capsule.b.spread, capsule.rad, capsule.b.sub(capsule.a).angle() - Math.PI/2, capsule.b.sub(capsule.a).angle() + Math.PI/2);
       ctx.stroke();
     }
 

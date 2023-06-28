@@ -11,6 +11,17 @@
 
   const { pow, random, min, max, abs, sqrt, floor } = Math;
 
+  type Circle = {
+    pos:Vec2,
+    rad:number
+  }
+
+  type Capsule ={
+    a:Vec2,
+    b:Vec2,
+    rad:number
+  }
+
 
   //
   // TODO
@@ -21,12 +32,11 @@
 
   // Config
 
-  const MODE = 'canvas' as 'canvas' | 'shader';
   const GRAVITY = 1000;
   const TIME_SCALE = 0.5;
   const SUBSTEP_FACTOR = 0.8; // Use no more than half the frame time
   const MAX_BALLS = 1;
-  const BOUNDARY_FRICTION = 0.9;
+  //const BOUNDARY_FRICTION = 0.9;
   const COLLISION_FRICTION = 0.98;
   const MAX_VEL = 1000;
 
@@ -34,21 +44,55 @@
   // World
 
   let world = new Rect(0, 0, 100, 100);
-  let boundary = world.w/2;
+  //let boundary = world.w/2;
   let balls:Ball[] = [ ];
 
   for (let i = 0; i < MAX_BALLS; i++) {
     balls.push(Ball.random(world));
   }
 
-  let lines = [{
-    a: Vec2.from(-10, -10),
-    b: Vec2.from(10, 10),
-    r: 5
-  }]
+  let capsules:Capsule[] = [
+    {
+      a: Vec2.from(-25, -40),
+      b: Vec2.from(-45, -30),
+      rad: 5
+    },
+    {
+      a: Vec2.from(25, -40),
+      b: Vec2.from(45, -30),
+      rad: 5
+    }
+  ]
 
 
   // Physics
+
+  // Collision functions should return the correction vector from object A to object B.
+  // It's up to the caller to apply the correction to the objects however they wish.
+
+  const collideCircleCircle = (a:Circle, b:Circle):Vec2|false => {
+    let axis = a.pos.sub(b.pos);
+    let dist = axis.len();
+    if (dist < a.rad + b.rad) return axis.withLen((a.rad + b.rad) - dist);
+    return false;
+  }
+
+  const collideCircleCapsule = (a:Circle, b:Capsule):Vec2|false => {
+    let closest = closestPointOnLine(a.pos, b.a, b.b);
+    let axis = a.pos.sub(closest);
+    let dist = axis.len();
+    if (dist < a.rad + b.rad) return axis.withLen((a.rad + b.rad) - dist);
+    return false;
+  }
+
+  const collideCircleRectInterior = (a:Circle, b:Rect):Vec2|false => {
+    if (a.pos.x < b.left   + a.rad) return Vec2.from( a.rad - (a.pos.x - b.left), 0);
+    if (a.pos.x > b.right  - a.rad) return Vec2.from((b.right - a.pos.x) - a.rad, 0);
+    if (a.pos.y < b.bottom + a.rad) return Vec2.from(0, a.rad - (a.pos.y - b.bottom));
+    if (a.pos.y > b.top    - a.rad) return Vec2.from(0, (b.top  -  a.pos.y) - a.rad);
+    return false;
+  }
+
 
   const closestPointOnLine = (p:Vec2, a:Vec2, b:Vec2):Vec2 => {
     const ap = p.sub(a);
@@ -76,36 +120,28 @@
 
     // Collisions
     for (let a of balls) {
+
+      // With other balls
       for (let b of balls) {
         if (a === b) continue;
-
-        let axis = a.pos.sub(b.pos);
-        let dist = axis.len();
-        axis.normSelf();
-
-        if (dist < a.rad + b.rad) {
-          let delta = (a.rad + b.rad) - dist;
-          a.pos.addSelf(axis.scale(delta/2));
-          b.pos.subSelf(axis.scale(delta/2));
+        let delta = collideCircleCircle(a, b);
+        // Apply correction half each
+        if (delta) {
+          a.pos.addSelf(delta.scale(1/2));
+          b.pos.subSelf(delta.scale(1/2));
           a.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
           b.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
         }
       }
 
-      for (let b of lines) {
-
-        // Capsule intersection
-        let closest = closestPointOnLine(a.pos, b.a, b.b);
-        let axis = a.pos.sub(closest);
-        let dist = axis.len();
-        axis.normSelf();
-
-        if (dist < a.rad + b.r) {
-          let delta = (a.rad + b.r) - dist;
-          a.pos.addSelf(axis.scale(delta));
+      // With capsules
+      for (let b of capsules) {
+        let delta = collideCircleCapsule(a, b);
+        // Whole correction goes to the ball cos the capsule is immovable
+        if (delta) {
+          a.pos.addSelf(delta);
           a.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
         }
-
       }
     }
 
@@ -122,10 +158,11 @@
     // Recangular boundary
 
     for (let ball of balls) {
-      if (ball.pos.x < world.left   + ball.rad) ball.pos.x = world.left   + ball.rad;
-      if (ball.pos.x > world.right  - ball.rad) ball.pos.x = world.right  - ball.rad;
-      if (ball.pos.y < world.bottom + ball.rad) ball.pos.y = world.bottom + ball.rad;
-      if (ball.pos.y > world.top    - ball.rad) ball.pos.y = world.top    - ball.rad;
+      let delta = collideCircleRectInterior(ball, world);
+      if (delta) {
+        ball.pos.addSelf(delta);
+        ball.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
+      }
     }
 
     for (let ball of balls) {
@@ -140,17 +177,16 @@
     for (let ball of balls) {
       ball.acc.set2(0, 0);
     }
-
   }
 
 
   // Render loop
 
-  let running = true;
   let lastTime = performance.now()/1000 * TIME_SCALE;
   let rafref = 0;
   let substeps = 8;
   let delta = 0;
+  let clicked = false;
 
   const render = () => {
     let start = performance.now();
@@ -175,13 +211,12 @@
     substeps = max(8, min(100, floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR)));
   }
 
-  let clicked = false;
-
   onMount(() => {
     render();
 
-    document.addEventListener('mousedown', (event) => { clicked = true; });
-    document.addEventListener('mouseup', (event) => { clicked = false; });
+    // Spawn new balls
+    document.addEventListener('mousedown', () => { clicked = true; });
+    document.addEventListener('mouseup',   () => { clicked = false; });
     document.addEventListener('mousemove', (event) => {
       if (clicked) {
         let x = event.clientX / innerWidth  - 0.5;
@@ -203,17 +238,15 @@
 <svelte:window bind:innerWidth bind:innerHeight />
 
 
-<CanvasRenderer {balls} {lines} {world} bind:width={innerWidth} bind:height={innerHeight} />
+<CanvasRenderer {balls} {capsules} {world} bind:width={innerWidth} bind:height={innerHeight} />
 <!--
-<ShaderRenderer {balls} {lines} {world} bind:width={innerWidth} bind:height={innerHeight} />
+<ShaderRenderer {balls} {capsules} {world} bind:width={innerWidth} bind:height={innerHeight} />
 -->
 
 <pre class="debug">
 Balls: {balls.length}
 Steps: {substeps}
 Time: {delta.toFixed(3)}
-Mntm: {balls.reduce((acc, ball) => acc + ball.vel.len() * ball.mass, 0).toFixed(2)}
-Heat: ??
 </pre>
 
 
