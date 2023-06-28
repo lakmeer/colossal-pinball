@@ -2,7 +2,7 @@
 import type { Capsule } from "$types";
 import Vec2 from "$lib/Vec2";
 
-const { sin, cos, min, max } = Math;
+const { sin, cos, min, max, sign, abs } = Math;
 
 
 //
@@ -12,17 +12,18 @@ const { sin, cos, min, max } = Math;
 export default class Flipper {
 
   capsule: Capsule;
+
   length: number;
-  angle: number;
-  angle_: number;
-  maxAngle: number;
   restAngle: number;
+  flipDir:   number;
+  flipRange: number;
   flipSpeed: number;
+
+  angle: number;
   angVel: number;
-  sign: number;
   active: boolean;
 
-  constructor (pos: Vec2, rad: number, length: number, restAngle: number, maxAngle:number, flipSpeed:number) {
+  constructor (pos: Vec2, rad: number, length: number, restAngle: number, flipRange:number, flipSpeed:number) {
     this.capsule = {
       rad: rad,
       a: pos,
@@ -31,13 +32,13 @@ export default class Flipper {
 
     this.length    = length;
     this.restAngle = restAngle;
-    this.maxAngle  = maxAngle;
+    this.flipDir   = sign(flipRange);
+    this.flipRange = abs(flipRange);
     this.flipSpeed = flipSpeed;
-    this.angle     = 0;
-    this.angVel    = 0;
-    this.sign      = restAngle < maxAngle ? 1 : -1;
-    this.active    = false;
-    this.angle_    = this.angle;
+
+    this.angle  = 0;
+    this.angVel = 0;
+    this.active = false;
 
     this.setAngle(restAngle);
   }
@@ -63,20 +64,25 @@ export default class Flipper {
   }
 
   setAngle (angle: number) {
-    this.angle = max(0, min(angle, this.maxAngle));
-    this.capsule.b = this.capsule.a.add(Vec2.fromAngle(this.restAngle + angle * this.sign, this.length));
+    this.angle = max(0, min(angle, this.flipRange));
+    this.updateTipPos();
+  }
+
+  updateTipPos () {
+    const angle = this.restAngle + this.angle * this.flipDir;
+    this.capsule.b = this.capsule.a.add(Vec2.fromAngle(angle, this.length));
   }
 
   update (Δt: number) {
-    this.angle_ = this.angle; // Do we need to store this?
+    const prevAngle = this.angle;
 
     if (this.active) {
-      this.setAngle(this.angle + this.flipSpeed * Δt * this.sign);
+      this.setAngle(this.angle + this.flipSpeed * Δt);
     } else {
-      this.setAngle(this.angle - this.flipSpeed * Δt * this.sign);
+      this.setAngle(this.angle - this.flipSpeed * Δt);
     }
 
-    this.angVel = (this.angle - this.angle_) / Δt;
+    this.angVel = (this.angle - prevAngle) / Δt;
   }
 
 }

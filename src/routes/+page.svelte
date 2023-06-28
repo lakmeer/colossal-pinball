@@ -57,29 +57,12 @@
     balls.push(Ball.random(world));
   }
 
-  let capsules:Capsule[] = [
-    {
-      a: Vec2.fromXY(-25, -40),
-      b: Vec2.fromXY(-50, -30),
-      rad: 5
-    },
-    {
-      a: Vec2.fromXY(25, -40),
-      b: Vec2.fromXY(50, -30),
-      rad: 5
-    }
-  ]
+  let capsules:Capsule[] = [];
+                                        //  pos, rad, len, rest, range, speed
+  let flipperA = new Flipper(Vec2.fromXY(-50, -30), 3, 25, 0  - PI/8,  PI/4, 40);
+  let flipperB = new Flipper(Vec2.fromXY( 50, -30), 3, 25, PI + PI/8, -PI/4, 40);
 
-  let flipperA = new Flipper(
-    Vec2.fromXY(-50, -30),
-    5,
-    20,
-    -PI/8,
-    PI/8,
-    50
-  );
-
-  const flippers = [ flipperA ];
+  const flippers = [ flipperA, flipperB ];
 
 
   // Physics
@@ -90,22 +73,19 @@
   const collideCircleCircle = (a:Circle, b:Circle):Vec2|false => {
     let axis = a.pos.sub(b.pos);
     let dist = axis.len();
-    if (dist < a.rad + b.rad) return axis.withLen((a.rad + b.rad) - dist);
-    return false;
+    if (dist === 0 || dist > a.rad + b.rad) return false;
+    return axis.withLen((a.rad + b.rad) - dist);
   }
 
   const collideCircleCapsule = (a:Circle, b:Capsule):Vec2|false => {
-    let axis = a.pos.sub(closestPointOnLine(a.pos, b.a, b.b));
-    let dist = axis.len();
-    if (dist < a.rad + b.rad) return axis.withLen((a.rad + b.rad) - dist);
-    return false;
+    return collideCircleCircle(a, { pos: closestPointOnLine(a.pos, b.a, b.b), rad: b.rad });
   }
 
   const collideCircleRectInterior = (a:Circle, b:Rect):Vec2|false => {
-    if (a.pos.x < b.left   + a.rad) return Vec2.fromXY( a.rad - (a.pos.x - b.left), 0);
-    if (a.pos.x > b.right  - a.rad) return Vec2.fromXY((b.right - a.pos.x) - a.rad, 0);
+    if (a.pos.x < b.left   + a.rad) return Vec2.fromXY(a.rad - (a.pos.x - b.left), 0);
+    if (a.pos.x > b.right  - a.rad) return Vec2.fromXY((b.right - a.pos.x)- a.rad, 0);
     if (a.pos.y < b.bottom + a.rad) return Vec2.fromXY(0, a.rad - (a.pos.y - b.bottom));
-    if (a.pos.y > b.top    - a.rad) return Vec2.fromXY(0, (b.top  -  a.pos.y) - a.rad);
+    if (a.pos.y > b.top    - a.rad) return Vec2.fromXY(0, (b.top - a.pos.y) - a.rad);
     return false;
   }
 
@@ -149,7 +129,14 @@
       }
 
       // With flippers
-
+      for (let flipper of flippers) {
+        let delta = collideCircleCapsule(a, flipper.capsule);
+        // Whole correction goes to the ball cos the flipper is immovable
+        if (delta) {
+          a.pos.addSelf(delta);
+          a.friction *= fff;
+        }
+      }
 
       // With capsules
       for (let b of capsules) {
@@ -211,10 +198,12 @@
     const now = performance.now()/1000;
     const dt = (now - lastTime) * TIME_SCALE;
 
-    flipperA.activate(btnA);
+    flipperA.active = btnA;
+    flipperB.active = btnB;
 
     for (let i = 0; i < substeps; i++) {
       flipperA.update(dt/substeps);
+      flipperB.update(dt/substeps);
       updateVertlet(dt/substeps);
     }
 
@@ -233,9 +222,11 @@
   let clicked = false;
   let erasing = false;
 
-  const mouse2world = ({ clientX, clientY }:MouseEvent) => {
-    let x = world.w * (clientX / innerWidth  - 0.5);
-    let y = world.h * (clientY / innerHeight - 0.5);
+  const mouse2world = ({ clientX, clientY, target }:MouseEvent) => {
+    let el = target as HTMLElement;
+    let rect = el.getBoundingClientRect();
+    let x = (clientX - rect.left) / rect.width  * world.w - world.w/2;
+    let y = (clientY - rect.top)  / rect.height * world.h - world.h/2;
     return Vec2.fromXY(x, -y);
   }
 
@@ -285,10 +276,12 @@
 <svelte:window bind:innerWidth bind:innerHeight />
 
 
-<CanvasRenderer {balls} {flippers} {capsules} {sink} {world} bind:width={innerWidth} bind:height={innerHeight} />
-<!--
-<ShaderRenderer {balls} {flippers} {capsules} {sink} {world} bind:width={innerWidth} bind:height={innerHeight} />
--->
+<div>
+  <CanvasRenderer {balls} {flippers} {capsules} {sink} {world} bind:width={innerHeight} bind:height={innerHeight} />
+  <!--
+  <ShaderRenderer {balls} {flippers} {capsules} {sink} {world} bind:width={innerWidth} bind:height={innerHeight} />
+  -->
+</div>
 
 <pre class="debug">
 Balls: {balls.length}
@@ -306,6 +299,17 @@ Steps: {substeps}
 
   :global(.TwoDee) {
     z-index: 1;
+  }
+
+  div {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    background: #111;
+    place-items: center;
   }
 
   pre {
