@@ -48,21 +48,6 @@ export default class Flipper {
   get b (): Vec2     { return this.capsule.b; }
   get rad (): number { return this.capsule.rad; }
 
-  contactPoint (p: Vec2) {
-    const { a, b, rad } = this.capsule;
-    const ab = b.sub(a);
-    const ap = p.sub(a);
-    const t = ap.dot(ab) / ab.dot(ab);
-    const d = ab.scale(t).add(a);
-    const n = p.sub(d).norm();
-    const c = d.add(n.scale(rad));
-    return c;
-  }
-
-  activate (state = true) {
-    this.active = state;
-  }
-
   setAngle (angle: number) {
     this.angle = max(0, min(angle, this.flipRange));
     this.updateTipPos();

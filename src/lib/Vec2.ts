@@ -1,7 +1,7 @@
 
 import type { Scalar, Tuple2 } from "$types";
 
-const { cos, sin } = Math;
+const { cos, sin, hypot, atan2 } = Math;
 
 
 //
@@ -50,19 +50,23 @@ export default class Vec2 extends Array {
   }
 
   len ():Scalar {
-    return Math.sqrt(this.dot(this));
+    return hypot(this.x, this.y);
   }
 
   norm ():Vec2 {
     return this.scale(1 / this.len());
   }
 
+  perp ():Vec2 {
+    return new Vec2(-this.y, this.x);
+  }
+
   dist (v:Vec2):Scalar {
-    return this.sub(v).len();
+    return hypot(this.x - v.x, this.y - v.y);
   }
 
   angle (v:Vec2):Scalar {
-    return Math.atan2(this.y, this.x);
+    return atan2(this.y, this.x) - atan2(v.y, v.x);
   }
 
   rotate (a:Scalar):Vec2 {
@@ -70,6 +74,14 @@ export default class Vec2 extends Array {
       this.x * Math.cos(a) - this.y * Math.sin(a),
       this.x * Math.sin(a) + this.y * Math.cos(a)
     );
+  }
+
+  face (v:Vec2):Vec2 {
+    return this.rotate(this.angle(v));
+  }
+
+  towards (v:Vec2, s = 1):Vec2 {
+    return this.add(v.sub(this).withLen(s));
   }
 
   lerp (v:Vec2, t:Scalar):Vec2 {
@@ -100,6 +112,13 @@ export default class Vec2 extends Array {
 
   setLen (s:Scalar):Vec2 {
     return this.scaleSelf(s / this.len());
+  }
+
+  setAngle (a:Scalar):Vec2 {
+    const len = this.len();
+    this[0] = cos(a) * len;
+    this[1] = sin(a) * len;
+    return this;
   }
 
   addSelf (v:Vec2):Vec2 {

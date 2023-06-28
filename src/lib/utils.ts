@@ -9,3 +9,5 @@ export const rand = (...args:number[]) => {
 
 export const randFrom = <T>(arr:T[]):T =>
   arr[floor(random() * arr.length)];
+
+export const clamp = (n:number, a = 0, b = 1) => min(max(n, a), b);

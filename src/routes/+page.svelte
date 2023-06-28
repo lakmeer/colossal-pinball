@@ -5,8 +5,8 @@
   import { onMount } from 'svelte';
 
   import Flipper from "$lib/Flipper";
-  import Vec2    from "$lib/Vec2";
   import Ball    from "$lib/Ball";
+  import Vec2    from "$lib/Vec2";
   import Rect    from "$lib/Rect";
 
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
@@ -28,14 +28,12 @@
   const TIME_SCALE = 0.5;
   const SUBSTEP_FACTOR = 0.8; // Use no more than half the frame time
   const MAX_BALLS = 1;
-  //const BOUNDARY_FRICTION = 0.9;
   const COLLISION_FRICTION = 0.98;
   const MAX_VEL = 1000;
 
 
   // World
 
-  //let boundary = world.w/2;
   let world = new Rect(0, 0, 100, 100);
   let balls:Ball[] = [ ];
   let sink:Circle = { pos: Vec2.fromXY(0, -70), rad: 30 };
@@ -63,39 +61,33 @@
   let flipperB = new Flipper(Vec2.fromXY( 50, -30), 3, 25, PI + PI/8, -PI/4, 40);
 
   const flippers = [ flipperA, flipperB ];
+  const bumpers  = [];
 
 
   // Physics
 
   // Collision functions should return the correction vector from object A to object B.
   // It's up to the caller to apply the correction to the objects however they wish.
+  // Constrain function takes two particular objects and returns a correction vector, or false.
 
-  const collideCircleCircle = (a:Circle, b:Circle):Vec2|false => {
-    let axis = a.pos.sub(b.pos);
-    let dist = axis.len();
-    if (dist === 0 || dist > a.rad + b.rad) return false;
-    return axis.withLen((a.rad + b.rad) - dist);
+  const elastic = (a:PhysObj, b:PhysObj, constraint:ConstrainFn, friction = 1) => {
+    resolve(a, b, constraint, 0.5, friction);
   }
 
-  const collideCircleCapsule = (a:Circle, b:Capsule):Vec2|false => {
-    return collideCircleCircle(a, { pos: closestPointOnLine(a.pos, b.a, b.b), rad: b.rad });
+  const immovable = (a:PhysObj, b:PhysObj, constraint:ConstrainFn, friction = 1) => {
+    resolve(a, b, constraint, 1.0, friction);
   }
 
-  const collideCircleRectInterior = (a:Circle, b:Rect):Vec2|false => {
-    if (a.pos.x < b.left   + a.rad) return Vec2.fromXY(a.rad - (a.pos.x - b.left), 0);
-    if (a.pos.x > b.right  - a.rad) return Vec2.fromXY((b.right - a.pos.x)- a.rad, 0);
-    if (a.pos.y < b.bottom + a.rad) return Vec2.fromXY(0, a.rad - (a.pos.y - b.bottom));
-    if (a.pos.y > b.top    - a.rad) return Vec2.fromXY(0, (b.top - a.pos.y) - a.rad);
-    return false;
-  }
-
-  const closestPointOnLine = (p:Vec2, a:Vec2, b:Vec2):Vec2 => {
-    const ap = p.sub(a);
-    const ab = b.sub(a);
-    const t  = ap.dot(ab) / ab.dot(ab);
-    if (t < 0) return a;
-    if (t > 1) return b;
-    return new Vec2( a[0] + ab[0] * t, a[1] + ab[1] * t);
+  const resolve = (a:PhysObj, b:PhysObj, constraint:ConstrainFn, energyDist:number, friction = 1) => {
+    const delta = constraint(a, b);
+    // energyDist is the proportion of the energy that should be transferred to object A
+    // 1.0 = immovable, 0.5 = elastic
+    if (delta) {
+      a.pos.addSelf(delta.scale(energyDist));
+      b.pos.subSelf(delta.scale(1 - energyDist));
+      a.friction *= friction;
+      b.friction *= friction;
+    }
   }
 
 
@@ -108,66 +100,34 @@
 
     // Gravity
     for (let ball of balls) {
-      ball.acc.addSelf(Vec2.fromXY(0, -GRAVITY));
-      ball.friction = 1;
+      ball.impart(Vec2.fromXY(0, -GRAVITY));
     }
 
     // Collisions
     for (let a of balls) {
-
-      // With other balls
       for (let b of balls) {
         if (a === b) continue;
-        let delta = collideCircleCircle(a, b);
-        // Apply correction half each
-        if (delta) {
-          a.pos.addSelf(delta.scale(1/2));
-          b.pos.subSelf(delta.scale(1/2));
-          a.friction *= fff;
-          b.friction *= fff;
-        }
+        b.collide(a, fff);
       }
 
-      // With flippers
-      for (let flipper of flippers) {
-        let delta = collideCircleCapsule(a, flipper.capsule);
-        // Whole correction goes to the ball cos the flipper is immovable
-        if (delta) {
-          a.pos.addSelf(delta);
-          a.friction *= fff;
-        }
+      for (let b of flippers) {
+        b.collide(a, fff);
       }
 
-      // With capsules
-      for (let b of capsules) {
-        let delta = collideCircleCapsule(a, b);
-        // Whole correction goes to the ball cos the capsule is immovable
-        if (delta) {
-          a.pos.addSelf(delta);
-          a.friction *= fff;
-        }
+      for (let b of bumpers) {
+        b.collide(a);
       }
-    }
 
-    // Circular boundary
-    // for (let ball of balls) {
-    //   if (ball.pos.len() > boundary - ball.rad) {
-    //     ball.pos.set(ball.pos.norm().scale(boundary - ball.rad));
-    //     ball.friction *= pow(1 - (1 - BOUNDARY_FRICTION), 1/substeps);
-    //   }
-    // }
+      // With straight walls
+      // With curved walls
 
-    // Recangular boundary
-    for (let ball of balls) {
-      let delta = collideCircleRectInterior(ball, world);
-      if (delta) {
-        ball.pos.addSelf(delta);
-        ball.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
-      }
+      // World boundary
+      world.collide(ball, fff);
     }
 
     // Apply verlet integration
     for (let ball of balls) {
+      ball.simulate(dt);
       const displacement = ball.pos.sub(ball.pos_);
       ball.pos_.set(ball.pos.clone());
       ball.vel.set(displacement.add(ball.acc.scale(dt * dt)).scale(ball.friction));
@@ -233,38 +193,57 @@
   const spawnAt = (event:MouseEvent) => spawn(mouse2world(event));
   const eraseAt = (event:MouseEvent) => erase(mouse2world(event), 20);
 
+  const onMouseDown = (event) => {
+    if (event.target.tagName !== 'CANVAS') return;
+    switch (event.button) {
+      case 0: spawnAt(event); clicked = true; break;
+      case 1: eraseAt(event); erasing = true; break;
+    }
+  }
+
+  const onMouseUp = (event) => {
+    clicked = false;
+    erasing = false;
+  }
+
+  const onMouseMove = (event) => {
+    if (event.target.tagName !== 'CANVAS') return;
+    if (clicked) spawnAt(event);
+    if (erasing) eraseAt(event);
+  }
+
+  const onKeydown = (event) => {
+    switch (event.key) {
+      case 'a': btnA = true; break;
+      case 's': btnB = true; break;
+    }
+  }
+
+  const onKeyup = (event) => {
+    switch (event.key) {
+      case 'a': btnA = false; break;
+      case 's': btnB = false; break;
+    }
+  }
+
   onMount(() => {
     render();
 
-    // Spawn new balls
-    document.addEventListener('mousedown', (event) => {
-      switch (event.button) {
-        case 0: spawnAt(event); clicked = true; break;
-        case 1: eraseAt(event); erasing = true; break;
-      }
-    });
-    document.addEventListener('mouseup',   () => { clicked = false; erasing = false; });
-    document.addEventListener('mousemove', (event) => {
-      if (clicked) spawnAt(event);
-      if (erasing) eraseAt(event);
-    });
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup',   onMouseUp);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('keydown',   onKeydown);
+    document.addEventListener('keyup',     onKeyup);
 
-    // Flip paddles
-    document.addEventListener('keydown', (event) => {
-      switch (event.key) {
-        case 'a': btnA = true; break;
-        case 's': btnB = true; break;
-      }
-    });
+    return () => {
+      cancelAnimationFrame(rafref);
 
-    document.addEventListener('keyup', (event) => {
-      switch (event.key) {
-        case 'a': btnA = false; break;
-        case 's': btnB = false; break;
-      }
-    });
-
-    return () => cancelAnimationFrame(rafref);
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mouseup',   onMouseUp);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('keydown',   onKeydown);
+      document.removeEventListener('keyup',     onKeyup);
+    }
   });
 
   let innerWidth = 0;
