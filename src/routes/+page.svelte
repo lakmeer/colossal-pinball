@@ -2,7 +2,7 @@
 
   import type { Circle, Capsule } from "$types";
 
-  import { onMount, afterUpdate } from 'svelte';
+  import { onMount } from 'svelte';
 
   import Vec2 from "$lib/Vec2";
   import Ball from "$lib/Ball";
@@ -11,7 +11,7 @@
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
   import ShaderRenderer from '../components/ShaderRenderer.svelte';
 
-  const { pow, random, min, max, abs, sqrt, floor } = Math;
+  const { pow, floor, min, max, abs, random, sqrt } = Math;
 
 
   //
@@ -37,6 +37,20 @@
   //let boundary = world.w/2;
   let world = new Rect(0, 0, 100, 100);
   let balls:Ball[] = [ ];
+  let sink:Circle = { pos: Vec2.from(0, -70), rad: 30 };
+
+  const spawn = (pos:Vec2) => {
+    balls.push(Ball.at(pos.x, pos.y));
+  }
+
+  const erase = (pos:Vec2, rad = 20) => {
+    for (let i = balls.length - 1; i >= 0; i--) {
+      let b = balls[i];
+      if (b.pos.dist(pos) < rad) {
+        balls.splice(i, 1);
+      }
+    }
+  }
 
   for (let i = 0; i < MAX_BALLS; i++) {
     balls.push(Ball.random(world));
@@ -45,15 +59,16 @@
   let capsules:Capsule[] = [
     {
       a: Vec2.from(-25, -40),
-      b: Vec2.from(-45, -30),
+      b: Vec2.from(-50, -30),
       rad: 5
     },
     {
       a: Vec2.from(25, -40),
-      b: Vec2.from(45, -30),
+      b: Vec2.from(50, -30),
       rad: 5
     }
   ]
+
 
 
   // Physics
@@ -134,14 +149,12 @@
     }
 
     // Circular boundary
-    /*
-    for (let ball of balls) {
-      if (ball.pos.len() > boundary - ball.rad) {
-        ball.pos.set(ball.pos.norm().scale(boundary - ball.rad));
-        ball.friction *= pow(1 - (1 - BOUNDARY_FRICTION), 1/substeps);
-      }
-    }
-    */
+    // for (let ball of balls) {
+    //   if (ball.pos.len() > boundary - ball.rad) {
+    //     ball.pos.set(ball.pos.norm().scale(boundary - ball.rad));
+    //     ball.friction *= pow(1 - (1 - BOUNDARY_FRICTION), 1/substeps);
+    //   }
+    // }
 
     // Recangular boundary
     for (let ball of balls) {
@@ -184,6 +197,8 @@
 
     for (let i = 0; i < substeps; i++) updateVertlet(dt/substeps);
 
+    erase(sink.pos, sink.rad);
+
     lastTime = now;
     balls = balls; // poke
 
@@ -197,29 +212,14 @@
   let clicked = false;
   let erasing = false;
 
-  const eraseRadius = 20;
-
   const mouse2world = ({ clientX, clientY }:MouseEvent) => {
     let x = world.w * (clientX / innerWidth  - 0.5);
     let y = world.h * (clientY / innerHeight - 0.5);
     return Vec2.from(x, -y);
   }
 
-  const spawn = (event:MouseEvent) => {
-    let pos = mouse2world(event);
-    let b = Ball.at(pos.x, pos.y);
-    balls.push(b);
-  }
-
-  const erase = (event:MouseEvent) => {
-    let pos = mouse2world(event);
-    for (let i = balls.length - 1; i >= 0; i--) {
-      let b = balls[i];
-      if (b.pos.dist(pos) < eraseRadius) {
-        balls.splice(i, 1);
-      }
-    }
-  }
+  const spawnAt = (event:MouseEvent) => spawn(mouse2world(event));
+  const eraseAt = (event:MouseEvent) => erase(mouse2world(event), 20);
 
   onMount(() => {
     render();
@@ -227,14 +227,14 @@
     // Spawn new balls
     document.addEventListener('mousedown', (event) => {
       switch (event.button) {
-        case 0: spawn(event); clicked = true; break;
-        case 1: erase(event); erasing = true; break;
+        case 0: spawnAt(event); clicked = true; break;
+        case 1: eraseAt(event); erasing = true; break;
       }
     });
     document.addEventListener('mouseup',   () => { clicked = false; erasing = false; });
     document.addEventListener('mousemove', (event) => {
-      if (clicked) spawn(event);
-      if (erasing) erase(event);
+      if (clicked) spawnAt(event);
+      if (erasing) eraseAt(event);
     });
 
     return () => cancelAnimationFrame(rafref);
@@ -249,9 +249,9 @@
 <svelte:window bind:innerWidth bind:innerHeight />
 
 
-<CanvasRenderer {balls} {capsules} {world} bind:width={innerWidth} bind:height={innerHeight} />
+<CanvasRenderer {balls} {capsules} {sink} {world} bind:width={innerWidth} bind:height={innerHeight} />
 <!--
-<ShaderRenderer {balls} {capsules} {world} bind:width={innerWidth} bind:height={innerHeight} />
+<ShaderRenderer {balls} {capsules} {sink} {world} bind:width={innerWidth} bind:height={innerHeight} />
 -->
 
 <pre class="debug">

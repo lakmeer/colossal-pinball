@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Capsule } from "$types";
+  import type { Circle, Capsule } from "$types";
   import type Ball from '$lib/Ball';
   import type Rect from '$lib/Rect';
 
@@ -10,6 +10,7 @@
   export let balls:Ball[] = [];
   export let capsules:Capsule[] = [];
   export let world:Rect;
+  export let sink:Circle;
   export let width:number = 100;
   export let height:number = 100;
 
@@ -34,6 +35,12 @@
     ctx.arc(0, 0, world.w/2, 0, 2 * Math.PI);
     ctx.fill();
     */
+
+    // Draw sink zone
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(sink.pos.x, sink.pos.y, sink.rad, 0, 2 * Math.PI);
+    ctx.fill();
 
     for (let capsule of capsules) {
       // Easy version
