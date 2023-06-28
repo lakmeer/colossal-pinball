@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Capsule } from "$types";
   import type Ball from '$lib/Ball';
   import type Rect from '$lib/Rect';
 
@@ -7,7 +8,7 @@
   const TRACE_BALLS = false;
 
   export let balls:Ball[] = [];
-  export let capsules = [];
+  export let capsules:Capsule[] = [];
   export let world:Rect;
   export let width:number = 100;
   export let height:number = 100;

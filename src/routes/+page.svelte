@@ -1,5 +1,7 @@
 <script lang="ts">
 
+  import type { Circle, Capsule } from "$types";
+
   import { onMount, afterUpdate } from 'svelte';
 
   import Vec2 from "$lib/Vec2";
@@ -10,17 +12,6 @@
   import ShaderRenderer from '../components/ShaderRenderer.svelte';
 
   const { pow, random, min, max, abs, sqrt, floor } = Math;
-
-  type Circle = {
-    pos:Vec2,
-    rad:number
-  }
-
-  type Capsule ={
-    a:Vec2,
-    b:Vec2,
-    rad:number
-  }
 
 
   //
@@ -43,8 +34,8 @@
 
   // World
 
-  let world = new Rect(0, 0, 100, 100);
   //let boundary = world.w/2;
+  let world = new Rect(0, 0, 100, 100);
   let balls:Ball[] = [ ];
 
   for (let i = 0; i < MAX_BALLS; i++) {
@@ -78,8 +69,7 @@
   }
 
   const collideCircleCapsule = (a:Circle, b:Capsule):Vec2|false => {
-    let closest = closestPointOnLine(a.pos, b.a, b.b);
-    let axis = a.pos.sub(closest);
+    let axis = a.pos.sub(closestPointOnLine(a.pos, b.a, b.b));
     let dist = axis.len();
     if (dist < a.rad + b.rad) return axis.withLen((a.rad + b.rad) - dist);
     return false;
@@ -93,24 +83,22 @@
     return false;
   }
 
-
   const closestPointOnLine = (p:Vec2, a:Vec2, b:Vec2):Vec2 => {
     const ap = p.sub(a);
     const ab = b.sub(a);
-
-    const ab2 = ab.dot(ab);
-    const ap_ab = ap.dot(ab);
-
-    const t = ap_ab / ab2;
-
+    const t  = ap.dot(ab) / ab.dot(ab);
     if (t < 0) return a;
     if (t > 1) return b;
-
     return new Vec2( a[0] + ab[0] * t, a[1] + ab[1] * t);
   }
 
 
+  // Main physics updater
+
   const updateVertlet = (dt:number) => {
+
+    // 'Fractional friction factor' - adjusted for number of steps
+    const fff = pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
 
     // Gravity
     for (let ball of balls) {
@@ -129,8 +117,8 @@
         if (delta) {
           a.pos.addSelf(delta.scale(1/2));
           b.pos.subSelf(delta.scale(1/2));
-          a.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
-          b.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
+          a.friction *= fff;
+          b.friction *= fff;
         }
       }
 
@@ -140,7 +128,7 @@
         // Whole correction goes to the ball cos the capsule is immovable
         if (delta) {
           a.pos.addSelf(delta);
-          a.friction *= pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
+          a.friction *= fff;
         }
       }
     }
@@ -156,7 +144,6 @@
     */
 
     // Recangular boundary
-
     for (let ball of balls) {
       let delta = collideCircleRectInterior(ball, world);
       if (delta) {
@@ -165,6 +152,7 @@
       }
     }
 
+    // Apply verlet integration
     for (let ball of balls) {
       const displacement = ball.pos.sub(ball.pos_);
       ball.pos_.set(ball.pos.clone());
@@ -182,28 +170,22 @@
 
   // Render loop
 
-  let lastTime = performance.now()/1000 * TIME_SCALE;
+  let lastTime = performance.now()/1000;
   let rafref = 0;
   let substeps = 8;
   let delta = 0;
-  let clicked = false;
 
   const render = () => {
-    let start = performance.now();
-
     rafref = requestAnimationFrame(render);
 
-    const now = performance.now()/1000 * TIME_SCALE;
-    const dt = now - lastTime;
+    const start = performance.now();
+    const now = performance.now()/1000;
+    const dt = (now - lastTime) * TIME_SCALE;
 
-    for (let i = 0; i < substeps; i++) {
-      updateVertlet(dt/substeps);
-    }
+    for (let i = 0; i < substeps; i++) updateVertlet(dt/substeps);
 
     lastTime = now;
-
-    // poke
-    balls = balls;
+    balls = balls; // poke
 
     // if delta is the time taken to simulate this whole frame, then
     // we can calculate how many substeps we can pack into the next frame
@@ -211,19 +193,48 @@
     substeps = max(8, min(100, floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR)));
   }
 
+
+  let clicked = false;
+  let erasing = false;
+
+  const eraseRadius = 20;
+
+  const mouse2world = ({ clientX, clientY }:MouseEvent) => {
+    let x = world.w * (clientX / innerWidth  - 0.5);
+    let y = world.h * (clientY / innerHeight - 0.5);
+    return Vec2.from(x, -y);
+  }
+
+  const spawn = (event:MouseEvent) => {
+    let pos = mouse2world(event);
+    let b = Ball.at(pos.x, pos.y);
+    balls.push(b);
+  }
+
+  const erase = (event:MouseEvent) => {
+    let pos = mouse2world(event);
+    for (let i = balls.length - 1; i >= 0; i--) {
+      let b = balls[i];
+      if (b.pos.dist(pos) < eraseRadius) {
+        balls.splice(i, 1);
+      }
+    }
+  }
+
   onMount(() => {
     render();
 
     // Spawn new balls
-    document.addEventListener('mousedown', () => { clicked = true; });
-    document.addEventListener('mouseup',   () => { clicked = false; });
-    document.addEventListener('mousemove', (event) => {
-      if (clicked) {
-        let x = event.clientX / innerWidth  - 0.5;
-        let y = event.clientY / innerHeight - 0.5;
-        let b = Ball.at(world.w * x, world.h * -y);
-        balls.push(b);
+    document.addEventListener('mousedown', (event) => {
+      switch (event.button) {
+        case 0: spawn(event); clicked = true; break;
+        case 1: erase(event); erasing = true; break;
       }
+    });
+    document.addEventListener('mouseup',   () => { clicked = false; erasing = false; });
+    document.addEventListener('mousemove', (event) => {
+      if (clicked) spawn(event);
+      if (erasing) erase(event);
     });
 
     return () => cancelAnimationFrame(rafref);
@@ -246,7 +257,7 @@
 <pre class="debug">
 Balls: {balls.length}
 Steps: {substeps}
-Time: {delta.toFixed(3)}
+ Time: {delta.toFixed(3)}
 </pre>
 
 

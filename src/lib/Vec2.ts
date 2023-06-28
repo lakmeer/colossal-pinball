@@ -6,6 +6,10 @@ import type { Scalar, Tuple2 } from "$types";
 // Vec2
 //
 
+// NOTE: Ignoring:
+// - Types of property 'from' are incompatible.
+// - Target signature provides too few arguments. Expected 2 or more, but got 1.
+// @ts-ignore
 export default class Vec2 extends Array {
 
   constructor (x:number, y:number) {
