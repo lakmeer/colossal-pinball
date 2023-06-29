@@ -41,9 +41,7 @@ export default class Rect {
     if (ball.pos.x < this.right  + ball.rad) return Vec2.fromXY(ball.rad - (ball.pos.x - this.right), 0);
     if (ball.pos.y > this.bottom - ball.rad) return Vec2.fromXY(0, (ball.pos.y - this.bottom) - ball.rad);
     if (ball.pos.y < this.top    + ball.rad) return Vec2.fromXY(0, ball.rad - (ball.pos.y - this.top));
-
-    const dist = delta.len();
-    ball.pos.addSelf(delta.withLen((this.rad + ball.rad) - dist));
+    return null;
   }
 
   intersectInterior(ball:Ball) {
@@ -64,11 +62,11 @@ export default class Rect {
     if (delta) ball.pos.addSelf(delta);
   }
 
-  toBounds ():Tuple4 { // Screen Y
+  toBounds():Tuple4 { // Screen Y
     return [ this.x1, this.y2, this.w, this.h ];
   }
 
-  toRange ():Tuple4 { // World Y
+  toRange():Tuple4 { // World Y
     return [ this.x1, this.x2, this.y1, this.y2 ];
   }
 

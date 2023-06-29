@@ -1,5 +1,5 @@
 
-import type { Capsule } from "$types";
+import { Capsule } from "$lib/Collider";
 import Vec2 from "$lib/Vec2";
 
 const { sin, cos, min, max, sign, abs } = Math;
@@ -24,11 +24,7 @@ export default class Flipper {
   active: boolean;
 
   constructor (pos: Vec2, rad: number, length: number, restAngle: number, flipRange:number, flipSpeed:number) {
-    this.capsule = {
-      rad: rad,
-      a: pos,
-      b: pos.clone()
-    };
+    this.capsule = new Capsule(pos, pos.clone(), rad);
 
     this.length    = length;
     this.restAngle = restAngle;
@@ -43,9 +39,8 @@ export default class Flipper {
     this.setAngle(restAngle);
   }
 
-  get pos (): Vec2   { return this.capsule.a; }
-  get a (): Vec2     { return this.capsule.a; }
-  get b (): Vec2     { return this.capsule.b; }
+  get pos (): Vec2   { return this.capsule.pos; }
+  get tip (): Vec2   { return this.capsule.tip; }
   get rad (): number { return this.capsule.rad; }
 
   setAngle (angle: number) {
@@ -55,7 +50,7 @@ export default class Flipper {
 
   updateTipPos () {
     const angle = this.restAngle + this.angle * this.flipDir;
-    this.capsule.b = this.capsule.a.add(Vec2.fromAngle(angle, this.length));
+    this.capsule.tip = this.capsule.pos.add(Vec2.fromAngle(angle, this.length));
   }
 
   update (Δt: number) {
@@ -68,6 +63,11 @@ export default class Flipper {
     }
 
     this.angVel = (this.angle - prevAngle) / Δt;
+  }
+
+  collide(ball: Ball) {
+    let delta = this.capsule.intersect(ball);
+    if (delta) ball.pos.addSelf(delta);
   }
 
 }

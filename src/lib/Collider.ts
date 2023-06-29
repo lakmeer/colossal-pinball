@@ -43,9 +43,7 @@ export class Collider {
   // applies correction vector to ball
   collide(ball:Ball) {
     let delta = this.intersect(ball);
-    if (delta) {
-      ball.pos.addSelf(delta);
-    }
+    if (delta) ball.pos.addSelf(delta);
   }
 
 }

@@ -1,7 +1,5 @@
 <script lang="ts">
 
-  import type { Circle, Capsule } from "$types";
-
   import { onMount } from 'svelte';
 
   import Flipper from "$lib/Flipper";
@@ -9,7 +7,9 @@
   import Vec2    from "$lib/Vec2";
   import Rect    from "$lib/Rect";
 
-  import CanvasRenderer from '../components/CanvasRenderer.svelte';
+  import { Collider, Capsule, Circle } from "$lib/Collider";
+
+  import CanvasRenderer from '../components/CanvasGameRenderer.svelte';
   import ShaderRenderer from '../components/ShaderRenderer.svelte';
 
   const { PI, pow, floor, min, max, abs, random, sqrt } = Math;
@@ -36,10 +36,11 @@
 
   let world = new Rect(0, 0, 100, 100);
   let balls:Ball[] = [ ];
-  let sink:Circle = { pos: Vec2.fromXY(0, -70), rad: 30 };
+  let sink = new Circle(Vec2.fromXY(0, -70), 30);
+  let colliders:Collider[] = [];
 
   const spawn = (pos:Vec2) => {
-    balls.push(Ball.at(pos.x, pos.y));
+    balls.push(Ball.randomAt(pos.x, pos.y));
   }
 
   const erase = (pos:Vec2, rad = 20) => {
@@ -50,12 +51,6 @@
       }
     }
   }
-
-  for (let i = 0; i < MAX_BALLS; i++) {
-    balls.push(Ball.random(world));
-  }
-
-  let capsules:Capsule[] = [];
                                         //  pos, rad, len, rest, range, speed
   let flipperA = new Flipper(Vec2.fromXY(-50, -30), 3, 25, 0  - PI/8,  PI/4, 40);
   let flipperB = new Flipper(Vec2.fromXY( 50, -30), 3, 25, PI + PI/8, -PI/4, 40);
@@ -65,33 +60,6 @@
 
 
   // Physics
-
-  // Collision functions should return the correction vector from object A to object B.
-  // It's up to the caller to apply the correction to the objects however they wish.
-  // Constrain function takes two particular objects and returns a correction vector, or false.
-
-  const elastic = (a:PhysObj, b:PhysObj, constraint:ConstrainFn, friction = 1) => {
-    resolve(a, b, constraint, 0.5, friction);
-  }
-
-  const immovable = (a:PhysObj, b:PhysObj, constraint:ConstrainFn, friction = 1) => {
-    resolve(a, b, constraint, 1.0, friction);
-  }
-
-  const resolve = (a:PhysObj, b:PhysObj, constraint:ConstrainFn, energyDist:number, friction = 1) => {
-    const delta = constraint(a, b);
-    // energyDist is the proportion of the energy that should be transferred to object A
-    // 1.0 = immovable, 0.5 = elastic
-    if (delta) {
-      a.pos.addSelf(delta.scale(energyDist));
-      b.pos.subSelf(delta.scale(1 - energyDist));
-      a.friction *= friction;
-      b.friction *= friction;
-    }
-  }
-
-
-  // Main physics updater
 
   const updateVertlet = (dt:number) => {
 
@@ -122,22 +90,10 @@
       // With curved walls
 
       // World boundary
-      world.collide(ball, fff);
-    }
+      world.collideInterior(a, fff);
 
-    // Apply verlet integration
-    for (let ball of balls) {
-      ball.simulate(dt);
-      const displacement = ball.pos.sub(ball.pos_);
-      ball.pos_.set(ball.pos.clone());
-      ball.vel.set(displacement.add(ball.acc.scale(dt * dt)).scale(ball.friction));
-      if (ball.vel.len() > MAX_VEL * dt) ball.vel.normSelf().scaleSelf(MAX_VEL * dt);
-      ball.pos.addSelf(ball.vel);
-    }
-
-    // Reset
-    for (let ball of balls) {
-      ball.acc.set2(0, 0);
+      // Apply verlet integration
+      a.simulate(dt);
     }
   }
 
@@ -193,7 +149,8 @@
   const spawnAt = (event:MouseEvent) => spawn(mouse2world(event));
   const eraseAt = (event:MouseEvent) => erase(mouse2world(event), 20);
 
-  const onMouseDown = (event) => {
+  const onMouseDown = (event:MouseEvent) => {
+    //@ts-ignore
     if (event.target.tagName !== 'CANVAS') return;
     switch (event.button) {
       case 0: spawnAt(event); clicked = true; break;
@@ -201,25 +158,26 @@
     }
   }
 
-  const onMouseUp = (event) => {
+  const onMouseUp = () => {
     clicked = false;
     erasing = false;
   }
 
-  const onMouseMove = (event) => {
+  const onMouseMove = (event:MouseEvent) => {
+    //@ts-ignore
     if (event.target.tagName !== 'CANVAS') return;
     if (clicked) spawnAt(event);
     if (erasing) eraseAt(event);
   }
 
-  const onKeydown = (event) => {
+  const onKeydown = (event:KeyboardEvent) => {
     switch (event.key) {
       case 'a': btnA = true; break;
       case 's': btnB = true; break;
     }
   }
 
-  const onKeyup = (event) => {
+  const onKeyup = (event:KeyboardEvent) => {
     switch (event.key) {
       case 'a': btnA = false; break;
       case 's': btnB = false; break;
@@ -256,9 +214,9 @@
 
 
 <div>
-  <CanvasRenderer {balls} {flippers} {capsules} {sink} {world} bind:width={innerHeight} bind:height={innerHeight} />
+  <CanvasRenderer {balls} {flippers} {sink} {world} bind:width={innerHeight} bind:height={innerHeight} />
   <!--
-  <ShaderRenderer {balls} {flippers} {capsules} {sink} {world} bind:width={innerWidth} bind:height={innerHeight} />
+  <ShaderRenderer {balls} {flippers} {sink} {world} bind:width={innerWidth} bind:height={innerHeight} />
   -->
 </div>
 

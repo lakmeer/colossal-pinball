@@ -63,12 +63,8 @@
     ctx.arc(sink.pos.x, sink.pos.y, sink.rad, 0, 2 * Math.PI);
     ctx.fill();
 
-    for (let capsule of capsules) {
-      //capsuleAt(capsule.a, capsule.b, capsule.rad, '#7d3');
-    }
-
     for (let flipper of flippers) {
-      capsuleAt(flipper.a, flipper.b, flipper.rad, '#d37');
+      capsuleAt(flipper.pos, flipper.tip, flipper.rad, '#d37');
     }
 
     for (let ball of balls) {

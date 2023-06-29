@@ -61,7 +61,7 @@ export default class Ball {
 
   // Static
 
-  static randomAt (x:number, y:number) {
+  static randomAt(x:number, y:number) {
     const m = rand(4, 5);
     return new Ball(
       Vec2.fromXY(x, y),
@@ -72,7 +72,7 @@ export default class Ball {
     )
   }
 
-  static randomWithin (bounds:Rect) {
+  static randomWithin(bounds:Rect) {
     return Ball.randomAt(Vec2.random(...bounds.toRange()));
   }
 }
