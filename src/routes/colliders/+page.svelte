@@ -23,7 +23,6 @@
   // Main physics updater
 
   const updateVertlet = (dt:number) => {
-
     for (let a of balls) {
       a.impart(Vec2.fromXY(0, -1000));
 
@@ -37,7 +36,6 @@
       }
 
       world.collideInterior(a);
-
       a.simulate(dt);
     }
   }
@@ -45,7 +43,7 @@
 
   // Render loop
 
-  const TIME_SCALE = 0.01;
+  const TIME_SCALE = 0.1;
 
   let lastTime = performance.now()/1000 * TIME_SCALE;
   let rafref = 0;
@@ -56,15 +54,15 @@
     const now = performance.now()/1000 * TIME_SCALE;
     const dt = (now - lastTime);
 
-    colliders[0].pos.x = 50 * Math.cos(100 * now);
-    colliders[0].pos.y = 50 * Math.sin(100 * now);
-    colliders[0].tip.x = 50 * Math.cos(100 * now + PI);
-    colliders[0].tip.y = 50 * Math.sin(100 * now + PI);
+    colliders[0].pos.x = 50 * Math.cos(10 * now);
+    colliders[0].pos.y = 50 * Math.sin(10 * now);
+    colliders[0].tip.x = 50 * Math.cos(10 * now + PI);
+    colliders[0].tip.y = 50 * Math.sin(10 * now + PI);
 
-    colliders[1].pos.x = 50 * Math.cos(PI/2 + 100 * now);
-    colliders[1].pos.y = 50 * Math.sin(PI/2 + 100 * now);
-    colliders[1].tip.x = 50 * Math.cos(PI/2 + 100 * now + PI);
-    colliders[1].tip.y = 50 * Math.sin(PI/2 + 100 * now + PI);
+    colliders[1].pos.x = 50 * Math.cos(PI/2 + 10 * now);
+    colliders[1].pos.y = 50 * Math.sin(PI/2 + 10 * now);
+    colliders[1].tip.x = 50 * Math.cos(PI/2 + 10 * now + PI);
+    colliders[1].tip.y = 50 * Math.sin(PI/2 + 10 * now + PI);
 
     if (balls.length < 10) {
       balls.push(Ball.randomAt(0, 190));

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Collider, Circle, Segment, Capsule } from "$lib/Collider";
+  import type Vec2 from '$lib/Vec2';
   import type Rect from '$lib/Rect';
   import type Ball from '$lib/Ball';
 
