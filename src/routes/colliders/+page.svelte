@@ -8,8 +8,9 @@
   import Ball from "$lib/Ball";
   import Rect from "$lib/Rect";
   import Sink from "$lib/Sink";
+  import Zone from "$lib/Zone";
 
-  import { Collider, Circle, Arc, Segment, Capsule } from "$lib/Collider";
+  import { Collider, Circle, Arc, Segment, Capsule, Fence } from "$lib/Collider";
 
   const { PI, pow, floor, min, max, abs, random, sqrt } = Math;
 
@@ -74,9 +75,9 @@
     if (now - lastEmit > 0.7) {
       if (balls.length < 50) {
         lastEmit = now;
-        balls.push(Ball.randomAt(-30, 90));
-        balls.push(Ball.randomAt(60, 90));
-        balls.push(Ball.randomAt(-90, 90));
+        //balls.push(Ball.randomAt(-30, 90));
+        //balls.push(Ball.randomAt(60, 90));
+        //balls.push(Ball.randomAt(-90, 90));
       }
     }
 
@@ -107,22 +108,33 @@
     //balls.push(Ball.randomAt(0, 190));
     //balls.push(Ball.randomAt(30, 0));
 
-
     colliders.push(Arc.at(50, 50, 30, -PI*2/3, 0));
+
+    colliders.push(new Zone(Circle.at(0, 0, Vec2.fromXY(200, 200))));
 
     //colliders.push(new Circle(Vec2.fromXY(-100, -100), 10));
     //colliders.push(new Circle(Vec2.fromXY(0, 0), 30));
     //colliders.push(Circle.inverted(0, 0, 30));
 
-    colliders.push(new Capsule(Vec2.fromXY(-40, 10), Vec2.fromXY(40, -10), 10));
+    //colliders.push(new Capsule(Vec2.fromXY(-40, 10), Vec2.fromXY(40, -10), 10));
 
-    colliders.push(new Segment(Vec2.fromXY(-100, 80), Vec2.fromXY(-80, 70)));
-    colliders.push(new Segment(Vec2.fromXY(-50,  60), Vec2.fromXY(-70, 50)));
-    colliders.push(new Segment(Vec2.fromXY(-100, 40), Vec2.fromXY(-80, 30)));
-    colliders.push(new Segment(Vec2.fromXY(-50,  20), Vec2.fromXY(-70, 10)));
+    //colliders.push(new Segment(Vec2.fromXY(-100, 80), Vec2.fromXY(-80, 70)));
+    //colliders.push(new Segment(Vec2.fromXY(-70,  50), Vec2.fromXY(-50, 60)));
+    //colliders.push(new Segment(Vec2.fromXY(-100, 40), Vec2.fromXY(-80, 30)));
+    //colliders.push(new Segment(Vec2.fromXY(-70,  10), Vec2.fromXY(-50, 20)));
+    //colliders.push(new Segment(Vec2.fromXY(-100,  0), Vec2.fromXY(-80,-10)));
+
+    //colliders.push(new Segment(Vec2.fromXY(100, 20), Vec2.fromXY(80,  20)));
+
+    colliders.push(new Fence(
+      Vec2.fromXY(-70, -40),
+      Vec2.fromXY(-30, -60),
+      Vec2.fromXY( 30, -60),
+      Vec2.fromXY( 70, -80),
+    ));
 
     sinks.push(Sink.from(Circle.at( 100, -100, 20)));
-    sinks.push(Sink.from(Circle.at(-100, -100, 20)));
+    //sinks.push(Sink.from(Circle.at(-100, -100, 20)));
 
     render();
 

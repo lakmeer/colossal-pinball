@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Collider, Circle, Arc, Segment, Capsule } from "$lib/Collider";
+  import { Collider, Circle, Arc, Segment, Capsule, Fence } from "$lib/Collider";
   import type { Sink } from "$lib/Sink";
   import { shortestAngle } from "$lib/utils";
   import Vec2 from '$lib/Vec2';
@@ -23,6 +23,10 @@
 
   let canvas:HTMLCanvasElement;
   let ctx:CanvasRenderingContext2D;
+
+  let intersectionOverlay:HTMLCanvasElement;
+  let intersectionCtx:CanvasGameRenderer;
+  let intersectionPixels:ImageData;
 
 
   // Objects
@@ -62,7 +66,7 @@
     arcAt(pos, rad, col, start, end, (end - start) < 0);
   }
 
-  const capsuleAt = (a:Vec2, b:Vec2, rad:number, col:string) => {
+  const capsuleAt = (a:Vec2, b:Vec2, rad:number, col:string, normal?:Vec2) => {
     ctx.lineCap = 'round';
     ctx.lineWidth = max(1, rad * 2);
     ctx.strokeStyle = col;
@@ -70,6 +74,11 @@
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
+
+    if (normal) {
+      const m = a.lerp(b, 0.5);
+      lineAt(m, m.add(normal.scale(5)), col, 1);
+    }
   }
 
   const lineAt = (a:Vec2, b:Vec2, col:string, width:number) => {
@@ -106,8 +115,13 @@
     for (let c of colliders) {
       if      (c instanceof Arc)     arcAt(c.pos, c.rad, 'magenta', c.start, c.end);
       else if (c instanceof Circle)  circleAt(c.pos, c.rad, c.color.toString(), c.inverted);
+      else if (c instanceof Segment) capsuleAt(c.pos, c.tip, 1, c.color.toString(), c.normal);
       else if (c instanceof Capsule) capsuleAt(c.pos, c.tip, c.rad, c.color.toString());
-      else if (c instanceof Segment) capsuleAt(c.pos, c.tip, 1, c.color.toString());
+      else if (c instanceof Fence) {
+        for (let l of c.links) {
+          capsuleAt(l.pos, l.tip, 1, c.color.toString());
+        }
+      }
     }
 
     // Sink
@@ -145,7 +159,6 @@
     let dx = world.w/RES/2;
     let dy = world.h/RES/2;
 
-    ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = 'white';
 
     for (let x = world.left; x < world.right; x += dx) {
@@ -158,10 +171,17 @@
 
         if (hits) {
           ctx.globalAlpha = 0.3 * hits;
-          ctx.fillRect(x, y, dx, dy);
+          //ctx.fillRect(x, y, dx, dy);
+          intersectionCtx.fillRect(x, y, dx, dy);
         }
       }
     }
+
+    //intersectionCtx.putImageData(intersectionPixels, 0, 0);
+    intersectionCtx.fillStyle = 'red';
+
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(intersectionOverlay, 0, 0, width, height);
 
     ctx.restore();
   }
@@ -172,6 +192,12 @@
 
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
+
+    intersectionOverlay = document.createElement('canvas');
+    intersectionOverlay.width  = world.w;
+    intersectionOverlay.height = world.h;
+    intersectionCtx     = intersectionOverlay.getContext('2d') as CanvasRenderingContext2D;
+    //intersectionPixels  = intersectionCtx.getImageData(0, 0, world.w, world.h);
   });
 </script>
 

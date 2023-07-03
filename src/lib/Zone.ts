@@ -3,19 +3,21 @@ import { Collider } from './Collider';
 
 
 //
-// Sink
+// Force Zone
 //
 // Can use any object; shims collision interface.
-// Marks any intersecting balls for deletion.
+// Pushes the ball steadily.
 //
 
-export default class Sink extends Collider {
+export default class Zone extends Collider {
 
   shape: Collider;
+  force: Vec2;
 
-  constructor(shape: Collider) {
+  constructor(shape: Collider, force: Vec2) {
     super(shape.pos);
     this.shape = shape;
+    this.force = force;
   }
 
   get pos() { return this.shape.pos; }
@@ -30,7 +32,9 @@ export default class Sink extends Collider {
   }
 
   collide(ball:Ball) {
-    if (this.shape.intersect(ball.pos)) ball.cull = true;
+    if (this.shape.intersect(ball.pos)) {
+      ball.impart(this.force);
+    }
   }
 
   static from (shape: Collider) {

@@ -1,6 +1,6 @@
 
 import type Ball from './Ball';
-import { clamp, shortestAngle } from '$lib/utils';
+import { clamp, shortestAngle, nearestPointOn } from '$lib/utils';
 import Vec2 from './Vec2';
 import Color from './Color';
 
@@ -200,24 +200,18 @@ export class Capsule extends Collider {
     return this.tip.sub(this.pos).scale(t);
   }
 
-  nearest(point:Vec2):Vec2 {
-    const ab = this.tip.sub(this.pos);
-    const t = clamp(point.sub(this.pos).dot(ab) / ab.dot(ab), 0, 1);
-    return this.pos.add(this.pointAlong(t));
-  }
-
   closest(point:Vec2):Vec2 {
-    return this.nearest(point).towards(point, this.rad);
+    return nearestPointOn(this.pos, this.tip, point).towards(point, this.rad);
   }
 
   intersect(point:Vec2):boolean {
-    const dir = this.nearest(point).sub(point);
+    const dir = nearestPointOn(this.pos, this.tip, point).sub(point);
     if (dir.len() >= this.rad) return false;
     return true;
   }
 
   collide(ball:Ball) {
-    let delta = this.nearest(ball.pos).sub(ball.pos);
+    let delta = nearestPointOn(this.pos, this.tip, ball.pos).sub(ball.pos);
     let dist = delta.len() - ball.rad - this.rad;
     if (dist < 0) ball.pos.addSelf(delta.withLen(dist).jitter());
   }
@@ -239,8 +233,60 @@ export class Segment extends Capsule {
 
   constructor(pos:Vec2, tip:Vec2) {
     super(pos, tip, 0);
-    this.normal = this.tip.sub(this.pos).norm().perp();
+    this.normal = this.pos.sub(this.tip).norm().perp();
+  }
+ 
+  intersect(point:Vec2):boolean {
+    return this.normal.dot(this.tip.sub(point)) < 0
+      && nearestPointOn(this.pos, this.tip, point).sub(point).len() < 5;
+  }
+
+  collide(ball:Ball) {
+    const delta = nearestPointOn(this.pos, this.tip, ball.pos).sub(ball.pos);
+    let dist = delta.len() - ball.rad;
+    if (dist > 0) return;
+
+    if (this.normal.dot(this.tip.sub(ball.pos)) > 0) {
+      ball.pos.addSelf(this.normal.withLen(dist).jitter());
+    }
   }
 
 }
+
+
+
+//
+// Fence
+//
+// Chain of line segments.
+// Directional; only pushes from one side.
+//
+
+export class Fence extends Collider {
+
+  links: Segment[] = [];
+
+  constructor(...vertices:Vec2[]) {
+    super(vertices[0]);
+
+    for (let i = 0; i < vertices.length - 1; i++) {
+      this.links.push(new Segment(vertices[i], vertices[i + 1]));
+    }
+  }
+
+  intersect(point:Vec2):boolean {
+    for (let link of this.links) {
+      if (link.intersect(point)) return true;
+    }
+    return false;
+  }
+
+  collide(ball:Ball):boolean {
+    for (let link of this.links) {
+      link.collide(ball);
+    }
+  }
+
+}
+
 

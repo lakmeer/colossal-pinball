@@ -2,6 +2,8 @@
 export const { random, min, max, abs, sqrt, floor, PI } = Math;
 export const TAU = PI * 2;
 
+export const lerp = (a:number, b:number, t:number) => a + (b - a) * t;
+
 export const rand = (...args:number[]) => {
   if (args.length === 0) return random();
   if (args.length === 1) return random() * args[0];
@@ -20,4 +22,9 @@ export const shortestAngle = (a:number, b:number) => {
   return d;
 }
 
+export const nearestPointOn = (a:Vec2, b:Vec2, p:Vec2) => {
+  const ab = b.sub(a);
+  let t = p.sub(a).dot(ab) / ab.dot(ab);
+  return a.lerp(b, clamp(t));
+}
 
