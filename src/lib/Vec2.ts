@@ -65,7 +65,7 @@ export default class Vec2 extends Array {
     return hypot(this.x - v.x, this.y - v.y);
   }
 
-  angle (v:Vec2):Scalar {
+  angle (v:Vec2 = Vec2.zero):Scalar {
     return atan2(this.y, this.x) - atan2(v.y, v.x);
   }
 
@@ -143,6 +143,10 @@ export default class Vec2 extends Array {
     return this.scaleSelf(1 / this.len());
   }
 
+  jitter ():Vec2 {
+    return this.add(Vec2.randomNormal(0.000001));
+  }
+
 
   // Static
 
@@ -163,6 +167,15 @@ export default class Vec2 extends Array {
       Math.random() * (maxY - minY) + minY
     );
   }
+
+  static randomNormal (len:Scalar = 1) {
+    return Vec2.fromAngle(Math.random() * Math.PI * 2, len);
+  }
+
+  static get zero ():Vec2 {
+    return new Vec2(0, 0);
+  }
+
 }
 
 

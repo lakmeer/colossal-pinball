@@ -51,7 +51,7 @@
       }
     }
   }
-                                        //  pos, rad, len, rest, range, speed
+
   let flipperA = new Flipper(Vec2.fromXY(-50, -30), 3, 25, 0  - PI/8,  PI/4, 40);
   let flipperB = new Flipper(Vec2.fromXY( 50, -30), 3, 25, PI + PI/8, -PI/4, 40);
 
@@ -123,7 +123,7 @@
       updateVertlet(dt/substeps);
     }
 
-    erase(sink.pos, sink.rad);
+    //erase(sink.pos, sink.rad);
 
     lastTime = now;
     balls = balls; // poke

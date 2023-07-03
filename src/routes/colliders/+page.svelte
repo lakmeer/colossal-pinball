@@ -7,8 +7,9 @@
   import Vec2 from "$lib/Vec2";
   import Ball from "$lib/Ball";
   import Rect from "$lib/Rect";
+  import Sink from "$lib/Sink";
 
-  import { Collider, Circle, Segment, Capsule } from "$lib/Collider";
+  import { Collider, Circle, Arc, Segment, Capsule } from "$lib/Collider";
 
   const { PI, pow, floor, min, max, abs, random, sqrt } = Math;
 
@@ -16,14 +17,21 @@
   // World
 
   let world = new Rect(0, 0, 200, 200);
-  let balls:Ball[] = [ ];
-  let colliders:Collider[] = [ ];
+  let balls:Ball[] = [];
+  let colliders:Collider[] = [];
+  let sinks:Sink[] = [];
+
+  const spawn = (pos:Vec2) => {
+    balls.push(Ball.randomAt(pos.x, pos.y));
+  }
 
 
   // Main physics updater
 
-  const updateVertlet = (dt:number) => {
-    for (let a of balls) {
+  const update = (dt:number) => {
+    for (let ix in balls) {
+      const a = balls[ix];
+
       a.impart(Vec2.fromXY(0, -1000));
 
       for (let b of balls) {
@@ -35,18 +43,27 @@
         c.collide(a);
       }
 
+      for (let s of sinks) {
+        s.collide(a);
+      }
+
       world.collideInterior(a);
       a.simulate(dt);
+
+      if (a.cull) {
+        balls.splice(ix, 1);
+      }
     }
   }
 
 
   // Render loop
 
-  const TIME_SCALE = 0.1;
+  const TIME_SCALE = 1.0;
 
   let lastTime = performance.now()/1000 * TIME_SCALE;
   let rafref = 0;
+  let lastEmit = lastTime;
 
   const render = () => {
     rafref = requestAnimationFrame(render);
@@ -54,24 +71,23 @@
     const now = performance.now()/1000 * TIME_SCALE;
     const dt = (now - lastTime);
 
-    colliders[0].pos.x = 50 * Math.cos(10 * now);
-    colliders[0].pos.y = 50 * Math.sin(10 * now);
-    colliders[0].tip.x = 50 * Math.cos(10 * now + PI);
-    colliders[0].tip.y = 50 * Math.sin(10 * now + PI);
-
-    colliders[1].pos.x = 50 * Math.cos(PI/2 + 10 * now);
-    colliders[1].pos.y = 50 * Math.sin(PI/2 + 10 * now);
-    colliders[1].tip.x = 50 * Math.cos(PI/2 + 10 * now + PI);
-    colliders[1].tip.y = 50 * Math.sin(PI/2 + 10 * now + PI);
-
-    if (balls.length < 10) {
-      balls.push(Ball.randomAt(0, 190));
+    if (now - lastEmit > 0.7) {
+      if (balls.length < 50) {
+        lastEmit = now;
+        balls.push(Ball.randomAt(-30, 90));
+        balls.push(Ball.randomAt(60, 90));
+        balls.push(Ball.randomAt(-90, 90));
+      }
     }
 
+    colliders[0].turn(PI * dt);
+    //colliders[0].pos.x = 30 + 30 * Math.cos(-now);
+    //colliders[0].pos.y = 30 + 30 * Math.sin(-now);
+    //colliders[0].tip.x = 30 + 30 * Math.cos(-now + PI);
+    //colliders[0].tip.y = 30 + 30 * Math.sin(-now + PI);
+
     for (let i = 0; i < 8; i++) {
-      for (let b of balls) {
-        updateVertlet(dt/8);
-      }
+      update(dt/8);
     }
 
     lastTime = now;
@@ -85,16 +101,28 @@
   let innerHeight = 0;
 
   onMount(() => {
+    console.clear();
 
     // Create Scene
     //balls.push(Ball.randomAt(0, 190));
-    //balls.push(Ball.randomAt(0, -20));
+    //balls.push(Ball.randomAt(30, 0));
 
-    //colliders.push(new Circle(Vec2.fromXY(-10, -50), 10));
-    //colliders.push(new Circle(Vec2.fromXY( 10, 50), 10));
-    
-    colliders.push(new Capsule(Vec2.fromXY(50, 50), Vec2.fromXY(-50,  -50), 10));
-    colliders.push(new Segment(Vec2.fromXY(-50,  50), Vec2.fromXY(50, -50)));
+
+    colliders.push(Arc.at(50, 50, 30, -PI*2/3, 0));
+
+    //colliders.push(new Circle(Vec2.fromXY(-100, -100), 10));
+    //colliders.push(new Circle(Vec2.fromXY(0, 0), 30));
+    //colliders.push(Circle.inverted(0, 0, 30));
+
+    colliders.push(new Capsule(Vec2.fromXY(-40, 10), Vec2.fromXY(40, -10), 10));
+
+    colliders.push(new Segment(Vec2.fromXY(-100, 80), Vec2.fromXY(-80, 70)));
+    colliders.push(new Segment(Vec2.fromXY(-50,  60), Vec2.fromXY(-70, 50)));
+    colliders.push(new Segment(Vec2.fromXY(-100, 40), Vec2.fromXY(-80, 30)));
+    colliders.push(new Segment(Vec2.fromXY(-50,  20), Vec2.fromXY(-70, 10)));
+
+    sinks.push(Sink.from(Circle.at( 100, -100, 20)));
+    sinks.push(Sink.from(Circle.at(-100, -100, 20)));
 
     render();
 
@@ -108,7 +136,7 @@
 <svelte:window bind:innerWidth bind:innerHeight />
 
 <div>
-  <CanvasRenderer {balls} {colliders} {world} {TIME_SCALE} bind:width={innerHeight} bind:height={innerHeight} />
+  <CanvasRenderer {sinks} {balls} {colliders} {world} {TIME_SCALE} bind:width={innerHeight} bind:height={innerHeight} />
 </div>
 
 
