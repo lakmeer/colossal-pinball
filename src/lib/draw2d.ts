@@ -1,8 +1,9 @@
 
+import type Vec2  from "$lib/Vec2";
+import type Rect  from "$lib/Rect";
 import type Color from "$lib/Color";
 
 import { max, floor, TAU } from "$lib/utils";
-
 
 
 // Drawing helpers
@@ -31,7 +32,7 @@ export const boxAt = (ctx: CanvasRenderingContext2D, r:Rect, col:string, a:numbe
   ctx.restore();
 }
 
-export const circleAt = (ctx: CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, invert:boolean) => {
+export const circleAt = (ctx: CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, invert:boolean = false) => {
   ctx.strokeStyle = col;
   ctx.fillStyle = col;
   ctx.lineWidth = 1;
@@ -50,7 +51,7 @@ export const arcAt = (ctx: CanvasRenderingContext2D, pos:Vec2, rad:number, col:s
 }
 
 export const shortArcAt = (ctx: CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, start = 0, end = TAU) => {
-  arcAt(pos, rad, col, start, end, (end - start) < 0);
+  arcAt(ctx, pos, rad, col, start, end, (end - start) < 0);
 }
 
 export const capsuleAt = (ctx: CanvasRenderingContext2D, a:Vec2, b:Vec2, rad:number, col:string, normal?:Vec2) => {

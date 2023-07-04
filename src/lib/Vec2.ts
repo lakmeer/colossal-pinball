@@ -92,9 +92,14 @@ export default class Vec2 extends Array {
     return this.norm().scale(s);
   }
 
+  equals (v:Vec2):boolean {
+    return this.x === v.x && this.y === v.y;
+  }
+
   raw ():Float32Array {
     return new Float32Array(this);
   }
+
 
   // Mutable
 

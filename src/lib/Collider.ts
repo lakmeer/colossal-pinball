@@ -2,59 +2,30 @@
 import type Ball from './Ball';
 
 import Vec2  from './Vec2';
-import Rect  from '$lib/Rect';
+import Rect  from './Rect';
 import Color from './Color';
 
-import { abs, clamp, shortestAngle, nearestPointOn, TAU } from '$lib/utils';
-
+import { abs, sqrt, clamp, shortestAngle, nearestPointOn, TAU } from '$lib/utils';
 
 
 //
 // Collider
 //
-// Anything that can be collided.
+// Anything that can be collided with.
 // Because this is pinball, we can assume all collisions will be vs Ball.
 //
 
-export class Collider {
-
+export interface Collider {
   pos:Vec2;
+  rad:number; // Not used by everyone
   color:Color;
+  friction?:number;
+  bounceForce?:number;
 
-  inverted = false; // Reverse corrections
-  friction = 1;     // Generic friction coefficient for collisions with this thing
-  bounceForce = 1;  // All energy goes to other (Immovable)
-
-  constructor(pos:Vec2) {
-    this.pos = pos;
-    this.color = Color.random();
-  }
-
-  // returns closest point on this shape to given point
-  closest(point:Vec2):Vec2 {
-    return this.pos;
-  }
-
-  // returns distance between ball and this shape
-  distance(ball:Ball):number {
-    return ball.pos.sub(this.pos).len() - ball.rad;
-  }
-
-  // returns whether a point is contained by this shape
-  intersect(vec2:Vec):boolean {
-    return false; // No interaction
-  }
-
-  // applies correction vector to ball
-  collide(ball:Ball) {
-    let delta = this.closest(ball).sub(this.pos);
-    if (delta > ball.rad) ball.pos.addSelf(delta.jitter());
-  }
-
-  // use as a container
-  invert() {
-    this.inverted = !this.inverted;
-  }
+  turn(delta:number):void;
+  closest(point:Vec2):Vec2;
+  intersect(point:Vec2):boolean;
+  collide(ball:Ball):void;
 }
 
 
@@ -62,24 +33,28 @@ export class Collider {
 // Circle
 //
 
-export class Circle extends Collider {
+export class Circle implements Collider {
 
+  pos:Vec2;
   rad:number;
+  color: Color;
+  inverted: boolean = false;
 
   constructor(pos:Vec2, rad:number) {
-    super(pos);
+    this.pos = pos;
     this.rad = rad;
+    this.color = Color.random();
+  }
+
+  turn (delta:number) {
+    // no-op
   }
 
   closest(point:Vec2):Vec2 {
     return this.pos.towards(point, this.rad);
   }
 
-  distance(ball:Ball):number {
-    return ball.pos.sub(this.pos).len() - ball.rad - this.rad;
-  }
-
-  intersect(point:Vec2):Vec2|false {
+  intersect(point:Vec2):boolean {
     if (this.inverted) {
       return (this.pos.sub(point).len() >= this.rad);
     } else {
@@ -103,7 +78,7 @@ export class Circle extends Collider {
     return new Circle(Vec2.fromXY(x, y), rad);
   }
 
-  static inverted (x:number, y:number, rad:number) {
+  static invert (x:number, y:number, rad:number) {
     const it = new Circle(Vec2.fromXY(x, y), rad);
     it.inverted = true;
     return it;
@@ -118,17 +93,20 @@ export class Circle extends Collider {
 // Only collides a certain range of angles
 //
 
-import { debug } from "$src/stores/debug";
+export class Arc implements Collider {
 
-export class Arc extends Circle {
-
+  pos:Vec2;
+  rad:number;
   angle:number;
   range:number;
+  color: Color;
 
   constructor(pos:Vec2, rad:number, range:number, angle:number = 0) {
-    super(pos, rad);
+    this.pos = pos;
+    this.rad = rad;
     this.angle = angle % TAU;
     this.range = range;
+    this.color = Color.random();
   }
 
   get start() {
@@ -164,7 +142,6 @@ export class Arc extends Circle {
 
   intersect(point:Vec2):boolean {
     return this.closest(point).sub(point).len() <= 5;
-    return (this.pos.sub(point).len() <= this.rad);
   }
 
   collide(ball:Ball) {
@@ -174,8 +151,8 @@ export class Arc extends Circle {
     if (dist < 0) ball.pos.addSelf(delta.withLen(dist).jitter());
   }
 
-  static at (x:number, y:number, ...rest) {
-    return new Arc(Vec2.fromXY(x, y), ...rest);
+  static at (x:number, y:number, rad:number, range:number, angle:number = 0) {
+    return new Arc(Vec2.fromXY(x, y), rad, range, angle);
   }
 
 }
@@ -185,15 +162,18 @@ export class Arc extends Circle {
 // Capsule
 //
 
-export class Capsule extends Collider {
+export class Capsule implements Collider {
 
+  pos:Vec2;
   tip:Vec2;
   rad:number;
+  color: Color;
 
   constructor(pos:Vec2, tip:Vec2, rad:number) {
-    super(pos);
+    this.pos = pos;
     this.tip = tip;
     this.rad = rad;
+    this.color = Color.random();
   }
 
   turn (delta:number) {
@@ -245,9 +225,11 @@ export class Capsule extends Collider {
 export class Segment extends Capsule {
 
   normal:Vec2;
+  color: Color;
 
   constructor(pos:Vec2, tip:Vec2) {
     super(pos, tip, 0);
+    this.color = Color.random();
     this.normal = this.pos.sub(this.tip).norm().perp();
   }
  
@@ -285,16 +267,39 @@ export class Segment extends Capsule {
 // Directional; only pushes from one side.
 //
 
-export class Fence extends Collider {
+export class Fence implements Collider {
 
+  pos:Vec2;
+  rad:number;
   links: Segment[] = [];
+  color: Color;
 
   constructor(...vertices:Vec2[]) {
-    super(vertices[0]);
+    this.pos = vertices[0];
+    this.rad = 0;
 
+    this.color = Color.random();
     for (let i = 0; i < vertices.length - 1; i++) {
       this.links.push(new Segment(vertices[i], vertices[i + 1]));
     }
+  }
+
+  turn (delta:number) {
+    // not supported
+  }
+
+  closest(point:Vec2):Vec2 {
+    let closest = this.links[0].closest(point);
+    let dist = closest.sub(point).len();
+    for (let link of this.links) {
+      let test = link.closest(point);
+      let testDist = test.sub(point).len();
+      if (testDist < dist) {
+        closest = test;
+        dist = testDist;
+      }
+    }
+    return closest;
   }
 
   intersect(point:Vec2):boolean {
@@ -304,7 +309,7 @@ export class Fence extends Collider {
     return false;
   }
 
-  collide(ball:Ball):boolean {
+  collide(ball:Ball) {
     for (let link of this.links) {
       link.collide(ball);
     }
@@ -324,21 +329,34 @@ export class Fence extends Collider {
 // TODO: Collision untested
 //
 
-export class Box extends Collider {
+export class Box implements Collider {
 
+  pos:Vec2;
+  rad:number;
   w: number;
   h: number;
   angle: number;
+  color: Color;
 
   constructor(pos:Vec2, w:number, h:number, angle:number = 0) {
-    super(pos);
+    this.pos = pos;
     this.w = w;
     this.h = h;
+    this.rad = sqrt(w * w + h * h) / 2;
     this.angle = angle;
+    this.color = Color.random();
   }
 
   turn (delta:number) {
     this.angle += delta;
+  }
+
+  closest(point:Vec2):Vec2 {
+    const dir = point.sub(this.pos).rotate(-this.angle);
+    return this.pos.add(Vec2.fromXY(
+      clamp(dir.x, -this.w / 2, this.w / 2),
+      clamp(dir.y, -this.h / 2, this.h / 2)
+    ).rotate(this.angle));
   }
 
   intersect(point:Vec2):boolean {
@@ -362,9 +380,10 @@ export class Box extends Collider {
     return new Rect(this.pos.x, this.pos.y, this.w, this.h);
   }
 
-  static at (x:number, y:number, w:number, h:number) {
-    return new Box(Vec2.fromXY(x, y), w, h);
+  static at (x:number, y:number, w:number, h:number, angle:number = 0) {
+    return new Box(Vec2.fromXY(x, y), w, h, angle);
   }
 
 }
+
 

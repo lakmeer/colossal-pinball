@@ -1,5 +1,7 @@
+import type Vec2 from './Vec2';
+import type Ball from './Ball';
 
-import { Collider } from './Collider';
+import type { Collider } from './Collider';
 
 
 //
@@ -9,12 +11,11 @@ import { Collider } from './Collider';
 // Marks any intersecting balls for deletion.
 //
 
-export default class Sink extends Collider {
+export default class Sink {
 
   shape: Collider;
 
   constructor(shape: Collider) {
-    super(shape.pos);
     this.shape = shape;
   }
 

@@ -5,15 +5,18 @@
   import type Sink from "$lib/Sink";
   import type Rect from '$lib/Rect';
   import type Ball from '$lib/Ball';
+  import type Flipper from '$lib/Flipper';
 
   import Vec2   from '$lib/Vec2';
   import Color  from '$lib/Color';
   import Pixels from '$lib/Pixels';
 
-  import { Collider, Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Collider";
+  import type { Collider } from "$lib/Collider";
+  import { Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Collider";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt } from "$lib/draw2d";
 
   const { floor, PI } = Math;
+
 
 
   // Config
@@ -38,9 +41,10 @@
   // Objects
 
   export let world:Rect;
-  export let balls:Ball[] = [];
-  export let colliders:Collider[] = [];
-  export let sinks:Sink[];
+  export let balls:Ball[]       = [];
+  export let colliders:any[]    = [];
+  export let sinks:Sink[]       = [];
+  export let flippers:Flipper[] = [];
 
 
   // Other Props
@@ -79,6 +83,11 @@
     // Sink
     for (let sink of sinks) {
       circleAt(ctx, sink.shape.pos, sink.shape.rad, 'black');
+    }
+
+    // Flippers
+    for (let flipper of flippers) {
+      capsuleAt(ctx, flipper.pos, flipper.tip, flipper.rad, '#d37');
     }
 
     // Balls

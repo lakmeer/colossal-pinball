@@ -6,11 +6,12 @@
   import Ball    from "$lib/Ball";
   import Vec2    from "$lib/Vec2";
   import Rect    from "$lib/Rect";
+  import Sink    from "$lib/Sink";
 
-  import { Collider, Capsule, Circle } from "$lib/Collider";
+  import { Capsule, Circle } from "$lib/Collider";
+  import type { Collider } from "$lib/Collider";
 
-  import CanvasRenderer from '../components/CanvasGameRenderer.svelte';
-  import ShaderRenderer from '../components/ShaderRenderer.svelte';
+  import CanvasRenderer from '../components/CanvasRenderer.svelte';
 
   const { PI, pow, floor, min, max, abs, random, sqrt } = Math;
 
@@ -36,8 +37,13 @@
 
   let world = new Rect(0, 0, 100, 100);
   let balls:Ball[] = [ ];
-  let sink = new Circle(Vec2.fromXY(0, -70), 30);
+  let sinks:Sink[] = [ Sink.from(Circle.at(0, -70, 30)) ];
   let colliders:Collider[] = [];
+
+  let flipperA = new Flipper(Vec2.fromXY(-50, -30), 3, 25, 0  - PI/8,  PI/4, 40);
+  let flipperB = new Flipper(Vec2.fromXY( 50, -30), 3, 25, PI + PI/8, -PI/4, 40);
+
+  let flippers = [ flipperA, flipperB ];
 
   const spawn = (pos:Vec2) => {
     balls.push(Ball.randomAt(pos.x, pos.y));
@@ -52,16 +58,11 @@
     }
   }
 
-  let flipperA = new Flipper(Vec2.fromXY(-50, -30), 3, 25, 0  - PI/8,  PI/4, 40);
-  let flipperB = new Flipper(Vec2.fromXY( 50, -30), 3, 25, PI + PI/8, -PI/4, 40);
-
-  const flippers = [ flipperA, flipperB ];
-  const bumpers  = [];
 
 
   // Physics
 
-  const updateVertlet = (dt:number) => {
+  const update = (dt:number) => {
 
     // 'Fractional friction factor' - adjusted for number of steps
     const fff = pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
@@ -75,22 +76,19 @@
     for (let a of balls) {
       for (let b of balls) {
         if (a === b) continue;
-        b.collide(a, fff);
-      }
-
-      for (let b of flippers) {
-        b.collide(a, fff);
-      }
-
-      for (let b of bumpers) {
         b.collide(a);
       }
 
-      // With straight walls
-      // With curved walls
+      for (let b of flippers) {
+        b.collide(a);
+      }
+
+      for (let c of colliders) {
+        c.collide(a);
+      }
 
       // World boundary
-      world.collideInterior(a, fff);
+      world.collideInterior(a);
 
       // Apply verlet integration
       a.simulate(dt);
@@ -120,7 +118,7 @@
     for (let i = 0; i < substeps; i++) {
       flipperA.update(dt/substeps);
       flipperB.update(dt/substeps);
-      updateVertlet(dt/substeps);
+      update(dt/substeps);
     }
 
     //erase(sink.pos, sink.rad);
@@ -184,6 +182,9 @@
     }
   }
 
+
+  // Init
+
   onMount(() => {
     render();
 
@@ -214,10 +215,7 @@
 
 
 <div>
-  <CanvasRenderer {balls} {flippers} {sink} {world} bind:width={innerHeight} bind:height={innerHeight} />
-  <!--
-  <ShaderRenderer {balls} {flippers} {sink} {world} bind:width={innerWidth} bind:height={innerHeight} />
-  -->
+  <CanvasRenderer {balls} {colliders} {flippers} {sinks} {world} bind:width={innerHeight} bind:height={innerHeight} />
 </div>
 
 <pre class="debug">

@@ -6,10 +6,10 @@
   import Vec2 from "$lib/Vec2";
   import Ball from "$lib/Ball";
   import Rect from "$lib/Rect";
-  import Sink from "$lib/Sink";
-  import Zone from "$lib/Zone";
+  import type Sink from "$lib/Sink";
 
-  import { Collider, Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Collider";
+  import type { Collider } from "$lib/Collider";
+  import { Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Collider";
 
   import { TAU, last, pow, floor, min, max, abs, random, sqrt } from "$lib/utils";
 
@@ -32,6 +32,7 @@
 
   const update = (dt:number) => {
     for (let ix in balls) {
+
       const a = balls[ix];
 
       a.impart(Vec2.fromXY(0, -1000));
@@ -52,7 +53,7 @@
       a.simulate(dt);
 
       if (a.cull) {
-        balls.splice(ix, 1);
+        balls.splice(parseInt(ix), 1);
       }
     }
   }
@@ -77,9 +78,7 @@
     if (now - lastEmit > 0.7) {
       if (balls.length < 50) {
         lastEmit = now;
-        //balls.push(Ball.randomAt(-74, 90));
-        //balls.push(Ball.randomAt(60, 90));
-        //balls.push(Ball.randomAt(-90, 90));
+        balls.push(Ball.randomAt(60, 90));
       }
     }
 
@@ -112,7 +111,7 @@
     // Gallery of collider types
 
     colliders.push(Circle.at(-66, 66, 25));
-    colliders.push(Circle.inverted(0, 66, 25));
+    colliders.push(Circle.invert(0, 66, 25));
     colliders.push(Capsule.at(66 - 12, 66 - 12, 66 + 12, 66 + 12, 12.5));
 
     colliders.push(Arc.at(-66, 0, 25, TAU * 2/8, 0));

@@ -75,7 +75,8 @@ export default class Ball {
   }
 
   static randomWithin(bounds:Rect) {
-    return Ball.randomAt(Vec2.random(...bounds.toRange()));
+    const at = Vec2.random(...bounds.toRange());
+    return Ball.randomAt(at.x, at.y);
   }
 }
 

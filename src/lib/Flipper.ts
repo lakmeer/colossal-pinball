@@ -1,6 +1,7 @@
 
 import { Capsule } from "$lib/Collider";
 import Vec2 from "$lib/Vec2";
+import type Ball from "$lib/Ball";
 
 const { sin, cos, min, max, sign, abs } = Math;
 
@@ -66,8 +67,7 @@ export default class Flipper {
   }
 
   collide(ball: Ball) {
-    let delta = this.capsule.intersect(ball);
-    if (delta) ball.pos.addSelf(delta);
+    this.capsule.collide(ball);
   }
 
 }

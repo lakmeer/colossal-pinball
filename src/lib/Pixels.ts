@@ -10,8 +10,8 @@ import type Color from '$lib/Color';
 
 export default class Pixels {
 
-  canvas_:  HTMLCanvasElement;
-  context: CanvasGameRenderer;
+  canvas_: HTMLCanvasElement;
+  context: CanvasRenderingContext2D;
   pixels:  ImageData;
 
   constructor (width:number, height:number) {
@@ -20,7 +20,7 @@ export default class Pixels {
     this.canvas_.height = height;
 
     this.context = this.canvas_.getContext('2d') as CanvasRenderingContext2D;
-    this.reset();
+    this.pixels  = this.context.getImageData(0, 0, width, height);
   }
 
   get width ():number {
@@ -42,7 +42,7 @@ export default class Pixels {
   }
 
   commit ():void {
-    this.context.putImageData(intersectionPixels, 0, 0);
+    this.context.putImageData(this.pixels, 0, 0);
   }
 
   setp (x:number, y:number, color:Color):void {
