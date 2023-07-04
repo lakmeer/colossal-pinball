@@ -10,8 +10,8 @@
   import Color  from '$lib/Color';
   import Pixels from '$lib/Pixels';
 
-  import { Collider, Circle, Arc, Segment, Capsule, Fence } from "$lib/Collider";
-  import { arcAt, capsuleAt, lineAt, circleAt } from "$lib/draw2d";
+  import { Collider, Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Collider";
+  import { arcAt, capsuleAt, lineAt, circleAt, boxAt } from "$lib/draw2d";
 
   const { floor, PI } = Math;
 
@@ -68,6 +68,7 @@
       else if (c instanceof Circle)  circleAt(ctx, c.pos, c.rad, c.color.toString(), c.inverted);
       else if (c instanceof Segment) capsuleAt(ctx, c.pos, c.tip, 1, c.color.toString(), c.normal);
       else if (c instanceof Capsule) capsuleAt(ctx, c.pos, c.tip, c.rad, c.color.toString());
+      else if (c instanceof Box)     boxAt(ctx, c.toRect(), c.color.toString(), c.angle);
       else if (c instanceof Fence) {
         for (let l of c.links) {
           capsuleAt(ctx, l.pos, l.tip, 1, c.color.toString(), l.normal);
@@ -106,8 +107,7 @@
         }
     }
 
-    // Debug dots
-
+    // Intersection overlay
     if (SHOW_OVERLAY) {
       const RES = INTERSECTION_RES;
       let dx = world.w/RES/2;
@@ -123,9 +123,7 @@
 
           for (let c of colliders) hits += c.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
 
-          if (hits) {
-            intersectionOverlay.setp(px, py, new Color(1, 1, 1, 0.3 * hits));
-          }
+          if (hits) intersectionOverlay.setp(px, py, new Color(1, 1, 1, 0.2 * hits));
         }
       }
 

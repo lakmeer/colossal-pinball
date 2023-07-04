@@ -9,7 +9,7 @@
   import Sink from "$lib/Sink";
   import Zone from "$lib/Zone";
 
-  import { Collider, Circle, Arc, Segment, Capsule, Fence } from "$lib/Collider";
+  import { Collider, Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Collider";
 
   import { TAU, last, pow, floor, min, max, abs, random, sqrt } from "$lib/utils";
 
@@ -89,9 +89,12 @@
 
     //debug( last(colliders).closest(Vec2.fromXY(0, 0)) );
 
-    colliders[3].end = (now * TAU * 3/8) % TAU;
-    colliders[4].end = (now * TAU * 3/8) % TAU;
-    colliders[5].turn(0.25);
+    colliders[2].turn(0.15);
+    colliders[3].turn(0.15);
+    colliders[4].turn(0.15);
+    colliders[5].turn(-0.15);
+    colliders[6].turn(0.15);
+    colliders[8].turn(0.15);
 
     lastTime = now;
     balls = balls; // poke
@@ -106,62 +109,26 @@
   onMount(() => {
     console.clear();
 
-    // Create Scene
-    //balls.push(Ball.randomAt(0, 190));
-    //balls.push(Ball.randomAt(30, 0));
+    // Gallery of collider types
 
-    // subsemi
-    colliders.push(Arc.at(-60,  60, 25, 0, TAU * 2/8));
-    // semi
-    colliders.push(Arc.at(  0,  60, 25, 0, TAU * 4/8));
-    // supersemi
-    colliders.push(Arc.at( 60,  60, 25, 0, TAU * 6/8));
+    colliders.push(Circle.at(-66, 66, 25));
+    colliders.push(Circle.inverted(0, 66, 25));
+    colliders.push(Capsule.at(66 - 12, 66 - 12, 66 + 12, 66 + 12, 12.5));
 
-    // subsemi over boundary
-    colliders.push(Arc.at(-60,   0, 25, TAU * 0/8, TAU * 4/8));
-    // animated negative
-    colliders.push(Arc.at(  0,   0, 25, TAU * 4/8, TAU * 8/8));
-    // supersemi over boundary
-    colliders.push(Arc.at( 60,   0, 25, TAU * 0/8, TAU * 2/8));
+    colliders.push(Arc.at(-66, 0, 25, TAU * 2/8, 0));
+    colliders.push(Arc.at(  0, 0, 25, TAU * 4/8, 0));
+    colliders.push(Arc.at( 66, 0, 25, TAU * 6/8, 0));
 
-    // subsemi negative
-    //colliders.push(Arc.at(-60, -60, 25, TAU * 6/8, TAU * 4/8));
-    // semi negative
-    //colliders.push(Arc.at(  0, -60, 25, TAU * 4/8, TAU * 0/8));
-    // supersemi negative
-    //colliders.push(Arc.at( 60, -60, 25, TAU * 4/8, TAU * 2/8));
+    colliders.push(Segment.at(-66 - 12, -66 + 12, -66 + 12, -66 + 12));
+    colliders.push(Segment.at(-66 + 12, -66 - 12, -66 - 12, -66 - 12));
 
+    colliders.push(Box.at(0, -66, 35, 35, 0));
 
-/*
-    colliders.push(Arc.at(-50, 50, 30, 0, TAU * 3/9));
-    last(colliders).turn(TAU * 4/8);
-    colliders.push(Segment.at(-35, 23, 30, 70));
-    colliders.push(Segment.at(-79, 80, -80, 50));
-
-    colliders.push(Arc.at(25, -30, 50, 0, TAU * 6/8));
-    last(colliders).turn(TAU * 2/8);
-
-    colliders.push(new Zone(Circle.at(0, 0, Vec2.fromXY(200, 200))));
-
-    //colliders.push(new Circle(Vec2.fromXY(-100, -100), 10));
-    //colliders.push(new Circle(Vec2.fromXY(0, 0), 30));
-    //colliders.push(Circle.inverted(0, 0, 30));
-
-    //colliders.push(new Capsule(Vec2.fromXY(-40, 10), Vec2.fromXY(40, -10), 10));
-
-    //colliders.push(new Segment(Vec2.fromXY(-100, 80), Vec2.fromXY(-80, 70)));
-    //colliders.push(new Segment(Vec2.fromXY(-70,  50), Vec2.fromXY(-50, 60)));
-    //colliders.push(new Segment(Vec2.fromXY(-100, 40), Vec2.fromXY(-80, 30)));
-    //colliders.push(new Segment(Vec2.fromXY(-70,  10), Vec2.fromXY(-50, 20)));
-    //colliders.push(new Segment(Vec2.fromXY(-100,  0), Vec2.fromXY(-80,-10)));
-
-    //colliders.push(new Segment(Vec2.fromXY(100, 20), Vec2.fromXY(80,  20)));
-
-    //colliders.push(Fence.at( Vec2.fromXY(-70, -40), Vec2.fromXY(-30, -60), Vec2.fromXY( 30, -60), Vec2.fromXY( 70, -80),));
-
-    sinks.push(Sink.from(Circle.at( 100, -100, 20)));
-    //sinks.push(Sink.from(Circle.at(-100, -100, 20)));
-*/
+    let fenceVertices = [];
+    for (let i = 0; i >= -8; i--) { // Go backwards cos segment normals are right-handed
+      fenceVertices.push(Vec2.fromXY(66, -66).add(Vec2.fromAngle(TAU * i/8, 25)));
+    }
+    colliders.push(Fence.at(...fenceVertices));
 
     render();
 

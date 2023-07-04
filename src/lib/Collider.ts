@@ -1,11 +1,12 @@
 
 import type Ball from './Ball';
-import { clamp, shortestAngle, nearestPointOn } from '$lib/utils';
-import Vec2 from './Vec2';
+
+import Vec2  from './Vec2';
+import Rect  from '$lib/Rect';
 import Color from './Color';
 
-const { abs, PI } = Math;
-const TAU = PI * 2;
+import { abs, clamp, shortestAngle, nearestPointOn, TAU } from '$lib/utils';
+
 
 
 //
@@ -121,49 +122,44 @@ import { debug } from "$src/stores/debug";
 
 export class Arc extends Circle {
 
-  start:number;
-  end:number;
+  angle:number;
+  range:number;
 
-  constructor(pos:Vec2, rad:number, start:number, end:number) {
+  constructor(pos:Vec2, rad:number, range:number, angle:number = 0) {
     super(pos, rad);
-    this.start = (start + TAU) % TAU;
-    this.end   = (end   + TAU) % TAU;
+    this.angle = angle % TAU;
+    this.range = range;
+  }
+
+  get start() {
+    return this.angle;
+  }
+
+  get end() {
+    return (this.angle + this.range) % TAU;
   }
 
   turn (delta:number) {
-    this.start = (this.start + delta + TAU) % TAU;
-    this.end   = (this.end   + delta + TAU) % TAU;
+    this.angle = (this.angle + delta) % TAU;
   }
 
   closest(point:Vec2):Vec2 {
-    let angle = (point.sub(this.pos).angle() + TAU) % TAU;
+    // Bump everything up by tau so we don't have to deal with negative angles
+    let start = TAU;
+    let end   = TAU + this.range;
+    let angle = TAU + ((point.sub(this.pos).angle() + TAU - this.angle) % TAU);
 
-    // Degenerate case
-    if (this.start == this.end) return this.start;
-
-    // Well-defined arc (start < end)
-    if (this.start < this.end) {
-      // Well-behaved case (start < end and angle in range)
-      if (this.start <= angle && angle <= this.end) {
-        return this.pos.towards(point, this.rad);
-      }
-
-      // Endpoints
-      if (shortestAngle(angle, this.start) < shortestAngle(angle, this.end)) {
-        return this.pos.add(Vec2.fromAngle(this.start, this.rad));
-      } else {
-        return this.pos.add(Vec2.fromAngle(this.end, this.rad));
-      }
+    // If the angle is within the range, return the point
+    if (start < angle && angle < end) {
+      return this.pos.towards(point, this.rad);
     }
 
-    // Negative arc
-    if (this.start > this.end) {
-      if (this.start >= angle && angle <= this.end) {
-        return this.pos.towards(point, this.rad);
-      }
+    // Otherwise, return the closest endpoint
+    if (shortestAngle(angle, start) < shortestAngle(angle, end)) {
+      return this.pos.add(Vec2.fromAngle(this.angle, this.rad));
+    } else {
+      return this.pos.add(Vec2.fromAngle(this.angle + this.range, this.rad));
     }
-
-    return this.pos;
   }
 
   intersect(point:Vec2):boolean {
@@ -178,14 +174,8 @@ export class Arc extends Circle {
     if (dist < 0) ball.pos.addSelf(delta.withLen(dist).jitter());
   }
 
-  static at (x:number, y:number, rad:number, start:number, end:number) {
-    return new Arc(Vec2.fromXY(x, y), rad, start, end);
-  }
-
-  static inverted (x:number, y:number, rad:number, start:number, end:number) {
-    const it = new Arc(Vec2.fromXY(x, y), rad, start, end);
-    it.inverted = true;
-    return it;
+  static at (x:number, y:number, ...rest) {
+    return new Arc(Vec2.fromXY(x, y), ...rest);
   }
 
 }
@@ -208,8 +198,8 @@ export class Capsule extends Collider {
 
   turn (delta:number) {
     const center = this.tip.sub(this.pos).scale(0.5).add(this.pos);
-    this.tip = this.tip.add(center).rotate(delta).sub(center);
-    this.pos = this.pos.add(center).rotate(delta).sub(center);
+    this.tip = this.tip.sub(center).rotate(delta).add(center);
+    this.pos = this.pos.sub(center).rotate(delta).add(center);
   }
 
   pointAlong(t:number):Vec2 {
@@ -261,6 +251,11 @@ export class Segment extends Capsule {
     this.normal = this.pos.sub(this.tip).norm().perp();
   }
  
+  turn (delta:number) {
+    super.turn(delta);
+    this.normal = this.pos.sub(this.tip).norm().perp();
+  }
+
   intersect(point:Vec2):boolean {
     return this.normal.dot(this.tip.sub(point)) < 0
       && nearestPointOn(this.pos, this.tip, point).sub(point).len() < 5;
@@ -321,4 +316,55 @@ export class Fence extends Collider {
 
 }
 
+
+//
+// Box
+//
+// Like a rect but can be rotated.
+// TODO: Collision untested
+//
+
+export class Box extends Collider {
+
+  w: number;
+  h: number;
+  angle: number;
+
+  constructor(pos:Vec2, w:number, h:number, angle:number = 0) {
+    super(pos);
+    this.w = w;
+    this.h = h;
+    this.angle = angle;
+  }
+
+  turn (delta:number) {
+    this.angle += delta;
+  }
+
+  intersect(point:Vec2):boolean {
+    const dir = point.sub(this.pos).rotate(-this.angle);
+    return Math.abs(dir.x) < this.w / 2 && Math.abs(dir.y) < this.h / 2;
+  }
+
+  collide(ball:Ball) {
+    const dir = ball.pos.sub(this.pos).rotate(-this.angle);
+    const dist = Vec2.fromXY( Math.abs(dir.x) - this.w / 2, Math.abs(dir.y) - this.h / 2);
+    if (dist.x < 0 && dist.y < 0) {
+      if (dist.x > dist.y) {
+        ball.pos.x += dist.x * Math.sign(dir.x);
+      } else {
+        ball.pos.y += dist.y * Math.sign(dir.y);
+      }
+    }
+  }
+
+  toRect():Rect {
+    return new Rect(this.pos.x, this.pos.y, this.w, this.h);
+  }
+
+  static at (x:number, y:number, w:number, h:number) {
+    return new Box(Vec2.fromXY(x, y), w, h);
+  }
+
+}
 
