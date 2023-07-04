@@ -11,8 +11,11 @@
   each point with a fake Ball and mark how far it gets moved,
   use this value to create a heatmap over the table.
 
+- Whole game state as object, pass to renderer, make reactive
+
 - Table
   - Split into horizontal chunks
   - Simulate any chunks with balls in, and their neighbours
   - Minimap
   - Launcher
+

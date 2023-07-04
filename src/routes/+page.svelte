@@ -16,12 +16,6 @@
   const { PI, pow, floor, min, max, abs, random, sqrt } = Math;
 
 
-  //
-  // TODO
-  //
-  // - Whole game state as object, pass to renderer, make reactive
-  //
-
 
   // Config
 
@@ -45,19 +39,6 @@
 
   let flippers = [ flipperA, flipperB ];
 
-  const spawn = (pos:Vec2) => {
-    balls.push(Ball.randomAt(pos.x, pos.y));
-  }
-
-  const erase = (pos:Vec2, rad = 20) => {
-    for (let i = balls.length - 1; i >= 0; i--) {
-      let b = balls[i];
-      if (b.pos.dist(pos) < rad) {
-        balls.splice(i, 1);
-      }
-    }
-  }
-
 
 
   // Physics
@@ -75,8 +56,7 @@
     // Collisions
     for (let a of balls) {
       for (let b of balls) {
-        if (a === b) continue;
-        b.collide(a);
+        if (a !== b) b.collide(a);
       }
 
       for (let b of flippers) {
@@ -86,6 +66,13 @@
       for (let c of colliders) {
         c.collide(a);
       }
+
+      for (let s of sinks) {
+        s.collide(a);
+      }
+
+      // Cull
+      if (a.cull) balls.splice(balls.indexOf(a), 1);
 
       // World boundary
       world.collideInterior(a);
@@ -121,8 +108,6 @@
       update(dt/substeps);
     }
 
-    //erase(sink.pos, sink.rad);
-
     lastTime = now;
     balls = balls; // poke
 
@@ -133,8 +118,23 @@
   }
 
 
+  // Interaction Events
+
   let clicked = false;
   let erasing = false;
+
+  const spawn = (pos:Vec2) => {
+    balls.push(Ball.randomAt(pos.x, pos.y));
+  }
+
+  const erase = (pos:Vec2, rad = 20) => {
+    for (let i = balls.length - 1; i >= 0; i--) {
+      let b = balls[i];
+      if (b.pos.dist(pos) < rad) {
+        balls.splice(i, 1);
+      }
+    }
+  }
 
   const mouse2world = ({ clientX, clientY, target }:MouseEvent) => {
     let el = target as HTMLElement;
@@ -185,6 +185,9 @@
 
   // Init
 
+  let innerWidth = 0;
+  let innerHeight = 0;
+
   onMount(() => {
     render();
 
@@ -204,9 +207,6 @@
       document.removeEventListener('keyup',     onKeyup);
     }
   });
-
-  let innerWidth = 0;
-  let innerHeight = 0;
 
 </script>
 
