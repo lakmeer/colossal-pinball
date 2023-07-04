@@ -21,13 +21,8 @@ export default class Zone extends Collider {
   }
 
   get pos() { return this.shape.pos; }
-  get rad() { return this.shape.rad; }
 
-  closest(point:Vec2):Vec2 {
-    return this.shape.closest(point);
-  }
-
-  intersect(point:Vec2):Vec2|null {
+  intersect(point:Vec2):boolean {
     return this.shape.intersect(point);
   }
 
@@ -37,8 +32,8 @@ export default class Zone extends Collider {
     }
   }
 
-  static from (shape: Collider) {
-    return new Sink(shape);
+  static from (shape: Collider, force: Vec2) {
+    return new Sink(shape, force);
   }
 
 }

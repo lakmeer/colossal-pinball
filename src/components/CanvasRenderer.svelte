@@ -1,19 +1,27 @@
 <script lang="ts">
-  import { Collider, Circle, Arc, Segment, Capsule, Fence } from "$lib/Collider";
-  import type { Sink } from "$lib/Sink";
-  import { shortestAngle } from "$lib/utils";
-  import Vec2 from '$lib/Vec2';
+  import { onMount } from 'svelte';
+
+  import type Zone from "$lib/Zone";
+  import type Sink from "$lib/Sink";
   import type Rect from '$lib/Rect';
   import type Ball from '$lib/Ball';
 
-  import { onMount } from 'svelte';
+  import Vec2   from '$lib/Vec2';
+  import Color  from '$lib/Color';
+  import Pixels from '$lib/Pixels';
 
-  const { max, PI } = Math;
+  import { Collider, Circle, Arc, Segment, Capsule, Fence } from "$lib/Collider";
+  import { arcAt, capsuleAt, lineAt, circleAt } from "$lib/draw2d";
+
+  const { floor, PI } = Math;
 
 
   // Config
 
-  const TRACES = true;
+  const SHOW_TRACES   = false;
+  const SHOW_VELOCITY = false;
+  const SHOW_OVERLAY  = false;
+  const INTERSECTION_RES = 32;
 
 
   // Canvas
@@ -24,9 +32,7 @@
   let canvas:HTMLCanvasElement;
   let ctx:CanvasRenderingContext2D;
 
-  let intersectionOverlay:HTMLCanvasElement;
-  let intersectionCtx:CanvasGameRenderer;
-  let intersectionPixels:ImageData;
+  let intersectionOverlay:Pixels;
 
 
   // Objects
@@ -40,61 +46,6 @@
   // Other Props
 
   export let TIME_SCALE = 1;
-
-
-  // Drawing helpers
-
-  const circleAt = (pos:Vec2, rad:number, col:string, invert:boolean) => {
-    ctx.strokeStyle = col;
-    ctx.fillStyle = col;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, rad, 0, 2 * Math.PI);
-    if (invert) ctx.stroke(); else ctx.fill();
-  }
-
-  const arcAt = (pos:Vec2, rad:number, col:string, start = 0, end = PI*2, cc = false) => {
-    ctx.strokeStyle = col;
-    ctx.fillStyle = col;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, rad, start, end, cc);
-    ctx.stroke();
-  }
-
-  const shortArcAt = (pos:Vec2, rad:number, col:string, start = 0, end = PI*2) => {
-    arcAt(pos, rad, col, start, end, (end - start) < 0);
-  }
-
-  const capsuleAt = (a:Vec2, b:Vec2, rad:number, col:string, normal?:Vec2) => {
-    ctx.lineCap = 'round';
-    ctx.lineWidth = max(1, rad * 2);
-    ctx.strokeStyle = col;
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
-
-    if (normal) {
-      const m = a.lerp(b, 0.5);
-      lineAt(m, m.add(normal.scale(5)), col, 1);
-    }
-  }
-
-  const lineAt = (a:Vec2, b:Vec2, col:string, width:number) => {
-    ctx.lineCap = 'round';
-    ctx.lineWidth = width;
-    ctx.strokeStyle = col;
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
-  }
-
-  const rectAt = (r:Rect, col:string) => {
-    ctx.fillStyle = col;
-    ctx.fillRect(...r.toBounds());
-  }
 
 
   // Main render
@@ -113,75 +64,74 @@
 
     // Static Colliders
     for (let c of colliders) {
-      if      (c instanceof Arc)     arcAt(c.pos, c.rad, 'magenta', c.start, c.end);
-      else if (c instanceof Circle)  circleAt(c.pos, c.rad, c.color.toString(), c.inverted);
-      else if (c instanceof Segment) capsuleAt(c.pos, c.tip, 1, c.color.toString(), c.normal);
-      else if (c instanceof Capsule) capsuleAt(c.pos, c.tip, c.rad, c.color.toString());
+      if      (c instanceof Arc)     arcAt(ctx, c.pos, c.rad, 'magenta', c.start, c.end);
+      else if (c instanceof Circle)  circleAt(ctx, c.pos, c.rad, c.color.toString(), c.inverted);
+      else if (c instanceof Segment) capsuleAt(ctx, c.pos, c.tip, 1, c.color.toString(), c.normal);
+      else if (c instanceof Capsule) capsuleAt(ctx, c.pos, c.tip, c.rad, c.color.toString());
       else if (c instanceof Fence) {
         for (let l of c.links) {
-          capsuleAt(l.pos, l.tip, 1, c.color.toString());
+          capsuleAt(ctx, l.pos, l.tip, 1, c.color.toString(), l.normal);
         }
       }
     }
 
     // Sink
     for (let sink of sinks) {
-      circleAt(sink.shape.pos, sink.shape.rad, 'black');
+      circleAt(ctx, sink.shape.pos, sink.shape.rad, 'black');
     }
 
     // Balls
     for (let ball of balls) {
 
       // Trace paths
-      if (TRACES) {
+      if (SHOW_TRACES) {
 
         // To Sink
         for (let s of sinks) {
-          lineAt(ball.pos, s.shape.closest(ball.pos), 'rgba(0, 0, 0, 0.5)', 1);
+          lineAt(ctx, ball.pos, s.shape.closest(ball.pos), 'rgba(0, 0, 0, 0.5)', 1);
         }
 
         // Nearest
         for (let c of colliders) {
-          lineAt(ball.pos, c.closest(ball.pos), 'rgba(255, 255, 255, 0.3)', 1);
+          lineAt(ctx, ball.pos, c.closest(ball.pos), 'rgba(255, 255, 255, 0.3)', 1);
         }
       }
 
       // Body
-      circleAt(ball.pos, ball.rad, ball.color.toString());
+      circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
 
       // Velocity
-      lineAt(ball.pos, ball.pos.add(ball.vel.scale(10/TIME_SCALE)), 'rgba(255, 63, 31, 0.7)', 2);
+      if (SHOW_VELOCITY) {
+        lineAt(ctx, ball.pos, ball.pos.add(ball.vel.scale(10/TIME_SCALE)), 'rgba(255, 63, 31, 0.7)', 2);
+        }
     }
 
     // Debug dots
 
-    const RES = 50;
-    let dx = world.w/RES/2;
-    let dy = world.h/RES/2;
+    if (SHOW_OVERLAY) {
+      const RES = INTERSECTION_RES;
+      let dx = world.w/RES/2;
+      let dy = world.h/RES/2;
 
-    ctx.fillStyle = 'white';
+      intersectionOverlay.reset();
 
-    for (let x = world.left; x < world.right; x += dx) {
-      for (let y = world.bottom; y < world.top; y += dy) {
-        let px = x + dx/2;
-        let py = y + dy/2;
-        let hits = 0;
+      for (let x = world.left; x < world.right; x += dx) {
+        for (let y = world.bottom; y < world.top; y += dy) {
+          let px = floor((x - world.left)/world.w * RES);
+          let py = floor((y + world.top)/world.h * RES);
+          let hits = 0;
 
-        for (let c of colliders) hits += c.intersect(Vec2.fromXY(px, py)) ? 1 : 0;
+          for (let c of colliders) hits += c.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
 
-        if (hits) {
-          ctx.globalAlpha = 0.3 * hits;
-          //ctx.fillRect(x, y, dx, dy);
-          intersectionCtx.fillRect(x, y, dx, dy);
+          if (hits) {
+            intersectionOverlay.setp(px, py, new Color(1, 1, 1, 0.3 * hits));
+          }
         }
       }
+
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.drawImage(intersectionOverlay.canvas, world.left, world.bottom, world.w, world.h);
     }
-
-    //intersectionCtx.putImageData(intersectionPixels, 0, 0);
-    intersectionCtx.fillStyle = 'red';
-
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.drawImage(intersectionOverlay, 0, 0, width, height);
 
     ctx.restore();
   }
@@ -193,16 +143,15 @@
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
 
-    intersectionOverlay = document.createElement('canvas');
-    intersectionOverlay.width  = world.w;
-    intersectionOverlay.height = world.h;
-    intersectionCtx     = intersectionOverlay.getContext('2d') as CanvasRenderingContext2D;
-    //intersectionPixels  = intersectionCtx.getImageData(0, 0, world.w, world.h);
+    if (SHOW_OVERLAY) {
+      intersectionOverlay = new Pixels(INTERSECTION_RES, INTERSECTION_RES);
+    }
   });
 </script>
 
 
 <canvas bind:this={canvas} {width} {height} />
+
 
 <style>
   canvas {

@@ -49,6 +49,10 @@ export default class Color extends Array {
     return `rgba(${floor(this.r*255)}, ${floor(this.g*255)}, ${floor(this.b*255)}, ${this.a})`;
   }
 
+  to8bit ():Tuple4 {
+    return [floor(this.r*255), floor(this.g*255), floor(this.b*255), floor(this.a*255)];
+  }
+
   static random () {
     const c = randFrom(COLORS);
     return new Color(...c);

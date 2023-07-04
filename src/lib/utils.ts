@@ -1,5 +1,5 @@
 
-export const { random, min, max, abs, sqrt, floor, PI } = Math;
+export const { random, min, max, abs, sqrt, floor, pow, PI } = Math;
 export const TAU = PI * 2;
 
 export const lerp = (a:number, b:number, t:number) => a + (b - a) * t;
@@ -28,3 +28,4 @@ export const nearestPointOn = (a:Vec2, b:Vec2, p:Vec2) => {
   return a.lerp(b, clamp(t));
 }
 
+export const last = <T>(arr:T[]) => arr[arr.length - 1];

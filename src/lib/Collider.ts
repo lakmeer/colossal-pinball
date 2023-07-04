@@ -216,6 +216,15 @@ export class Capsule extends Collider {
     if (dist < 0) ball.pos.addSelf(delta.withLen(dist).jitter());
   }
 
+  static at (x:number, y:number, tipX:number, tipY:number, rad:number) {
+    return new Capsule(Vec2.fromXY(x, y), Vec2.fromXY(tipX, tipY), rad);
+  }
+
+  static fromAngle (x:number, y:number, angle:number, length:number, rad:number) {
+    const pos = Vec2.fromXY(x, y);
+    return new Capsule(pos, pos.add(Vec2.fromAngle(angle, length)), rad);
+  }
+
 }
 
 
@@ -249,6 +258,10 @@ export class Segment extends Capsule {
     if (this.normal.dot(this.tip.sub(ball.pos)) > 0) {
       ball.pos.addSelf(this.normal.withLen(dist).jitter());
     }
+  }
+
+  static at (x:number, y:number, tipX:number, tipY:number) {
+    return new Segment(Vec2.fromXY(x, y), Vec2.fromXY(tipX, tipY));
   }
 
 }
@@ -285,6 +298,10 @@ export class Fence extends Collider {
     for (let link of this.links) {
       link.collide(ball);
     }
+  }
+
+  static at (...vertices:Vec2[]) {
+    return new Fence(...vertices);
   }
 
 }

@@ -1,8 +1,7 @@
 <script lang="ts">
+  import CanvasRenderer from '$comp/CanvasRenderer.svelte';
 
   import { onMount } from 'svelte';
-
-  import CanvasRenderer from '$comp/CanvasRenderer.svelte';
 
   import Vec2 from "$lib/Vec2";
   import Ball from "$lib/Ball";
@@ -12,7 +11,7 @@
 
   import { Collider, Circle, Arc, Segment, Capsule, Fence } from "$lib/Collider";
 
-  const { PI, pow, floor, min, max, abs, random, sqrt } = Math;
+  import { TAU, last, pow, floor, min, max, abs, random, sqrt } from "$lib/utils";
 
 
   // World
@@ -75,17 +74,11 @@
     if (now - lastEmit > 0.7) {
       if (balls.length < 50) {
         lastEmit = now;
-        //balls.push(Ball.randomAt(-30, 90));
+        balls.push(Ball.randomAt(-75, 90));
         //balls.push(Ball.randomAt(60, 90));
         //balls.push(Ball.randomAt(-90, 90));
       }
     }
-
-    colliders[0].turn(PI * dt);
-    //colliders[0].pos.x = 30 + 30 * Math.cos(-now);
-    //colliders[0].pos.y = 30 + 30 * Math.sin(-now);
-    //colliders[0].tip.x = 30 + 30 * Math.cos(-now + PI);
-    //colliders[0].tip.y = 30 + 30 * Math.sin(-now + PI);
 
     for (let i = 0; i < 8; i++) {
       update(dt/8);
@@ -108,9 +101,16 @@
     //balls.push(Ball.randomAt(0, 190));
     //balls.push(Ball.randomAt(30, 0));
 
-    colliders.push(Arc.at(50, 50, 30, -PI*2/3, 0));
+    colliders.push(Arc.at(-50, 50, 30, 0, TAU * 3/9));
+    last(colliders).turn(TAU * 4/8);
+    colliders.push(Segment.at(-35, 23, 30, 70));
+    colliders.push(Segment.at(-80, 80, -80, 50));
+
+    //colliders.push(Arc.at(-50, 50, 30, 0, TAU * 3/9));
+    //last(colliders).turn(TAU * 4/8);
 
     colliders.push(new Zone(Circle.at(0, 0, Vec2.fromXY(200, 200))));
+
 
     //colliders.push(new Circle(Vec2.fromXY(-100, -100), 10));
     //colliders.push(new Circle(Vec2.fromXY(0, 0), 30));
@@ -126,7 +126,7 @@
 
     //colliders.push(new Segment(Vec2.fromXY(100, 20), Vec2.fromXY(80,  20)));
 
-    colliders.push(new Fence(
+    colliders.push(Fence.at(
       Vec2.fromXY(-70, -40),
       Vec2.fromXY(-30, -60),
       Vec2.fromXY( 30, -60),
@@ -150,7 +150,6 @@
 <div>
   <CanvasRenderer {sinks} {balls} {colliders} {world} {TIME_SCALE} bind:width={innerHeight} bind:height={innerHeight} />
 </div>
-
 
 
 <style>

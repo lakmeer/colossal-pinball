@@ -25,7 +25,7 @@ export default class Sink extends Collider {
     return this.shape.closest(point);
   }
 
-  intersect(point:Vec2):Vec2|null {
+  intersect(point:Vec2):boolean {
     return this.shape.intersect(point);
   }
 
