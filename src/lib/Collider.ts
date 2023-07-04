@@ -117,6 +117,8 @@ export class Circle extends Collider {
 // Only collides a certain range of angles
 //
 
+import { debug } from "$src/stores/debug";
+
 export class Arc extends Circle {
 
   start:number;
@@ -124,34 +126,48 @@ export class Arc extends Circle {
 
   constructor(pos:Vec2, rad:number, start:number, end:number) {
     super(pos, rad);
-    this.start = start;
-    this.end   = end;
+    this.start = (start + TAU) % TAU;
+    this.end   = (end   + TAU) % TAU;
   }
 
   turn (delta:number) {
-    this.start += delta;
-    this.end   += delta;
-    if (this.start > TAU) this.start -= TAU;
-    if (this.end   > TAU) this.end   -= TAU;
-    if (this.start < 0) this.start += TAU;
-    if (this.end   < 0) this.end   += TAU;
+    this.start = (this.start + delta + TAU) % TAU;
+    this.end   = (this.end   + delta + TAU) % TAU;
   }
 
   closest(point:Vec2):Vec2 {
-    let angle = point.sub(this.pos).angle();
+    let angle = (point.sub(this.pos).angle() + TAU) % TAU;
 
-    if (shortestAngle(angle, this.start) < 0 && 0 < shortestAngle(angle, this.end))
-      return Vec2.fromAngle(angle, this.rad).add(this.pos);
+    // Degenerate case
+    if (this.start == this.end) return this.start;
 
-    if (abs(shortestAngle(angle, this.end)) < abs(shortestAngle(angle, this.start))) {
-      return this.pos.add(Vec2.fromAngle(this.end, this.rad));
-    } else {
-      return this.pos.add(Vec2.fromAngle(this.start, this.rad));
+    // Well-defined arc (start < end)
+    if (this.start < this.end) {
+      // Well-behaved case (start < end and angle in range)
+      if (this.start <= angle && angle <= this.end) {
+        return this.pos.towards(point, this.rad);
+      }
+
+      // Endpoints
+      if (shortestAngle(angle, this.start) < shortestAngle(angle, this.end)) {
+        return this.pos.add(Vec2.fromAngle(this.start, this.rad));
+      } else {
+        return this.pos.add(Vec2.fromAngle(this.end, this.rad));
+      }
     }
+
+    // Negative arc
+    if (this.start > this.end) {
+      if (this.start >= angle && angle <= this.end) {
+        return this.pos.towards(point, this.rad);
+      }
+    }
+
+    return this.pos;
   }
 
   intersect(point:Vec2):boolean {
-    return this.closest(point).sub(point).len() <= 1;
+    return this.closest(point).sub(point).len() <= 5;
     return (this.pos.sub(point).len() <= this.rad);
   }
 
@@ -265,7 +281,6 @@ export class Segment extends Capsule {
   }
 
 }
-
 
 
 //

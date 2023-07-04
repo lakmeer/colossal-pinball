@@ -19,7 +19,7 @@ export const shortestAngle = (a:number, b:number) => {
   let d = (b - a) % TAU;
   if (d < -PI) d += TAU;
   if (d > PI) d -= TAU;
-  return d;
+  return abs(d);
 }
 
 export const nearestPointOn = (a:Vec2, b:Vec2, p:Vec2) => {

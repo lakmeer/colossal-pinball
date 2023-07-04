@@ -20,8 +20,8 @@
 
   const SHOW_TRACES   = false;
   const SHOW_VELOCITY = false;
-  const SHOW_OVERLAY  = false;
-  const INTERSECTION_RES = 32;
+  const SHOW_OVERLAY  = true;
+  const INTERSECTION_RES = 64;
 
 
   // Canvas
