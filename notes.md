@@ -2,14 +2,20 @@
 # TODO
 
 - Make Zone an interface
-  - Force
-  - Sink
-  - Well
-  - Slow
+  - Force: apply constant acceleration
+  - Sink: drain the ball
+  - Well: attract the ball to a single point (magents)
+  - Slow: change the simulation time factor
+  - Detect: trigger when ball enters or leaves (rollovers)
+  - Gravity: change global gravity direction
 - Remove 'intersects' from Collider and give it to Zone
 - Change the intersection overlay to a collision overlay, test
   each point with a fake Ball and mark how far it gets moved,
   use this value to create a heatmap over the table.
+- Move Collider to Shape, and have Collider be a single class
+  that hosts a shape like Zone does. That way we can have non-colliding
+  shapes for decorative elements.
+- Give things like kick force to Collider.
 
 - Whole game state as object, pass to renderer, make reactive
 
@@ -18,6 +24,78 @@
   - Simulate any chunks with balls in, and their neighbours
   - Minimap
   - Launcher
+
+- Load tables from named files
+
+
+## Theme Ideas
+
+### Hunt for the colossal squid
+
+- The table is much taller than a normal table but you play one tables worth
+  at a time
+- Progress the game in sectors but gating each one until a mode is completed
+- Each sector represents going deeping into the ocean and gets harder
+- More flippers come into play as you move up the table
+- Falling back down doesnt drain the ball but drops you back to an earlier
+  sector, but new drains exist at weird locations in deeper zones
+
+
+### Sectors
+
+#### Beach
+
+- Bright, sandy
+- Waves lapping
+- Easy combos and targets
+
+#### Shallows
+
+- Bright caustics
+- Tropical fish
+- Crabs
+
+#### Reef
+
+- Faint caustics
+- Coral
+- Eels
+- Anenome
+  - Retracts when hit (drop target)
+- Bobbit worms
+  - Pop out to obstruct shots
+
+#### Open Ocean
+
+- Murky particles
+- Jellyfish
+- Sharks
+- Dolphins
+- Sunfish
+
+#### Deep Ocean
+
+- Nearly black
+- Thermal vents
+- Whales
+- Isopods
+- Oarfish
+- Siphonophores
+
+#### Abyssal Zone
+
+- Big-mouthed eel
+- Anglerfish
+  - A deeper mode where the lure is a dangling target that must be hit n times,
+  but the mouth of the fish will drain the ball. Lure must be hit from oblique
+  angles
+
+#### Black Zone
+
+- Lair of the squid
+- Tentacles move the targets around
+- Central drain is the beak of the squid, like a saarlac
+- Eye watches the ball from the surface of the playfield
 
 
 ## Pinball terms
@@ -29,13 +107,6 @@
 - Apron (lowest assembly)
 - Return lane
 - Tilt/smash sensors
-
-### Techniques
-
-- Lock shot
-  - Holds the ball
-  - Gives you a new ball,
-  - Releases when multiball is activated
 
 ### Gameplay mechanics
 
@@ -52,6 +123,7 @@
   - Can be time-limited ("hurry-up" mode)
   - Wizard mode: sometimes the final mission
   - Special: sometimes rewards a replay game
+  - Some modes will issue you extra balls
 - Sacrifice
   - Exchange a ball for points
   - A hole that normally drains the ball for no points
@@ -68,6 +140,35 @@
   - A whole free game after your game ends
 - Skill shot
   - Hitting a particular target directly off of a launch or ball release
+- Lock shot
+  - Holds the ball, and issues you a new ball
+  - Releases when multiball is activated
+- Hiding extra features under an upper-playfield flipper so that it is
+  accessable when the flipper is activated.
+- An upper flipper immediately below a target area where the ball can be
+  trapped so you can mash it into targets repeatedly (Mandalorian)
+- Launch selection
+  - Between drain and launch, screen can show a range of options that can be
+  selected with flipper buttons or by waiting for rotation.
+  - Can be used to select missions, or attempt particular skill shots
+- Peristant Track Advancement
+  - Certain shots can advance a multiplier, enable certain features, or some
+  other track that persists over all the missions (Star Trek TNG: Warp Factors)
+
+
+
+### Techniques
+
+- Flipper transfers
+  - Alley pass: shoot the ball up the opposite inlane
+  - Dead pass: bounce the ball off a static flipper and catch with the other one
+  - Post pass: using the back of the flipper to hit the underside of the slingshot post
+  - Tap pass: using a tiny flick to gently throw the ball to the other flipper
+  - Ski pass: cradling a transferred ball by raising both flippers like a ski jump
+- Cradle: holding the ball with an activated flipper
+- Drop catch: absorb momentum of incoming ball by releasing a flipper
+- Shielding: narrowing the drain diameter as the ball moves by clever flipper positioning
+- Micro flip: dropping an active flipper just enough to bump a cradled ball
 
 ### Lamp Groups
 
@@ -109,6 +210,5 @@
 - Kickback: stopper for the outlane
 - Magnets
 - Orbit: ramp goes all the way around the back of the playfield
-- 
 
 
