@@ -13,39 +13,40 @@
 
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
 
-  const { PI, pow, floor, min, max, abs, random, sqrt } = Math;
+  import { PI, pow, floor, min, max, nsin, random, sqrt } from "$lib/utils";
 
 
 
   // Config
 
   const GRAVITY = 1000;
-  const TIME_SCALE = 0.5;
+  const TIME_SCALE = 1.0;
   const SUBSTEP_FACTOR = 0.8; // Use no more than half the frame time
-  const MAX_BALLS = 1;
+  const MAX_BALLS = 100;
   const COLLISION_FRICTION = 0.98;
-  const MAX_VEL = 1000;
+  const GAME_ASPECT = 1/2;
 
 
   // World
 
-  let world = new Rect(0, 0, 100, 100);
+  let world = new Rect(0, 500, 100, 1000);
   let balls:Ball[] = [ ];
-  let sinks:Sink[] = [ Sink.from(Circle.at(0, -70, 30)) ];
+  let sinks:Sink[] = [ Sink.from(Circle.at(0, -15, 30)) ];
   let colliders:Collider[] = [];
 
-  let flipperA = new Flipper(Vec2.fromXY(-50, -30), 3, 25, 0  - PI/8,  PI/4, 40);
-  let flipperB = new Flipper(Vec2.fromXY( 50, -30), 3, 25, PI + PI/8, -PI/4, 40);
+  let flipperA = new Flipper(Vec2.fromXY(-50, 30), 3, 25, 0  - PI/8,  PI/4, 40);
+  let flipperB = new Flipper(Vec2.fromXY( 50, 30), 3, 25, PI + PI/8, -PI/4, 40);
 
   let flippers = [ flipperA, flipperB ];
 
+  let cameraY = 0;
 
 
   // Physics
 
   const update = (dt:number) => {
 
-    // 'Fractional friction factor' - adjusted for number of steps
+    // 'Fractional friction factor' - exponentially adjusted for number of steps
     const fff = pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
 
     // Gravity
@@ -55,23 +56,18 @@
 
     // Collisions
     for (let a of balls) {
+
+      // Other balls
       for (let b of balls) {
         if (a !== b) b.collide(a);
       }
+      
+      // Other objects
+      for (let b of flippers)  b.collide(a);
+      for (let c of colliders) c.collide(a);
+      for (let s of sinks)     s.collide(a);
 
-      for (let b of flippers) {
-        b.collide(a);
-      }
-
-      for (let c of colliders) {
-        c.collide(a);
-      }
-
-      for (let s of sinks) {
-        s.collide(a);
-      }
-
-      // Cull
+      // Cull dead balls
       if (a.cull) balls.splice(balls.indexOf(a), 1);
 
       // World boundary
@@ -99,6 +95,8 @@
     const now = performance.now()/1000;
     const dt = (now - lastTime) * TIME_SCALE;
 
+    cameraY = nsin(now/2) * world.h;
+
     flipperA.active = btnA;
     flipperB.active = btnB;
 
@@ -124,7 +122,9 @@
   let erasing = false;
 
   const spawn = (pos:Vec2) => {
-    balls.push(Ball.randomAt(pos.x, pos.y));
+    if (balls.length < MAX_BALLS) {
+      balls.push(Ball.randomAt(pos.x, pos.y));
+    }
   }
 
   const erase = (pos:Vec2, rad = 20) => {
@@ -188,6 +188,8 @@
   let innerWidth = 0;
   let innerHeight = 0;
 
+  $: viewAspect = innerWidth / innerHeight;
+
   onMount(() => {
     render();
 
@@ -213,9 +215,21 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-
+<!--
+    bind:width={innerWidth}
+    bind:height={innerHeight}
+-->
 <div>
-  <CanvasRenderer {balls} {colliders} {flippers} {sinks} {world} bind:width={innerHeight} bind:height={innerHeight} />
+  <CanvasRenderer
+    {balls}
+    {colliders}
+    {flippers}
+    {sinks}
+    {world}
+    {cameraY}
+    width={innerHeight * GAME_ASPECT}
+    height={innerHeight}
+  />
 </div>
 
 <pre class="debug">

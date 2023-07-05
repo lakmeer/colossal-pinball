@@ -8,7 +8,7 @@ import { max, floor, TAU } from "$lib/utils";
 
 // Drawing helpers
 
-export const lineAt = (ctx: CanvasRenderingContext2D, a:Vec2, b:Vec2, col:string, width:number) => {
+export const lineAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, col:string, width:number) => {
   ctx.lineCap = 'round';
   ctx.lineWidth = width;
   ctx.strokeStyle = col;
@@ -18,12 +18,12 @@ export const lineAt = (ctx: CanvasRenderingContext2D, a:Vec2, b:Vec2, col:string
   ctx.stroke();
 }
 
-export const rectAt = (ctx: CanvasRenderingContext2D, r:Rect, col:string) => {
+export const rectAt = (ctx:CanvasRenderingContext2D, r:Rect, col:string) => {
   ctx.fillStyle = col;
   ctx.fillRect(...r.toBounds());
 }
 
-export const boxAt = (ctx: CanvasRenderingContext2D, r:Rect, col:string, a:number = 0) => {
+export const boxAt = (ctx:CanvasRenderingContext2D, r:Rect, col:string, a:number = 0) => {
   ctx.fillStyle = col;
   ctx.save();
   ctx.translate(r.x, r.y);
@@ -32,7 +32,7 @@ export const boxAt = (ctx: CanvasRenderingContext2D, r:Rect, col:string, a:numbe
   ctx.restore();
 }
 
-export const circleAt = (ctx: CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, invert:boolean = false) => {
+export const circleAt = (ctx:CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, invert:boolean = false) => {
   ctx.strokeStyle = col;
   ctx.fillStyle = col;
   ctx.lineWidth = 1;
@@ -41,7 +41,7 @@ export const circleAt = (ctx: CanvasRenderingContext2D, pos:Vec2, rad:number, co
   if (invert) ctx.stroke(); else ctx.fill();
 }
 
-export const arcAt = (ctx: CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, start = 0, end = TAU, cc = false) => {
+export const arcAt = (ctx:CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, start = 0, end = TAU, cc = false) => {
   ctx.strokeStyle = col;
   ctx.fillStyle = col;
   ctx.lineWidth = 2;
@@ -50,11 +50,11 @@ export const arcAt = (ctx: CanvasRenderingContext2D, pos:Vec2, rad:number, col:s
   ctx.stroke();
 }
 
-export const shortArcAt = (ctx: CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, start = 0, end = TAU) => {
+export const shortArcAt = (ctx:CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, start = 0, end = TAU) => {
   arcAt(ctx, pos, rad, col, start, end, (end - start) < 0);
 }
 
-export const capsuleAt = (ctx: CanvasRenderingContext2D, a:Vec2, b:Vec2, rad:number, col:string, normal?:Vec2) => {
+export const capsuleAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, rad:number, col:string, normal?:Vec2) => {
   ctx.lineCap = 'round';
   ctx.lineWidth = max(1, rad * 2);
   ctx.strokeStyle = col;
@@ -67,5 +67,17 @@ export const capsuleAt = (ctx: CanvasRenderingContext2D, a:Vec2, b:Vec2, rad:num
     const m = a.lerp(b, 0.5);
     lineAt(ctx, m, m.add(normal.scale(5)), col, 1);
   }
+}
+
+export const textAt = (ctx:CanvasRenderingContext2D, text:string, x:number, y:number, col:string, align = "center") => {
+  ctx.fillStyle    = col;
+  ctx.font         = '10px monospace';
+  ctx.textAlign    = align as CanvasTextAlign;
+  ctx.textBaseline = 'middle';
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1, -1);
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
 }
 

@@ -44,21 +44,18 @@ export default class Rect {
     return null;
   }
 
-  intersectInterior(ball:Ball) {
-    if (ball.pos.x < this.left   + ball.rad) return Vec2.fromXY(ball.rad - (ball.pos.x - this.left), 0);
-    if (ball.pos.x > this.right  - ball.rad) return Vec2.fromXY((this.right - ball.pos.x)- ball.rad, 0);
-    if (ball.pos.y < this.bottom + ball.rad) return Vec2.fromXY(0, ball.rad - (ball.pos.y - this.bottom));
-    if (ball.pos.y > this.top    - ball.rad) return Vec2.fromXY(0, (this.top - ball.pos.y) - ball.rad);
-    return false;
-  }
-
   collide(ball:Ball) {
     let delta = this.intersect(ball);
     if (delta) ball.pos.addSelf(delta);
   }
 
   collideInterior(ball:Ball) {
-    let delta = this.intersectInterior(ball);
+    let delta = Vec2.zero;
+    if (ball.pos.x < this.left   + ball.rad) delta.set2(ball.rad - (ball.pos.x - this.left), 0);
+    if (ball.pos.x > this.right  - ball.rad) delta.set2((this.right - ball.pos.x)- ball.rad, 0);
+    if (ball.pos.y < this.bottom + ball.rad) delta.set2(0, ball.rad - (ball.pos.y - this.bottom));
+    if (ball.pos.y > this.top    - ball.rad) delta.set2(0, (this.top - ball.pos.y) - ball.rad);
+
     if (delta) ball.pos.addSelf(delta);
   }
 

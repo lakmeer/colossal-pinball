@@ -225,7 +225,6 @@ export class Capsule implements Collider {
 export class Segment extends Capsule {
 
   normal:Vec2;
-  color: Color;
 
   constructor(pos:Vec2, tip:Vec2) {
     super(pos, tip, 0);
