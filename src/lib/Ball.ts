@@ -70,7 +70,7 @@ export default class Ball {
       Vec2.fromXY(0, 0),
       z,
       z,
-      Color.random()
+      new Color(1, 1, 1, 1) // Color.random()
     )
   }
 

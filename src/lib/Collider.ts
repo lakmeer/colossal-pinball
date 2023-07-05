@@ -97,15 +97,15 @@ export class Arc implements Collider {
 
   pos:Vec2;
   rad:number;
-  angle:number;
   range:number;
+  angle:number;
   color: Color;
 
   constructor(pos:Vec2, rad:number, range:number, angle:number = 0) {
     this.pos = pos;
     this.rad = rad;
-    this.angle = angle % TAU;
     this.range = range;
+    this.angle = angle % TAU;
     this.color = Color.random();
   }
 
@@ -225,16 +225,18 @@ export class Capsule implements Collider {
 export class Segment extends Capsule {
 
   normal:Vec2;
+  flip:number = 1;
 
-  constructor(pos:Vec2, tip:Vec2) {
+  constructor(pos:Vec2, tip:Vec2, flip = false) {
     super(pos, tip, 0);
     this.color = Color.random();
-    this.normal = this.pos.sub(this.tip).norm().perp();
+    this.flip = flip ? -1 : 1;
+    this.normal = this.pos.sub(this.tip).norm().perp().scale(this.flip);
   }
- 
+
   turn (delta:number) {
     super.turn(delta);
-    this.normal = this.pos.sub(this.tip).norm().perp();
+    this.normal = this.pos.sub(this.tip).norm().perp().scale(this.flip);
   }
 
   intersect(point:Vec2):boolean {
@@ -252,8 +254,18 @@ export class Segment extends Capsule {
     }
   }
 
+  invert () {
+    this.flip = -this.flip;
+    this.normal = this.pos.sub(this.tip).norm().perp().scale(this.flip);
+    return this;
+  }
+
   static at (x:number, y:number, tipX:number, tipY:number) {
     return new Segment(Vec2.fromXY(x, y), Vec2.fromXY(tipX, tipY));
+  }
+
+  static from (x:number, y:number, tipX:number, tipY:number, flip = false) {
+    return new Segment(Vec2.fromXY(x, y), Vec2.fromXY(tipX, tipY), flip);
   }
 
 }
@@ -270,14 +282,16 @@ export class Fence implements Collider {
 
   pos:Vec2;
   rad:number;
-  links: Segment[] = [];
   color: Color;
+  links: Segment[] = [];
+  vertices: Vec2[] = [];
 
   constructor(...vertices:Vec2[]) {
     this.pos = vertices[0];
     this.rad = 0;
-
+    this.vertices = vertices;
     this.color = Color.random();
+
     for (let i = 0; i < vertices.length - 1; i++) {
       this.links.push(new Segment(vertices[i], vertices[i + 1]));
     }
@@ -314,10 +328,28 @@ export class Fence implements Collider {
     }
   }
 
+  close () {
+    return new Fence(...this.vertices, this.vertices[0]);
+  }
+
+  invert () {
+    this.links.map(seg => seg.invert());
+    return this;
+  }
+
   static at (...vertices:Vec2[]) {
     return new Fence(...vertices);
   }
 
+  static from (...coords:number[]) {
+    let vertices = [];
+
+    for (let i = 0; i < coords.length - 1; i += 2) {
+      vertices.push(new Vec2(coords[i], coords[i + 1]));
+    }
+
+    return new Fence(...vertices);
+  }
 }
 
 
@@ -383,6 +415,9 @@ export class Box implements Collider {
     return new Box(Vec2.fromXY(x, y), w, h, angle);
   }
 
-}
+  static from (x1:number, y1:number, x2:number, y2:number, angle:number = 0) {
+    return new Box(Vec2.fromXY((x1 + x2)/2, (y1 + y2)/2), x2 - x1, y2 - y1, angle);
+  }
 
+}
 

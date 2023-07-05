@@ -155,6 +155,10 @@ export default class Vec2 extends Array {
 
   // Static
 
+  static at (x:number, y:number):Vec2 {
+    return new Vec2(x, y);
+  }
+
   static fromXY (x:number, y:number):Vec2 {
     return new Vec2(x, y);
   }
