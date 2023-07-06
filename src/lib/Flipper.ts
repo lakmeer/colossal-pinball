@@ -1,6 +1,7 @@
 
 import { Capsule } from "$lib/Collider";
 import Vec2 from "$lib/Vec2";
+import Color from "$lib/Color";
 import type Ball from "$lib/Ball";
 
 const { sin, cos, min, max, sign, abs } = Math;
@@ -20,6 +21,7 @@ export default class Flipper {
   flipRange: number;
   flipSpeed: number;
 
+  color: Color;
   angle: number;
   angVel: number;
   active: boolean;
@@ -33,6 +35,7 @@ export default class Flipper {
     this.flipRange = abs(flipRange);
     this.flipSpeed = flipSpeed;
 
+    this.color = Color.interactive();
     this.angle  = 0;
     this.angVel = 0;
     this.active = false;

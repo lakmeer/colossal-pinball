@@ -61,5 +61,13 @@ export default class Color extends Array {
   static fromRgb (r:number, g:number, b:number) {
     return new Color(r/255, g/255, b/255, 1);
   }
+
+  static interactive () {
+    return new Color(...CYAN);
+  }
+
+  static static () {
+    return new Color(...BLUE);
+  }
 }
 

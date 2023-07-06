@@ -65,7 +65,7 @@
   // Shape draw dispatch
 
   const drawShape = (c:Collider) => {
-    if      (c instanceof Arc)     arcAt(ctx, c.pos, c.rad, 'magenta', c.start, c.end);
+    if      (c instanceof Arc)     arcAt(ctx, c.pos, c.rad, c.color.toString(), c.start, c.end);
     else if (c instanceof Circle)  circleAt(ctx, c.pos, c.rad, c.color.toString(), c.inverted);
     else if (c instanceof Segment) capsuleAt(ctx, c.pos, c.tip, 1, c.color.toString(), c.normal);
     else if (c instanceof Capsule) capsuleAt(ctx, c.pos, c.tip, c.rad, c.color.toString());
@@ -143,7 +143,7 @@
 
     // Flippers
     for (let flipper of Object.values(table.flippers)) {
-      capsuleAt(ctx, flipper.pos, flipper.tip, flipper.rad, '#d37');
+      capsuleAt(ctx, flipper.pos, flipper.tip, flipper.rad, flipper.color.toString());
     }
 
     // Balls

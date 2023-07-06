@@ -42,7 +42,7 @@ export class Circle implements Collider {
   constructor(pos:Vec2, rad:number) {
     this.pos = pos;
     this.rad = rad;
-    this.color = Color.random();
+    this.color = Color.static();
   }
 
   turn (delta:number) {
@@ -105,7 +105,7 @@ export class Arc implements Collider {
     this.rad = rad;
     this.range = range;
     this.angle = angle % TAU;
-    this.color = Color.random();
+    this.color = Color.static();
   }
 
   get start() {
@@ -172,7 +172,7 @@ export class Capsule implements Collider {
     this.pos = pos;
     this.tip = tip;
     this.rad = rad;
-    this.color = Color.random();
+    this.color = Color.static();
   }
 
   turn (delta:number) {
@@ -228,7 +228,7 @@ export class Segment extends Capsule {
 
   constructor(pos:Vec2, tip:Vec2, flip = false) {
     super(pos, tip, 0);
-    this.color = Color.random();
+    this.color = Color.static();
     this.flip = flip ? -1 : 1;
     this.normal = this.pos.sub(this.tip).norm().perp().scale(this.flip);
   }
@@ -289,7 +289,7 @@ export class Fence implements Collider {
     this.pos = vertices[0];
     this.rad = 0;
     this.vertices = vertices;
-    this.color = Color.random();
+    this.color = Color.static();
 
     for (let i = 0; i < vertices.length - 1; i++) {
       this.links.push(new Segment(vertices[i], vertices[i + 1]));
@@ -374,7 +374,7 @@ export class Box implements Collider {
     this.h = h;
     this.rad = sqrt(w * w + h * h) / 2;
     this.angle = angle;
-    this.color = Color.random();
+    this.color = Color.static();
   }
 
   turn (delta:number) {

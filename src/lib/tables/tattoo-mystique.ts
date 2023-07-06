@@ -121,6 +121,15 @@ export default (world:Rect):Table => {
   colliders.push(Arc.at(middle + 43, 352, 25, 11*TAU/32, -1*TAU/32));
   colliders.push(Capsule.at(middle + 33, 373, middle + 66, 348, 3));
 
+  // Central bumpers
+  colliders.push(Fence.from(
+    middle - 25, 222,
+    middle - 16, 240,
+    middle +  2, 240,
+    middle +  9, 236,
+    middle + 12, 216,
+  ).close());
+
   console.log("Table complete:", colliders.length, "elements total");
 
 
