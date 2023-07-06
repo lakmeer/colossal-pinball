@@ -7,7 +7,6 @@
   - Well: attract the ball to a single point (magents)
   - Slow: change the simulation time factor
   - Detect: trigger when ball enters or leaves (rollovers)
-  - Gravity: change global gravity direction
 - Remove 'intersects' from Collider and give it to Zone
 - Change the intersection overlay to a collision overlay, test
   each point with a fake Ball and mark how far it gets moved,
@@ -16,7 +15,6 @@
   that hosts a shape like Zone does. That way we can have non-colliding
   shapes for decorative elements.
 - Give things like kick force to Collider.
-
 - Whole game state as object, pass to renderer, make reactive
 
 - Table
@@ -25,7 +23,17 @@
   - Minimap
   - Launcher
 
-- Load tables from named files
+### Features
+
+- Ramps / multi-level
+  - Subways
+- Bumpers
+- Spinners
+- Droptargets
+  - Banks of droptargets for combos
+- Lamps
+- Rollovers
+- Slingshots -> collider.friction >= 1
 
 
 ## Theme Ideas
@@ -50,6 +58,7 @@
 - Easy combos and targets
 - Seashell drop targets
 - Snails drop targets
+- Nudibranches
 - Starfish
   - Graphic on the playfield with 5 lamps
   - Must disable all lamps at the same time
@@ -76,6 +85,7 @@
   - Pop out to grab and drain the ball
   - Ball wanders over specific zones in the playfield?
   - Chances of strike go up as the mission progresses
+  - Inlane hazard?
 - Reef shark main graphic
 
 #### Open Ocean
