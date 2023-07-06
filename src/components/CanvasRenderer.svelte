@@ -1,17 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import type Zone from "$lib/Zone";
-  import type Sink from "$lib/Sink";
-  import type Rect from '$lib/Rect';
   import type Ball from '$lib/Ball';
-  import type Flipper from '$lib/Flipper';
+  import type { Table } from "$lib/tables";
+  import type { Collider } from "$lib/Collider";
 
   import Vec2   from '$lib/Vec2';
   import Color  from '$lib/Color';
   import Pixels from '$lib/Pixels';
 
-  import type { Collider } from "$lib/Collider";
   import { Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Collider";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt } from "$lib/draw2d";
 
@@ -41,11 +38,8 @@
 
   // Objects
 
-  export let world:Rect;
-  export let balls:Ball[]       = [];
-  export let colliders:any[]    = [];
-  export let sinks:Sink[]       = [];
-  export let flippers:Flipper[] = [];
+  export let table:Table;
+  export let balls:Ball[] = [];
 
 
   // Canvas
@@ -64,6 +58,8 @@
 
   export let TIME_SCALE = 1;
   export let cameraY = 0;
+
+  let world = table.bounds;
 
 
   // Shape draw dispatch
@@ -136,17 +132,17 @@
     // Static Colliders
     if (SHOW_TEMPLATE) ctx.globalAlpha = 0.5;
 
-    for (let c of colliders) {
+    for (let c of table.colliders) {
       drawShape(c);
     }
 
     // Sink
-    for (let sink of sinks) {
+    for (let sink of table.sinks) {
       drawShape(sink.shape);
     }
 
     // Flippers
-    for (let flipper of flippers) {
+    for (let flipper of Object.values(table.flippers)) {
       capsuleAt(ctx, flipper.pos, flipper.tip, flipper.rad, '#d37');
     }
 
@@ -157,12 +153,12 @@
       if (SHOW_TRACES) {
 
         // To Sink
-        for (let s of sinks) {
+        for (let s of table.sinks) {
           lineAt(ctx, ball.pos, s.shape.closest(ball.pos), 'rgba(0, 0, 0, 0.5)', 1);
         }
 
         // Nearest
-        for (let c of colliders) {
+        for (let c of table.colliders) {
           lineAt(ctx, ball.pos, c.closest(ball.pos), 'rgba(255, 255, 255, 0.3)', 1);
         }
       }
@@ -173,7 +169,7 @@
       // Velocity
       if (SHOW_VELOCITY) {
         lineAt(ctx, ball.pos, ball.pos.add(ball.vel.scale(10/TIME_SCALE)), 'rgba(255, 63, 31, 0.7)', 2);
-        }
+      }
     }
 
     // Intersection overlay
@@ -190,7 +186,7 @@
           let py = floor((y + world.top)/world.h * RES);
           let hits = 0;
 
-          for (let c of colliders) hits += c.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
+          for (let c of table.colliders) hits += c.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
 
           if (hits) intersectionOverlay.setp(px, py, new Color(1, 1, 1, 0.2 * hits));
         }
@@ -204,8 +200,10 @@
   }
 
 
+  // Lifecycle
+
   $: balls && render();
-  $: colliders && render();
+  $: table.colliders && render();
 
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares

@@ -1,4 +1,3 @@
-
 import type Ball from './Ball';
 
 import Vec2  from './Vec2';

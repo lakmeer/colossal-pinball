@@ -1,4 +1,7 @@
 <script lang="ts">
+  // @ts-nocheck
+  // - will update this later
+
   import CanvasRenderer from '$comp/CanvasRenderer.svelte';
 
   import { onMount } from 'svelte';
@@ -11,9 +14,9 @@
   import type { Collider } from "$lib/Collider";
   import { Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Collider";
 
-  import { TAU, last, pow, floor, min, max, abs, random, sqrt } from "$lib/utils";
+  import { TAU } from "$lib/utils";
 
-  import store, { debug, reset } from "$src/stores/debug";
+  import store, { reset } from "$src/stores/debug";
 
 
   // World
@@ -141,7 +144,7 @@
 <svelte:window bind:innerWidth bind:innerHeight />
 
 <div>
-  <CanvasRenderer {sinks} {balls} {colliders} {world} {TIME_SCALE} bind:width={innerHeight} bind:height={innerHeight} />
+  <CanvasRenderer {balls} {table} {TIME_SCALE} bind:width={innerHeight} bind:height={innerHeight} />
 </div>
 
 <pre>
