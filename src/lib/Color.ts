@@ -61,12 +61,19 @@ export default class Color extends Array {
     return new Color(r/255, g/255, b/255, 1);
   }
 
+
+  // Default colors for certain purposes
+
   static interactive () {
     return new Color(...CYAN);
   }
 
   static static () {
     return new Color(...BLUE);
+  }
+
+  static zone () {
+    return new Color(...GREEN);
   }
 }
 

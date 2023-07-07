@@ -35,6 +35,11 @@
   let btnB = false;
 
 
+  // TEMP: Test zones
+
+  table.zones.push(Zone.from(Circle.at(0, 0, 50), Vec2.fromXY(100, 100)));
+
+
   //
   // Physics
   //
