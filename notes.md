@@ -22,6 +22,12 @@
   - Simulate any chunks with balls in, and their neighbours
   - Minimap
   - Launcher
+- Table definition
+  - Helper function that takes a name, builds a string-indexed object so that
+    components can be referenced by scripts
+  - Event trigger names on obstacle components
+  - Table state
+
 
 ### Features
 
