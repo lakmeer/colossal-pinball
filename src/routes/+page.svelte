@@ -6,6 +6,9 @@
   import Vec2 from "$lib/Vec2";
   import Rect from "$lib/Rect";
 
+  import { Circle }    from "$lib/Shape";
+  import { ForceZone } from "$lib/Zone";
+
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
 
   import type Table from "$lib/tables/";
@@ -37,7 +40,7 @@
 
   // TEMP: Test zones
 
-  table.zones.push(Zone.from(Circle.at(0, 0, 50), Vec2.fromXY(100, 100)));
+  table.zones.push(ForceZone.from(Circle.at(0, 150, 50), Vec2.fromXY(1000, 0)));
 
 
   //
@@ -66,6 +69,9 @@
 
       // Playfield obstacles
       for (let c of table.colliders) c.collide(a);
+
+      // Zones
+      for (let z of table.zones) z.apply(a);
 
       // Drain
       for (let s of table.sinks) s.collide(a);

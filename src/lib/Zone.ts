@@ -60,3 +60,8 @@ export class ForceZone implements Zone {
 }
 
 
+
+// Export Zone interface for typescript
+
+export default Zone;
+

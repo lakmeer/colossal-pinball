@@ -155,6 +155,7 @@ export default (world:Rect):Table => {
     bounds: world,
     colliders,
     sinks: [ drain ],
+    zones: [],
     flippers: {
       left: new Flipper(Vec2.fromXY(middle - drainWidth/2 - flipperSize, 46), 4, flipperSize, 0  - PI/6,  PI/4, 50),
       right: new Flipper(Vec2.fromXY(middle + drainWidth/2 + flipperSize, 46), 4, flipperSize, PI + PI/6, -PI/4, 50),

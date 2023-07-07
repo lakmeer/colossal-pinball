@@ -122,6 +122,11 @@
       lineAt(ctx, Vec2.fromXY(world.left, cameraY), Vec2.fromXY(world.right, cameraY), 'red', 0.5);
     }
 
+    // Zones
+    for (let zone of table.zones) {
+      drawShape(zone.shape, zone.color);
+    }
+
     // Static Colliders
     if (SHOW_TEMPLATE) ctx.globalAlpha = 0.5;
 
