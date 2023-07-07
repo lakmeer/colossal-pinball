@@ -26,13 +26,46 @@ interface Zone {
 }
 
 
+
+//
+// Drain Zone
+//
+// Kills the ball
+//
+
+export class Drain implements Zone {
+
+  shape:Shape;
+  color:Color;
+
+  constructor(shape:Shape) {
+    this.shape = shape;
+    this.color = new Color(0, 0, 0, 1);
+  }
+
+  intersect(point:Vec2):boolean {
+    return this.shape.intersect(point);
+  }
+
+  apply(ball:Ball) {
+    if (this.shape.intersect(ball.pos)) ball.cull = true;
+  }
+
+  static from (shape:Shape) {
+    return new Drain(shape);
+  }
+
+}
+
+
+
 //
 // Force Zone
 //
 // Pushes the ball steadily.
 //
 
-export class ForceZone implements Zone {
+export class Force implements Zone {
 
   shape: Shape;
   color: Color;
@@ -55,7 +88,7 @@ export class ForceZone implements Zone {
   }
 
   static from (shape:Shape, force:Vec2) {
-    return new ForceZone(shape, force);
+    return new Force(shape, force);
   }
 }
 

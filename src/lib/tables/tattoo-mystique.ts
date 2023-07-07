@@ -1,15 +1,16 @@
 
-import type Rect     from "$lib/Rect";
-import type Shape    from "$lib/Shape";
-import type Table    from "$lib/tables";
+import type Rect  from "$lib/Rect";
+import type Shape from "$lib/Shape";
+import type Table from "$lib/tables";
+import type Zone  from "$lib/Zone";
 
 import Vec2     from "$lib/Vec2";
-import Sink     from "$lib/Sink";
 import Color    from "$lib/Color";
 import Flipper  from "$lib/Flipper";
 import Collider from "$lib/Collider";
 
 import { Segment, Circle, Capsule, Arc, Fence, Box } from "$lib/Shape";
+import { Drain } from "$lib/Zone";
 
 import { PI, TAU } from "$lib/utils";
 
@@ -21,6 +22,7 @@ import { PI, TAU } from "$lib/utils";
 export default (world:Rect):Table => {
 
   const colliders:Collider[] = [];
+  const zones:Zone[] = [];
 
 
   // Vars
@@ -146,16 +148,15 @@ export default (world:Rect):Table => {
 
   // Central drain
 
-  const drain = Sink.from(Box.fromBounds(world.left, 0, world.right - chuteWidth - chuteWall, 15));
+  zones.push(Drain.from(Box.fromBounds(world.left, 0, world.right - chuteWidth - chuteWall, 15)));
 
 
   // Final Table
 
   return {
     bounds: world,
+    zones,
     colliders,
-    sinks: [ drain ],
-    zones: [],
     flippers: {
       left: new Flipper(Vec2.fromXY(middle - drainWidth/2 - flipperSize, 46), 4, flipperSize, 0  - PI/6,  PI/4, 50),
       right: new Flipper(Vec2.fromXY(middle + drainWidth/2 + flipperSize, 46), 4, flipperSize, PI + PI/6, -PI/4, 50),

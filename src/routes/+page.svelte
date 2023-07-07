@@ -7,7 +7,7 @@
   import Rect from "$lib/Rect";
 
   import { Circle }    from "$lib/Shape";
-  import { ForceZone } from "$lib/Zone";
+  import { Force } from "$lib/Zone";
 
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
 
@@ -19,7 +19,7 @@
 
   // Config
 
-  const GRAVITY       = 1000;
+  const GRAVITY       = 500;
   const TIME_SCALE    = 1.0;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
   const MAX_BALLS     = 100;
@@ -40,7 +40,7 @@
 
   // TEMP: Test zones
 
-  table.zones.push(ForceZone.from(Circle.at(0, 150, 50), Vec2.fromXY(1000, 0)));
+  table.zones.push(Force.from(Circle.at(0, 150, 50), Vec2.fromXY(1000, 0)));
 
 
   //
@@ -72,9 +72,6 @@
 
       // Zones
       for (let z of table.zones) z.apply(a);
-
-      // Drain
-      for (let s of table.sinks) s.collide(a);
 
       // Cull dead balls
       if (a.cull) balls.splice(balls.indexOf(a), 1);

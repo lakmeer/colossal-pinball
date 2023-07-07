@@ -44,6 +44,10 @@ export default class Color extends Array {
     return [this.r, this.g, this.b, this.a];
   }
 
+  alpha(a:number):Color {
+    return new Color(this.r, this.g, this.b, a);
+  }
+
   toString() {
     return `rgba(${floor(this.r*255)}, ${floor(this.g*255)}, ${floor(this.b*255)}, ${this.a})`;
   }
@@ -73,7 +77,7 @@ export default class Color extends Array {
   }
 
   static zone () {
-    return new Color(...GREEN);
+    return new Color(...GREEN).alpha(0.3);
   }
 }
 

@@ -1,20 +1,13 @@
 
 # TODO
 
-- Make Zone an interface
-  - Force: apply constant acceleration
   - Sink: drain the ball
   - Well: attract the ball to a single point (magents)
   - Slow: change the simulation time factor
   - Detect: trigger when ball enters or leaves (rollovers)
-- Remove 'intersects' from Collider and give it to Zone
 - Change the intersection overlay to a collision overlay, test
   each point with a fake Ball and mark how far it gets moved,
   use this value to create a heatmap over the table.
-- Move Collider to Shape, and have Collider be a single class
-  that hosts a shape like Zone does. That way we can have non-colliding
-  shapes for decorative elements.
-- Give things like kick force to Collider.
 - Whole game state as object, pass to renderer, make reactive
 
 - Table
@@ -24,7 +17,7 @@
   - Launcher
 - Table definition
   - Helper function that takes a name, builds a string-indexed object so that
-    components can be referenced by scripts
+    playfield components can be referenced by scripts
   - Event trigger names on obstacle components
   - Table state
 

@@ -134,11 +134,6 @@
       drawShape(c.shape, c.color);
     }
 
-    // Sink
-    for (let sink of table.sinks) {
-      drawShape(sink.shape, sink.color);
-    }
-
     // Flippers
     for (let flipper of Object.values(table.flippers)) {
       capsuleAt(ctx, flipper.pos, flipper.tip, flipper.rad, flipper.color.toString());
@@ -149,13 +144,6 @@
 
       // Trace paths
       if (SHOW_TRACES) {
-
-        // To Sink
-        for (let s of table.sinks) {
-          lineAt(ctx, ball.pos, s.shape.closest(ball.pos), 'rgba(0, 0, 0, 0.5)', 1);
-        }
-
-        // Nearest
         for (let c of table.colliders) {
           lineAt(ctx, ball.pos, c.shape.closest(ball.pos), 'rgba(255, 255, 255, 0.3)', 1);
         }
