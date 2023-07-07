@@ -1,8 +1,11 @@
 
-import { Capsule } from "$lib/Collider";
+import type Ball from "$lib/Ball";
+
 import Vec2 from "$lib/Vec2";
 import Color from "$lib/Color";
-import type Ball from "$lib/Ball";
+import Collider from "$lib/Collider";
+
+import { Capsule } from "$lib/Shape";
 
 const { sin, cos, min, max, sign, abs } = Math;
 
@@ -13,7 +16,8 @@ const { sin, cos, min, max, sign, abs } = Math;
 
 export default class Flipper {
 
-  capsule: Capsule;
+  capsule:  Capsule;
+  collider: Collider;
 
   length: number;
   restAngle: number;
@@ -27,7 +31,8 @@ export default class Flipper {
   active: boolean;
 
   constructor (pos: Vec2, rad: number, length: number, restAngle: number, flipRange:number, flipSpeed:number) {
-    this.capsule = new Capsule(pos, pos.clone(), rad);
+    this.capsule  = new Capsule(pos, pos.clone(), rad);
+    this.collider = new Collider(this.capsule, Color.interactive());
 
     this.length    = length;
     this.restAngle = restAngle;
@@ -70,7 +75,7 @@ export default class Flipper {
   }
 
   collide(ball: Ball) {
-    this.capsule.collide(ball);
+    this.collider.collide(ball);
   }
 
 }

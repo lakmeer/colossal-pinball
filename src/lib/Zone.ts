@@ -1,8 +1,7 @@
 
-import type Vec2 from './Vec2';
-import type Ball from './Ball';
-
-import type { Collider } from './Collider';
+import type Vec2  from './Vec2';
+import type Ball  from './Ball';
+import type Shape from './Shape';
 
 
 //
@@ -14,28 +13,25 @@ import type { Collider } from './Collider';
 
 export default class Zone {
 
-  shape: Collider;
+  shape: Shape;
   force: Vec2;
 
-  constructor(shape: Collider, force: Vec2) {
+  constructor(shape:Shape, force:Vec2) {
     this.shape = shape;
     this.force = force;
   }
-
-  get pos() { return this.shape.pos; }
-  get rad() { return this.shape.rad; }
 
   intersect(point:Vec2):boolean {
     return this.shape.intersect(point);
   }
 
   collide(ball:Ball) {
-    if (this.intersect(ball.pos)) {
+    if (this.shape.intersect(ball.pos)) {
       ball.impart(this.force);
     }
   }
 
-  static from (shape: Collider, force: Vec2) {
+  static from (shape:Shape, force:Vec2) {
     return new Zone(shape, force);
   }
 

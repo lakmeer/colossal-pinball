@@ -1,9 +1,11 @@
-import type Vec2  from './Vec2';
-import type Ball  from './Ball';
 
-import type { Collider } from './Collider';
+import type Vec2     from './Vec2';
+import type Ball     from './Ball';
+import type Shape    from './Shape';
+import type Collider from './Collider';
 
 import Color from './Color';
+
 
 
 //
@@ -15,11 +17,12 @@ import Color from './Color';
 
 export default class Sink {
 
-  shape: Collider;
+  shape:Shape;
+  color:Color;
 
-  constructor(shape: Collider) {
+  constructor(shape:Shape) {
     this.shape = shape;
-    this.shape.color = new Color(0, 0, 0, 1);
+    this.color = new Color(0, 0, 0, 1);
   }
 
   get pos() { return this.shape.pos; }
@@ -37,7 +40,7 @@ export default class Sink {
     if (this.shape.intersect(ball.pos)) ball.cull = true;
   }
 
-  static from (shape: Collider) {
+  static from (shape:Shape) {
     return new Sink(shape);
   }
 

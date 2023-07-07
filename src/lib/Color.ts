@@ -26,8 +26,7 @@ const COLORS:Tuple4[] = [ RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE ];
 export default class Color extends Array {
 
   constructor (r:number, g:number, b:number, a:number) {
-    // This works but typescript doesn't get it
-    // @ts-ignore
+    // @ts-ignore - This works but typescript doesn't get it
     super(r, g, b, a);
   }
 
@@ -41,15 +40,15 @@ export default class Color extends Array {
   set b(v:number) { this[2] = v; }
   set a(v:number) { this[3] = v; }
 
-  get spread ():Tuple4 {
+  get spread():Tuple4 {
     return [this.r, this.g, this.b, this.a];
   }
 
-  toString () {
+  toString() {
     return `rgba(${floor(this.r*255)}, ${floor(this.g*255)}, ${floor(this.b*255)}, ${this.a})`;
   }
 
-  to8bit ():Tuple4 {
+  to8bit():Tuple4 {
     return [floor(this.r*255), floor(this.g*255), floor(this.b*255), floor(this.a*255)];
   }
 

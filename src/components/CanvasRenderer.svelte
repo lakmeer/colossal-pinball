@@ -1,25 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import type Ball from '$lib/Ball';
-  import type { Table } from "$lib/tables";
-  import type { Collider } from "$lib/Collider";
+  import type Ball  from '$lib/Ball';
+  import type Table from "$lib/tables";
+  import type Shape from "$lib/Shape";
 
   import Vec2   from '$lib/Vec2';
   import Color  from '$lib/Color';
   import Pixels from '$lib/Pixels';
 
-  import { Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Collider";
+  import { Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt } from "$lib/draw2d";
 
-  const { floor } = Math;
-
-  const loadImage = (src:string):Promise<HTMLImageElement> =>
-    new Promise((resolve) => {
-      let i = new Image();
-      i.src = src;
-      i.onload = () => resolve(i);
-    });
+  import { floor, loadImage } from "$lib/utils";
 
 
   // Config
@@ -64,15 +57,15 @@
 
   // Shape draw dispatch
 
-  const drawShape = (c:Collider) => {
-    if      (c instanceof Arc)     arcAt(ctx, c.pos, c.rad, c.color.toString(), c.start, c.end);
-    else if (c instanceof Circle)  circleAt(ctx, c.pos, c.rad, c.color.toString(), c.inverted);
-    else if (c instanceof Segment) capsuleAt(ctx, c.pos, c.tip, 1, c.color.toString(), c.normal);
-    else if (c instanceof Capsule) capsuleAt(ctx, c.pos, c.tip, c.rad, c.color.toString());
-    else if (c instanceof Box)     boxAt(ctx, c.toRect(), c.color.toString(), c.angle);
-    else if (c instanceof Fence) {
-      for (let l of c.links) {
-        capsuleAt(ctx, l.pos, l.tip, 1, c.color.toString(), l.normal);
+  const drawShape = (s:Shape, c:Color) => {
+    if      (s instanceof Arc)         arcAt(ctx, s.pos, s.rad, c.toString(), s.start, s.end);
+    else if (s instanceof Circle)   circleAt(ctx, s.pos, s.rad, c.toString(), s.invert);
+    else if (s instanceof Segment) capsuleAt(ctx, s.pos, s.tip, 1, c.toString(), s.normal);
+    else if (s instanceof Capsule) capsuleAt(ctx, s.pos, s.tip, s.rad, c.toString());
+    else if (s instanceof Box)         boxAt(ctx, s.toRect(), c.toString(), s.angle);
+    else if (s instanceof Fence) {
+      for (let l of s.links) {
+        capsuleAt(ctx, l.pos, l.tip, 1, c.toString(), l.normal);
       }
     }
   }
@@ -133,12 +126,12 @@
     if (SHOW_TEMPLATE) ctx.globalAlpha = 0.5;
 
     for (let c of table.colliders) {
-      drawShape(c);
+      drawShape(c.shape, c.color);
     }
 
     // Sink
     for (let sink of table.sinks) {
-      drawShape(sink.shape);
+      drawShape(sink.shape, sink.color);
     }
 
     // Flippers
@@ -159,7 +152,7 @@
 
         // Nearest
         for (let c of table.colliders) {
-          lineAt(ctx, ball.pos, c.closest(ball.pos), 'rgba(255, 255, 255, 0.3)', 1);
+          lineAt(ctx, ball.pos, c.shape.closest(ball.pos), 'rgba(255, 255, 255, 0.3)', 1);
         }
       }
 
@@ -186,7 +179,7 @@
           let py = floor((y + world.top)/world.h * RES);
           let hits = 0;
 
-          for (let c of table.colliders) hits += c.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
+          for (let c of table.colliders) hits += c.shape.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
 
           if (hits) intersectionOverlay.setp(px, py, new Color(1, 1, 1, 0.2 * hits));
         }

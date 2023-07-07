@@ -2,26 +2,26 @@
 
   import { onMount } from 'svelte';
 
-  import Ball    from "$lib/Ball";
-  import Vec2    from "$lib/Vec2";
-  import Rect    from "$lib/Rect";
-
-  import { TattooMystique } from "$lib/tables/";
-  import type { Table } from "$lib/tables/";
+  import Ball from "$lib/Ball";
+  import Vec2 from "$lib/Vec2";
+  import Rect from "$lib/Rect";
 
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
+
+  import type Table from "$lib/tables/";
+  import { TattooMystique } from "$lib/tables/";
 
   import { clamp, pow, floor, min, max, nsin } from "$lib/utils";
 
 
   // Config
 
-  const GRAVITY = 1000;
-  const TIME_SCALE = 1.0;
-  const SUBSTEP_FACTOR = 0.8; // Use no more than half the frame time
-  const MAX_BALLS = 100;
-  const COLLISION_FRICTION = 0.98;
-  const GAME_ASPECT = 1/2;
+  const GRAVITY       = 1000;
+  const TIME_SCALE    = 1.0;
+  const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
+  const MAX_BALLS     = 100;
+  const STD_FRICTION  = 0.98;
+  const GAME_ASPECT   = 1/2;
 
 
   // World
@@ -31,6 +31,8 @@
   let balls:Ball[] = [];
 
   let cameraY = 0;
+  let btnA = false;
+  let btnB = false;
 
 
   //
@@ -40,7 +42,7 @@
   const update = (dt:number) => {
 
     // 'Fractional friction factor' - exponentially adjusted for number of steps
-    const fff = pow(1 - (1 - COLLISION_FRICTION), 1/substeps);
+    const fff = pow(1 - (1 - STD_FRICTION), 1/substeps);
 
     // Collisions
     for (let a of balls) {
@@ -81,8 +83,6 @@
   let rafref = 0;
   let substeps = 8;
   let delta = 0;
-  let btnA = false;
-  let btnB = false;
 
   const render = () => {
     rafref = requestAnimationFrame(render);
@@ -108,7 +108,7 @@
     // if delta is the time taken to simulate this whole frame, then
     // we can calculate how many substeps we can pack into the next frame
     delta = performance.now() - start;
-    substeps = max(8, min(100, floor(substeps * (1000/60)/delta * SUBSTEP_FACTOR)));
+    substeps = max(8, min(100, floor(substeps * (1000/60)/delta * SUBSTEP_LIMIT)));
   }
 
 
@@ -186,8 +186,6 @@
   let innerWidth = 0;
   let innerHeight = 0;
 
-  $: viewAspect = innerWidth / innerHeight;
-
   onMount(() => {
     render();
 
@@ -213,10 +211,6 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<!--
-    bind:width={innerWidth}
-    bind:height={innerHeight}
--->
 <div>
   <CanvasRenderer
     {balls}
