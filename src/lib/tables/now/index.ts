@@ -187,9 +187,13 @@ export default ():Table => {
   
   // Lower Guards
 
-  C(`lower_guard_left_top`, Capsule.at(TL + 11, 383, TL + 31, 374, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_left_top`, Capsule.at(TL + 11, 383, TL + 31, 372, 9), Color.fromTw('emerald-500'));
   C(`lower_guard_left_mid`, Circle.at(TL + 21, 334, 9), Color.fromTw('emerald-500'));
   C(`lower_guard_left_btm`, Circle.at(TL + 14, 299, 9), Color.fromTw('emerald-500'));
+
+  C(`lower_guard_right_top`, Circle.at(TR - 31, 372, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_right_mid`, Circle.at(TR - 21, 334, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_right_btm`, Circle.at(TR - 14, 299, 9), Color.fromTw('emerald-500'));
 
 
   // Outlane rollovers
