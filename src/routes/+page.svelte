@@ -4,12 +4,6 @@
 
   import Ball from "$lib/Ball";
   import Vec2 from "$lib/Vec2";
-  import Rect from "$lib/Rect";
-
-  import Color from "$lib/Color";
-  import Collider from "$lib/Collider";
-  import { Circle }    from "$lib/Shape";
-  import { Rollover, Force } from "$lib/Zone";
 
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
 
@@ -26,7 +20,6 @@
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
   const MAX_BALLS     = 100;
   const STD_FRICTION  = 0.98;
-  const GAME_ASPECT   = 1/2;
 
 
   // World
@@ -123,7 +116,7 @@
 
   const spawn = (pos:Vec2) => {
     if (balls.length < MAX_BALLS) {
-      balls.push(Ball.randomAt(pos.x, pos.y));
+      balls.push(Ball.randomAt(pos.x, pos.y, table.ballRad));
     }
   }
 
@@ -224,7 +217,7 @@
     {balls}
     {table}
     {cameraY}
-    width={innerHeight * table.bounds.toAspect()}
+    width={innerHeight * table.bounds.aspect}
     height={innerHeight}
   />
 </div>

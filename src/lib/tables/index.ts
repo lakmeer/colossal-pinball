@@ -11,6 +11,7 @@ export default class Table {
   bounds:     Rect;
   zones:      Record<string,Zone>;
   colliders:  Record<string,Collider>;
+  ballRad:    number;
   template:   null | HTMLImageElement;
   templateSrc: string;
   flippers: {

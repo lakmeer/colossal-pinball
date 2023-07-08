@@ -20,15 +20,15 @@ export const lineAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, col:string,
 
 export const rectAt = (ctx:CanvasRenderingContext2D, r:Rect, col:string) => {
   ctx.fillStyle = col;
-  ctx.fillRect(...r.toBounds());
+  ctx.fillRect(...r.asTuple());
 }
 
 export const boxAt = (ctx:CanvasRenderingContext2D, r:Rect, col:string, a:number = 0) => {
   ctx.fillStyle = col;
   ctx.save();
-  ctx.translate(r.x, r.y);
+  ctx.translate(r.left, r.top);
   ctx.rotate(a);
-  ctx.fillRect(-r.w/2, -r.h/2, r.w, r.h);
+  ctx.fillRect(0, 0, r.w, r.h);
   ctx.restore();
 }
 

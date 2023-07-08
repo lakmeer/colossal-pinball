@@ -61,7 +61,10 @@
     else if (s instanceof Circle)   circleAt(ctx, s.pos, s.rad, c.toString(), s.invert);
     else if (s instanceof Segment) capsuleAt(ctx, s.pos, s.tip, 1, c.toString(), s.normal);
     else if (s instanceof Capsule) capsuleAt(ctx, s.pos, s.tip, s.rad, c.toString());
-    else if (s instanceof Box)         boxAt(ctx, s.toRect(), c.toString(), s.angle);
+    else if (s instanceof Box) {
+      //console.log(s.pos, s.w, s.h, s.toRect());
+    boxAt(ctx, s.toRect(), c.toString(), s.angle);
+    }
     else if (s instanceof Fence) {
       for (let l of s.links) {
         capsuleAt(ctx, l.pos, l.tip, 1, c.toString(), l.normal);

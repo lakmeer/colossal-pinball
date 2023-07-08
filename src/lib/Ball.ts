@@ -63,8 +63,8 @@ export default class Ball {
 
   // Static
 
-  static randomAt(x:number, y:number) {
-    const z = rand(5, 5);
+  static randomAt(x:number, y:number, r:number = 5) {
+    const z = rand(r, r);
     return new Ball(
       Vec2.fromXY(x, y),
       Vec2.fromXY(0, 0),

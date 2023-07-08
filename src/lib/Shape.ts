@@ -3,7 +3,7 @@ import type Ball from './Ball';
 import Vec2  from './Vec2';
 import Rect  from './Rect';
 
-import { abs, sqrt, clamp, shortestAngle, nearestPointOn, TAU } from '$lib/utils';
+import { min, abs, sqrt, clamp, shortestAngle, nearestPointOn, TAU } from '$lib/utils';
 
 
 //
@@ -30,6 +30,8 @@ interface Shape {
   // Returns a zero vector if the ball is not intersecting.
   eject(ball:Ball):Vec2;
 }
+
+export default Shape;
 
 
 //
@@ -404,22 +406,18 @@ export class Box implements Shape {
   }
 
   toRect():Rect {
-    return new Rect(this.pos.x, this.pos.y, this.w, this.h);
+    return new Rect(this.pos.x - this.w / 2, this.pos.y - this.h / 2, this.pos.x + this.w / 2, this.pos.y + this.h / 2);
   }
 
   static at (x:number, y:number, w:number, h:number, angle:number = 0) {
     return new Box(Vec2.fromXY(x, y), w, h, angle);
   }
 
-  static fromBounds (x1:number, y1:number, x2:number, y2:number, angle:number = 0) {
-    return new Box(Vec2.fromXY((x1 + x2)/2, (y1 + y2)/2), x2 - x1, y2 - y1, angle);
+  static from (left:number, top:number, right:number, bottom:number, angle:number = 0) {
+    const w = abs(right - left);
+    const h = abs(bottom - top);
+    return new Box(Vec2.fromXY(left + w / 2, min(top, bottom)+ h / 2), w, h, angle);
   }
 
 }
-
-
-
-// Export Shape interface for typescript
-
-export default Shape;
 

@@ -21,9 +21,11 @@ import { PI, TAU } from "$lib/utils";
 
 export default ():Table => {
 
-  const bounds = Rect.from(0, 0, 432, 768);
+  const name = "NOW";
+  const bounds = new Rect(-216, 768, 216, 0);
   const colliders:Record<string,Collider> = {};
   const zones:Record<string,Zone> = {};
+  const flippers = {} as Table["flippers"];
 
 
   // Vars
@@ -35,13 +37,17 @@ export default ():Table => {
   let chuteWall   = 6;
   let chuteWidth  = ballSize + 2;
 
-  let tableWidth  = bounds.w - chuteWidth - chuteWall;
-  let middle      = tableWidth/2 + bounds.left;
-  let drainWidth  = ballSize * 2;
 
-  let upperLaneCenter = middle - 14;
-  let upperLaneStride = 22;
+  // Shorthands
 
+  const L  = bounds.left;
+  const R  = bounds.right;
+  const W  = bounds.w;
+  const H  = bounds.h;
+  const TW = bounds.w - chuteWidth - chuteWall; // table width except chute
+  const TR = L + TW;  // rightmost position excluding chute
+  const M  = TW/2 + L; // middle line of playfield
+  
 
   // Adds a collider to the field based on the shape
 
@@ -56,26 +62,35 @@ export default ():Table => {
 
   // Launch chute and right wall
 
-  console.log("Table complete:", Object.values(colliders).length, "elements total");
-
 
   // Central drain
 
-  zones.drain = Drain.from(Box.fromBounds(bounds.left, 0, bounds.right - chuteWidth - chuteWall, 15));
+  console.log(L, TR, TW, M);
+  zones.drain = Drain.from(Box.from(L, 80, TR, 0));
+  console.log(zones.drain);
 
 
-  // Final Table
+  // Flippers
+
+  flippers.left  = new Flipper(Vec2.fromXY(M - 20 - flipperSize, 46), 4, flipperSize, 0  - PI/6,  PI/4, 50);
+  flippers.right = new Flipper(Vec2.fromXY(M + 20 + flipperSize, 46), 4, flipperSize, PI + PI/6, -PI/4, 50);
+
+
+  // Done
+
+  console.log(`Loaded table '${name}':
+  ${Object.values(zones).length} zones
+  ${Object.values(colliders).length} colliders
+  ${Object.values(flippers).length} flippers`);
 
   return {
     bounds,
     zones,
+    flippers,
     colliders,
     template: null,
     templateSrc: "/now.png",
-    flippers: {
-      left: new Flipper(Vec2.fromXY(middle - drainWidth/2 - flipperSize, 46), 4, flipperSize, 0  - PI/6,  PI/4, 50),
-      right: new Flipper(Vec2.fromXY(middle + drainWidth/2 + flipperSize, 46), 4, flipperSize, PI + PI/6, -PI/4, 50),
-    }
+    ballRad: ballSize/2,
   }
 }
 
