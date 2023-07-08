@@ -8,8 +8,8 @@ import { max, floor, TAU } from "$lib/utils";
 
 // Drawing helpers
 
-export const lineAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, col:string, width:number) => {
-  ctx.lineCap = 'round';
+export const lineAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, col:string, width:number, cap = 'round') => {
+  ctx.lineCap = cap;
   ctx.lineWidth = width;
   ctx.strokeStyle = col;
   ctx.beginPath();
@@ -41,12 +41,13 @@ export const circleAt = (ctx:CanvasRenderingContext2D, pos:Vec2, rad:number, col
   if (invert) ctx.stroke(); else ctx.fill();
 }
 
-export const arcAt = (ctx:CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, start = 0, end = TAU, cc = false) => {
+export const arcAt = (ctx:CanvasRenderingContext2D, pos:Vec2, rad:number, radius:number, col:string, start = 0, end = TAU, cc = false) => {
+  ctx.lineCap = 'round';
   ctx.strokeStyle = col;
   ctx.fillStyle = col;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = rad * 2;
   ctx.beginPath();
-  ctx.arc(pos.x, pos.y, rad, start, end, cc);
+  ctx.arc(pos.x, pos.y, radius, start, end, cc);
   ctx.stroke();
 }
 
@@ -65,7 +66,7 @@ export const capsuleAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, rad:numb
 
   if (normal) {
     const m = a.lerp(b, 0.5);
-    lineAt(ctx, m, m.add(normal.scale(5)), col, 1);
+    lineAt(ctx, m, m.add(normal.scale(10)), col, 3, 'butt');
   }
 }
 

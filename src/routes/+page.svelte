@@ -88,7 +88,7 @@
     const now = performance.now()/1000;
     const dt = (now - lastTime) * TIME_SCALE;
 
-    cameraY = nsin(now/2) * table.bounds.h;
+    //cameraY = nsin(now/2) * table.bounds.h;
 
     table.flippers.left.active  = btnA;
     table.flippers.right.active = btnB;
@@ -186,7 +186,7 @@
   //@ts-ignore shut up
   onMount(async () => {
 
-    table.template = await loadImage(table.templateSrc);
+    if (table.templateSrc) table.template = await loadImage(table.templateSrc);
 
     render();
 

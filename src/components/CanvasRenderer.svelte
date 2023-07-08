@@ -57,17 +57,14 @@
   // Shape draw dispatch
 
   const drawShape = (s:Shape, c:Color) => {
-    if      (s instanceof Arc)         arcAt(ctx, s.pos, s.rad, c.toString(), s.start, s.end);
+    if      (s instanceof Arc)         arcAt(ctx, s.pos, s.rad, s.radius, c.toString(), s.start, s.end);
     else if (s instanceof Circle)   circleAt(ctx, s.pos, s.rad, c.toString(), s.invert);
     else if (s instanceof Segment) capsuleAt(ctx, s.pos, s.tip, 1, c.toString(), s.normal);
     else if (s instanceof Capsule) capsuleAt(ctx, s.pos, s.tip, s.rad, c.toString());
-    else if (s instanceof Box) {
-      //console.log(s.pos, s.w, s.h, s.toRect());
-    boxAt(ctx, s.toRect(), c.toString(), s.angle);
-    }
+    else if (s instanceof Box)         boxAt(ctx, s.toRect(), c.toString(), s.angle);
     else if (s instanceof Fence) {
       for (let l of s.links) {
-        capsuleAt(ctx, l.pos, l.tip, 1, c.toString(), l.normal);
+        capsuleAt(ctx, l.pos, l.tip, l.rad, c.toString(), l.normal);
       }
     }
   }
@@ -94,7 +91,7 @@
     if (SHOW_TEMPLATE) {
       if (table.template && typeof table.template != 'string') {
         ctx.scale(1, -1);
-        ctx.globalAlpha = 0.9;
+        ctx.globalAlpha = 0.7;
         ctx.drawImage(table.template, world.left, -world.top, world.w, world.h);
         ctx.globalAlpha = 1.0;
         ctx.scale(1, -1);
@@ -115,7 +112,7 @@
       for (let y = world.bottom; y <= world.top; y += GRID_RES) {
         if (y % (GRID_MAJOR * GRID_RES) === 0) {
           lineAt(ctx, Vec2.fromXY(world.left, y), Vec2.fromXY(world.right, y), '#444', 1);
-          textAt(ctx, `${y}`, world.left, y, '#555', 'left');
+          textAt(ctx, `${y}`, world.left, y, '#fff', 'left');
         } else {
           lineAt(ctx, Vec2.fromXY(world.left, y), Vec2.fromXY(world.right, y), '#333', 0.2);
         }
@@ -124,13 +121,19 @@
       lineAt(ctx, Vec2.fromXY(world.left, cameraY), Vec2.fromXY(world.right, cameraY), 'red', 0.5);
     }
 
+    if (SHOW_TEMPLATE) ctx.globalAlpha = 0.4;
+
     // Zones
     for (let zone of Object.values(table.zones)) {
       drawShape(zone.shape, zone.color);
     }
 
+    // Decoration layer
+    for (let deco of Object.values(table.decos)) {
+      drawShape(deco.shape, deco.color);
+    }
+
     // Static Colliders (dim if template is displayed)
-    if (SHOW_TEMPLATE) ctx.globalAlpha = 0.5;
     for (let c of Object.values(table.colliders)) {
       drawShape(c.shape, c.color);
     }
@@ -139,6 +142,8 @@
     for (let flipper of Object.values(table.flippers)) {
       capsuleAt(ctx, flipper.pos, flipper.tip, flipper.rad, flipper.color.toString());
     }
+
+    if (SHOW_TEMPLATE) ctx.globalAlpha = 1.0;
 
     // Balls
     for (let ball of balls) {

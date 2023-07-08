@@ -5,6 +5,7 @@
   each point with a fake Ball and mark how far it gets moved,
   use this value to create a heatmap over the table.
 - Whole game state as object, pass to renderer, make reactive
+- Better debug ball spawner (drag and release, middle-click repeats last spawn)
 
 - Table
   - Split into horizontal chunks

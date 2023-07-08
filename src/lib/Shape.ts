@@ -101,15 +101,17 @@ export class Circle implements Shape {
 export class Arc implements Shape {
 
   pos:Vec2;
-  rad:number;
+  rad:number;    // thickness
+  radius:number; // arc radius
   range:number;
   angle:number;
 
-  constructor(pos:Vec2, rad:number, range:number, angle:number = 0) {
+  constructor(pos:Vec2, rad:number, radius:number, range:number, angle:number = 0) {
     this.pos = pos;
     this.rad = rad;
     this.range = range;
     this.angle = angle % TAU;
+    this.radius = radius;
   }
 
   get start() {
@@ -132,14 +134,14 @@ export class Arc implements Shape {
 
     // If the angle is within the range, return the point
     if (start < angle && angle < end) {
-      return this.pos.towards(point, this.rad);
+      return this.pos.towards(point, this.radius);
     }
 
     // Otherwise, return the closest endpoint
     if (shortestAngle(angle, start) < shortestAngle(angle, end)) {
-      return this.pos.add(Vec2.fromAngle(this.angle, this.rad));
+      return this.pos.add(Vec2.fromAngle(this.angle, this.radius));
     } else {
-      return this.pos.add(Vec2.fromAngle(this.angle + this.range, this.rad));
+      return this.pos.add(Vec2.fromAngle(this.angle + this.range, this.radius));
     }
   }
 
@@ -150,13 +152,13 @@ export class Arc implements Shape {
   eject(ball:Ball):Vec2 {
     let close = this.closest(ball.pos);
     let delta = close.sub(ball.pos);
-    let dist = delta.len() - ball.rad;
+    let dist = delta.len() - ball.rad - this.rad;
     if (dist < 0) return delta.withLen(dist);
     return Vec2.zero;
   }
 
-  static at (x:number, y:number, rad:number, range:number, angle:number = 0) {
-    return new Arc(Vec2.fromXY(x, y), rad, range, angle);
+  static at (x:number, y:number, rad:number, radius:number, range:number, angle:number = 0) {
+    return new Arc(Vec2.fromXY(x, y), rad, radius, range, angle);
   }
 }
 
@@ -289,13 +291,13 @@ export class Fence implements Shape {
   links: Segment[] = [];
   vertices: Vec2[] = [];
 
-  constructor(...vertices:Vec2[]) {
+  constructor(vertices:Vec2[], rad = 1) {
     this.pos = vertices[0];
-    this.rad = 0;
+    this.rad = rad;
     this.vertices = vertices;
 
     for (let i = 0; i < vertices.length - 1; i++) {
-      this.links.push(new Segment(vertices[i], vertices[i + 1]));
+      this.links.push(new Capsule(vertices[i], vertices[i + 1], rad));
     }
   }
 
@@ -333,7 +335,11 @@ export class Fence implements Shape {
   }
 
   close () {
-    return new Fence(...this.vertices, this.vertices[0]);
+    return new Fence([ ...this.vertices, this.vertices[0] ], this.rad);
+  }
+
+  withRad (rad:number) {
+    return new Fence(this.vertices, rad);
   }
 
   flipNormals () {
@@ -341,12 +347,12 @@ export class Fence implements Shape {
     return this;
   }
 
-  static at (...coords:number[]) {
+  static at (coords:number[], rad:number) {
     let vertices = [];
     for (let i = 0; i < coords.length - 1; i += 2) {
       vertices.push(new Vec2(coords[i], coords[i + 1]));
     }
-    return new Fence(...vertices);
+    return new Fence(vertices, rad);
   }
 }
 
@@ -413,7 +419,7 @@ export class Box implements Shape {
     return new Box(Vec2.fromXY(x, y), w, h, angle);
   }
 
-  static from (left:number, top:number, right:number, bottom:number, angle:number = 0) {
+  static fromRect (left:number, top:number, right:number, bottom:number, angle:number = 0) {
     const w = abs(right - left);
     const h = abs(bottom - top);
     return new Box(Vec2.fromXY(left + w / 2, min(top, bottom)+ h / 2), w, h, angle);
