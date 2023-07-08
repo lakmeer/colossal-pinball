@@ -1,4 +1,5 @@
-
+// TODO: Update to new schema
+/*
 import type Rect  from "$lib/Rect";
 import type Shape from "$lib/Shape";
 import type Table from "$lib/tables";
@@ -163,4 +164,4 @@ export default (world:Rect):Table => {
     }
   }
 }
-
+*/

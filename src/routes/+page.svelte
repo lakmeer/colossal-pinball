@@ -14,9 +14,9 @@
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
 
   import type Table from "$lib/tables/";
-  import { TattooMystique } from "$lib/tables/";
+  import Now from "$lib/tables/now";
 
-  import { clamp, pow, floor, min, max, nsin } from "$lib/utils";
+  import { clamp, pow, floor, min, max, nsin, loadImage } from "$lib/utils";
 
 
   // Config
@@ -31,8 +31,7 @@
 
   // World
 
-  let world:Rect   = new Rect(0, 200, 200, 400);
-  let table:Table  = TattooMystique(world);
+  let table:Table  = Now();
   let balls:Ball[] = [];
 
   let cameraY = 0;
@@ -65,16 +64,16 @@
       table.flippers.right.collide(a);
 
       // Playfield obstacles
-      for (let c of table.colliders) c.collide(a);
+      for (let c of Object.values(table.colliders)) c.collide(a);
 
       // Zones
-      for (let z of table.zones) z.apply(a);
+      for (let z of Object.values(table.zones)) z.apply(a);
 
       // Cull dead balls
       if (a.cull) balls.splice(balls.indexOf(a), 1);
 
-      // World boundary
-      world.collideInterior(a);
+      // Table boundary
+      table.bounds.collideInterior(a);
 
       // Apply verlet integration
       a.simulate(dt);
@@ -96,7 +95,7 @@
     const now = performance.now()/1000;
     const dt = (now - lastTime) * TIME_SCALE;
 
-    cameraY = nsin(now/2) * world.h;
+    cameraY = nsin(now/2) * table.bounds.h;
 
     table.flippers.left.active  = btnA;
     table.flippers.right.active = btnB;
@@ -142,8 +141,8 @@
     let rect = el.getBoundingClientRect();
     let cx = clamp((clientX - rect.left) / rect.width);
     let cy = clamp((clientY - rect.top) / rect.height);
-    let x = cx * world.w + world.left;
-    let y = cy * world.h - world.top;
+    let x = cx * table.bounds.w + table.bounds.left;
+    let y = cy * table.bounds.h - table.bounds.top;
     return Vec2.fromXY(x, -y);
   }
 
@@ -191,7 +190,11 @@
   let innerWidth = 0;
   let innerHeight = 0;
 
-  onMount(() => {
+  //@ts-ignore shut up
+  onMount(async () => {
+
+    table.template = await loadImage(table.templateSrc);
+
     render();
 
     document.addEventListener('mousedown', onMouseDown);
@@ -221,7 +224,7 @@
     {balls}
     {table}
     {cameraY}
-    width={innerHeight * GAME_ASPECT}
+    width={innerHeight * table.bounds.toAspect()}
     height={innerHeight}
   />
 </div>

@@ -8,17 +8,13 @@ import type Flipper  from "$lib/Flipper";
 // Table Type
 
 export default class Table {
-  bounds: Rect;
-  colliders: Collider[];
-  zones: Zone[];
+  bounds:     Rect;
+  zones:      Record<string,Zone>;
+  colliders:  Record<string,Collider>;
+  template:   null | HTMLImageElement;
+  templateSrc: string;
   flippers: {
     left:  Flipper;
     right: Flipper;
   }
 }
-
-
-// Supported tables
-
-export { default as TattooMystique } from "./tattoo-mystique";
-

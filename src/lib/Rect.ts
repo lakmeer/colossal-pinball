@@ -67,5 +67,21 @@ export default class Rect {
     return [ this.x1, this.x2, this.y1, this.y2 ];
   }
 
+  toAspect():number {
+    return this.w / this.h;
+  }
+
+  static at(x:number, y:number, w:number, h:number):Rect {
+    return new Rect(x + w/2, y - h/2, w, h);
+  }
+
+  static over(x1:number, x2:number, y1:number, y2:number):Rect {
+    return new Rect((x1 + x2)/2, (y1 + y2)/2, x2 - x1, y1 - y2);
+  }
+
+  static from(x:number, y:number, w:number, h:number):Rect {
+    return new Rect(x, y, w, h);
+  }
+
 }
 

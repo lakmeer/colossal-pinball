@@ -12,7 +12,7 @@
   import { Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt } from "$lib/draw2d";
 
-  import { floor, loadImage } from "$lib/utils";
+  import { floor } from "$lib/utils";
 
 
   // Config
@@ -21,7 +21,7 @@
   const SHOW_VELOCITY  = false;
   const SHOW_OVERLAY   = false;
   const SHOW_GRIDLINES = true;
-  const SHOW_TEMPLATE  = false;
+  const SHOW_TEMPLATE  = true;
 
   const INTERSECTION_RES = 64; // Resolution of collision overlay
 
@@ -44,7 +44,6 @@
   let ctx:CanvasRenderingContext2D;
 
   let intersectionOverlay:Pixels;
-  let template:HTMLImageElement;
 
 
   // Other Props
@@ -90,10 +89,10 @@
 
     // Table template
     if (SHOW_TEMPLATE) {
-      if (template) {
+      if (table.template && typeof table.template != 'string') {
         ctx.scale(1, -1);
-        ctx.globalAlpha = 0.3;
-        ctx.drawImage(template, world.left, -world.top, world.w, world.h);
+        ctx.globalAlpha = 0.9;
+        ctx.drawImage(table.template, world.left, -world.top, world.w, world.h);
         ctx.globalAlpha = 1.0;
         ctx.scale(1, -1);
       }
@@ -104,18 +103,18 @@
 
       for (let x = world.left; x <= world.right; x += GRID_RES) {
         if (x % (GRID_MAJOR * GRID_RES) === 0) {
-          lineAt(ctx, Vec2.fromXY(x, world.bottom), Vec2.fromXY(x, world.top), '#444', 2);
+          lineAt(ctx, Vec2.fromXY(x, world.bottom), Vec2.fromXY(x, world.top), '#444', 1);
         } else {
-          lineAt(ctx, Vec2.fromXY(x, world.bottom), Vec2.fromXY(x, world.top), '#333', 1);
+          lineAt(ctx, Vec2.fromXY(x, world.bottom), Vec2.fromXY(x, world.top), '#333', 0.2);
         }
       }
 
       for (let y = world.bottom; y <= world.top; y += GRID_RES) {
         if (y % (GRID_MAJOR * GRID_RES) === 0) {
-          lineAt(ctx, Vec2.fromXY(world.left, y), Vec2.fromXY(world.right, y), '#444', 2);
+          lineAt(ctx, Vec2.fromXY(world.left, y), Vec2.fromXY(world.right, y), '#444', 1);
           textAt(ctx, `${y}`, world.left, y, '#555', 'left');
         } else {
-          lineAt(ctx, Vec2.fromXY(world.left, y), Vec2.fromXY(world.right, y), '#333', 1);
+          lineAt(ctx, Vec2.fromXY(world.left, y), Vec2.fromXY(world.right, y), '#333', 0.2);
         }
       }
 
@@ -123,14 +122,13 @@
     }
 
     // Zones
-    for (let zone of table.zones) {
+    for (let zone of Object.values(table.zones)) {
       drawShape(zone.shape, zone.color);
     }
 
-    // Static Colliders
+    // Static Colliders (dim if template is displayed)
     if (SHOW_TEMPLATE) ctx.globalAlpha = 0.5;
-
-    for (let c of table.colliders) {
+    for (let c of Object.values(table.colliders)) {
       drawShape(c.shape, c.color);
     }
 
@@ -144,7 +142,7 @@
 
       // Trace paths
       if (SHOW_TRACES) {
-        for (let c of table.colliders) {
+        for (let c of Object.values(table.colliders)) {
           lineAt(ctx, ball.pos, c.shape.closest(ball.pos), 'rgba(255, 255, 255, 0.3)', 1);
         }
       }
@@ -172,7 +170,7 @@
           let py = floor((y + world.top)/world.h * RES);
           let hits = 0;
 
-          for (let c of table.colliders) hits += c.shape.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
+          for (let c of Object.values(table.colliders)) hits += c.shape.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
 
           if (hits) intersectionOverlay.setp(px, py, new Color(1, 1, 1, 0.2 * hits));
         }
@@ -193,7 +191,6 @@
 
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
-    template = await loadImage('/template.jpg');
 
     if (SHOW_OVERLAY) {
       intersectionOverlay = new Pixels(INTERSECTION_RES, INTERSECTION_RES);
