@@ -46,7 +46,7 @@ export default class Pixels {
   }
 
   setp (x:number, y:number, color:Color):void {
-    let [ r, g, b, a ] = color.to8bit();
+    let [ r, g, b, a ] = color.toByte();
     let p = 4 * (x + y * this.pixels.width);
     this.pixels.data[p + 0] = r;
     this.pixels.data[p + 1] = g;

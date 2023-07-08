@@ -58,6 +58,60 @@ export class Drain implements Zone {
 }
 
 
+//
+// Rollover
+//
+// Detects when ball enters or leaves (rollovers)
+// TODO: Give zones and colliders some state for gameplay
+//
+
+export class Rollover implements Zone {
+
+  shape:Shape;
+  color:Color;
+  state: { // will be checked and cleared this frame
+    active: boolean;
+    entered: boolean;
+    exited: boolean; 
+  }
+
+  constructor(shape:Shape) {
+    this.shape = shape;
+    this.color = Color.fromTw('white');
+    this.state = {
+      active:  false,
+      entered: false,
+      exited:  false,
+    }
+  }
+
+  intersect(point:Vec2):boolean {
+    return this.shape.intersect(point);
+  }
+
+  apply(ball:Ball) {
+    if (this.shape.intersect(ball.pos)) {
+      if (!this.state.active) {
+        this.state.active = true;
+        this.state.entered = true;
+        this.color = Color.fromTw('red-400');
+      }
+    } else {
+      if (this.state.active) {
+        this.state.active = false;
+        this.state.exited = true;
+        this.color = Color.fromTw('white');
+      }
+    }
+  }
+
+  static from (shape:Shape) {
+    return new Rollover(shape);
+  }
+
+}
+
+
 
 //
 // Force Zone
@@ -74,7 +128,7 @@ export class Force implements Zone {
   constructor(shape:Shape, force:Vec2) {
     this.shape = shape;
     this.force = force;
-    this.color = Color.zone();
+    this.color = Color.fromTw('green-400').alpha(0.3);
   }
 
   intersect(point:Vec2):boolean {
@@ -91,6 +145,20 @@ export class Force implements Zone {
     return new Force(shape, force);
   }
 }
+
+
+//
+// Magnet
+// Attract (or repel) the ball to a single point (ie: magents)
+//
+
+
+//
+// Slow
+// Change the simulation time factor
+// TODO: apply() should take a copy of the gamestate, when it exists
+//
+
 
 
 

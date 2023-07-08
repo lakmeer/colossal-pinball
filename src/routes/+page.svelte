@@ -6,8 +6,10 @@
   import Vec2 from "$lib/Vec2";
   import Rect from "$lib/Rect";
 
+  import Color from "$lib/Color";
+  import Collider from "$lib/Collider";
   import { Circle }    from "$lib/Shape";
-  import { Force } from "$lib/Zone";
+  import { Rollover, Force } from "$lib/Zone";
 
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
 
@@ -38,11 +40,6 @@
   let btnB = false;
 
 
-  // TEMP: Test zones
-
-  table.zones.push(Force.from(Circle.at(0, 150, 50), Vec2.fromXY(1000, 0)));
-
-
   //
   // Physics
   //
@@ -62,7 +59,7 @@
       for (let b of balls) {
         if (a !== b) b.collide(a);
       }
-      
+
       // Flippers
       table.flippers.left.collide(a);
       table.flippers.right.collide(a);

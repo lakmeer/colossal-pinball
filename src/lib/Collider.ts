@@ -27,5 +27,10 @@ export default class Collider {
   collide (ball:Ball) {
     ball.pos.addSelf(this.shape.eject(ball).jitter());
   }
+
+  static from (shape:Shape, color:Color) {
+    return new Collider(shape, color);
+  }
+
 }
 

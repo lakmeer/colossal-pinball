@@ -1,10 +1,6 @@
 
 # TODO
 
-  - Sink: drain the ball
-  - Well: attract the ball to a single point (magents)
-  - Slow: change the simulation time factor
-  - Detect: trigger when ball enters or leaves (rollovers)
 - Change the intersection overlay to a collision overlay, test
   each point with a fake Ball and mark how far it gets moved,
   use this value to create a heatmap over the table.
@@ -20,6 +16,14 @@
     playfield components can be referenced by scripts
   - Event trigger names on obstacle components
   - Table state
+
+## nnoww
+
+- Template table
+- Event queue for scripting?
+- Scripts organisation in table object
+- Are table and gamestate object seperate?
+
 
 
 ### Features
