@@ -8,17 +8,19 @@ import Color from './Color';
 
 
 // From things to table
-enum EventType {
+export enum EventType {
   BALL_ENTER,
   BALL_LEAVE,
   BOUNCED,
   ACTIVATED,
   DEACTIVATED,
+  BTN_LEFT,
+  BTN_RIGHT,
 }
 
 
 // From table script to things
-enum Command {
+export enum Command {
   ACTIVATE,
   DEACTIVATE,
   LAMP_FLASH,
@@ -69,8 +71,22 @@ export default class Thing {
 
 
 //
-// Drain Zone
-// Kills the ball
+// Deco
+// Doesn't do anything.
+//
+
+export class Deco extends Thing {
+
+  static from (name:string, shape:Shape):Deco {
+    return new Deco(name, shape, Color.fromTw('yellow-400'));
+  }
+
+}
+
+
+//
+// Drain
+// Kills the ball.
 //
 
 export class Drain extends Thing {
@@ -88,7 +104,7 @@ export class Drain extends Thing {
 
 //
 // Collider
-// Generic collider that emits events when a ball hits it
+// Generic collider that blocks the ball and emits an event when hit.
 //
 
 interface ColliderState extends ThingState {
@@ -277,6 +293,7 @@ interface FlipperState extends ThingState {
   restAngle: number;
   flipRange: number;
   flipSpeed: number;
+  flipDir: number;
 }
 
 export class Flipper extends Thing {
@@ -284,7 +301,7 @@ export class Flipper extends Thing {
   update (Δt) {
     const prevAngle = this.state.angle;
 
-    // TODO: Some easing here
+    // TODO: Some easing here?
     if (this.state.active) {
       this.setAngle(this.state.angle + this.state.flipSpeed * Δt);
     } else {
@@ -305,18 +322,18 @@ export class Flipper extends Thing {
 
   setAngle (angle: number) {
     this.state.angle = max(0, min(angle, this.state.flipRange));
-    angle = this.state.restAngle + this.state.angle;
     let shape = this.shape as Capsule;
-    shape.setPivot(angle);
+    shape.setPivot(this.state.restAngle + this.state.angle * this.state.flipDir);
   }
 
   static from (name:string, x:number, y:number, rad:number, len:number, restAngle: number, flipRange:number, flipSpeed:number) {
-    const shape = Capsule.at(x, y, x - len, y, rad);
+    const shape = Capsule.from(x, y, x - len, y, rad);
     shape.setPivot(restAngle);
 
     return new Flipper(name, shape, Color.fromTw('rose-500'), {
       restAngle: restAngle,
-      flipRange: flipRange,
+      flipDir: Math.sign(flipRange),
+      flipRange: abs(flipRange),
       flipSpeed: flipSpeed,
       angle:  restAngle,
       angVel: 0,

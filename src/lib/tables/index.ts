@@ -2,6 +2,8 @@
 import type Rect  from "$lib/Rect";
 import type Thing from "$lib/Thing";
 
+import type { InputState } from "$types";
+
 
 
 // Table Type
@@ -11,7 +13,7 @@ export default class Table {
   bounds:     Rect;
   ballRad:    number;
   things:     Record<string,Thing>;
-  process:    (events:any[]) => void;
+  process:    (input:InputState, events:any[]) => void;
   template:   null | HTMLImageElement;
   templateSrc: string;
 }

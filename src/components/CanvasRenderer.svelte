@@ -11,7 +11,7 @@
 
   import type Thing from "$lib/Thing";
 
-  import { Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Shape";
+  import { Circle, Arc, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt } from "$lib/draw2d";
 
   import { floor } from "$lib/utils";
@@ -60,7 +60,7 @@
   const drawShape = (s:Shape, c:Color) => {
     if      (s instanceof Arc)         arcAt(ctx, s.pos, s.rad, s.radius, c.toString(), s.start, s.end);
     else if (s instanceof Circle)   circleAt(ctx, s.pos, s.rad, c.toString(), s.invert);
-    else if (s instanceof Segment) capsuleAt(ctx, s.pos, s.tip, 1, c.toString(), s.normal);
+    //else if (s instanceof Segment) capsuleAt(ctx, s.pos, s.tip, 1, c.toString(), s.normal);
     else if (s instanceof Capsule) capsuleAt(ctx, s.pos, s.tip, s.rad, c.toString());
     else if (s instanceof Box)         boxAt(ctx, s.toRect(), c.toString(), s.angle);
     else if (s instanceof Fence) {

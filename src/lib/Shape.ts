@@ -212,81 +212,19 @@ export class Capsule implements Shape {
     return Vec2.zero;
   }
 
-  static at (x:number, y:number, tipX:number, tipY:number, rad:number) {
-    return new Capsule(Vec2.fromXY(x, y), Vec2.fromXY(tipX, tipY), rad);
-  }
-
-  static att (x:number, y:number, rad:number, length:number, angle = 0) {
+  static at (x:number, y:number, rad:number, length:number, angle = 0) {
     const middle = Vec2.fromXY(x, y);
     const half = Vec2.fromAngle(angle + TAU/4, length/2);
     return new Capsule(middle.add(half), middle.sub(half), rad);
+  }
+ 
+  static from (x:number, y:number, x2:number, y2:number, rad:number) {
+    return new Capsule(Vec2.fromXY(x, y), Vec2.fromXY(x2, y2), rad);
   }
 
   static fromAngle (x:number, y:number, angle:number, length:number, rad:number) {
     const pos = Vec2.fromXY(x, y);
     return new Capsule(pos, pos.add(Vec2.fromAngle(angle, length)), rad);
-  }
-
-}
-
-
-//
-// Segment
-//
-// A line segment between two points.
-// Just a special case of capsule with no radius, except that it will always intersect on
-// the back side (of the normal) so that it can be used for unclippable walls.
-//
-
-export class Segment implements Shape {
-
-  pos:Vec2;
-  tip:Vec2;
-  rad:number;
-  flip:number;
-  normal:Vec2;
-
-  constructor(pos:Vec2, tip:Vec2, flip = false) {
-    this.pos = pos;
-    this.tip = tip;
-    this.rad = 0;
-    this.flip = flip ? -1 : 1;
-    this.normal = this.pos.sub(this.tip).norm().perp().scale(this.flip);
-  }
-
-  turn(delta:number) {
-    const center = this.tip.sub(this.pos).scale(0.5).add(this.pos);
-    this.tip = this.tip.sub(center).rotate(delta).add(center);
-    this.pos = this.pos.sub(center).rotate(delta).add(center);
-  }
-
-  closest(point:Vec2):Vec2 {
-    return nearestPointOn(this.pos, this.tip, point).towards(point, this.rad);
-  }
-
-  intersect(point:Vec2):boolean {
-    return this.normal.dot(this.tip.sub(point)) < 0
-      && nearestPointOn(this.pos, this.tip, point).sub(point).len() < 5;
-  }
-
-  eject(ball:Ball):Vec2 {
-    const delta = nearestPointOn(this.pos, this.tip, ball.pos).sub(ball.pos);
-    let dist = delta.len() - ball.rad;
-    if (dist > 0) return Vec2.zero;
-    if (this.normal.dot(this.tip.sub(ball.pos)) > 0) {
-      return this.normal.withLen(dist);
-    }
-    return Vec2.zero;
-  }
-
-  flipNormal () {
-    this.flip = -this.flip;
-    this.normal = this.pos.sub(this.tip).norm().perp().scale(this.flip);
-    return this;
-  }
-
-  static at (x:number, y:number, tipX:number, tipY:number, flip = false) {
-    return new Segment(Vec2.fromXY(x, y), Vec2.fromXY(tipX, tipY), flip);
   }
 
 }

@@ -8,9 +8,10 @@
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
 
   import type Table from "$lib/tables/";
-  import Now from "$lib/tables/now";
 
   import { clamp, pow, floor, min, max, loadImage } from "$lib/utils";
+
+  import type { InputState, EventQueue } from "$types";
 
 
   // Config
@@ -24,12 +25,16 @@
 
   // World
 
+  import Now from "$lib/tables/now";
+
   let table:Table  = Now();
   let balls:Ball[] = [];
 
   let cameraY = 0;
-  let btnA = false;
-  let btnB = false;
+  let input:InputState = {
+    left:  false,
+    right: false,
+  };
 
 
   //
@@ -48,7 +53,7 @@
   // - Cull balls
   // - Apply verlet integration
 
-  let newEvents = [];
+  let newEvents:EventQueue = [];
 
   const update = (dt:number) => {
 
@@ -76,21 +81,22 @@
       t.update(dt).forEach(evt => newEvents.push([ t.name, evt ]));
     }
 
-    table.process(newEvents);
+    table.process(input, newEvents);
 
-    //while (newEvents.length) {
-      //let [ name, evt ] = newEvents.pop();
-      ////console.log(`-- ${name} => ${evt}`);
-    //}
+    while (newEvents.length) {
+      let [ name, evt ] = newEvents.pop();
+      console.log(`Unhandled event -- ${name} => ${evt}`);
+    }
+    newEvents = [];
   }
 
 
   // Render loop
 
   let lastTime = performance.now()/1000;
-  let rafref = 0;
+  let rafref   = 0;
   let substeps = 8;
-  let delta = 0;
+  let delta    = 0;
 
   const render = () => {
     rafref = requestAnimationFrame(render);
@@ -101,12 +107,7 @@
 
     //cameraY = nsin(now/2) * table.bounds.h;
 
-    //table.flippers.left.active  = btnA;
-    //table.flippers.right.active = btnB;
-
     for (let i = 0; i < substeps; i++) {
-      //table.flippers.left.update(dt/substeps);
-      //table.flippers.right.update(dt/substeps);
       update(dt/substeps);
     }
 
@@ -176,15 +177,15 @@
 
   const onKeydown = (event:KeyboardEvent) => {
     switch (event.key) {
-      case 'a': btnA = true; break;
-      case 's': btnB = true; break;
+      case 'a': input.left  = true; break;
+      case 's': input.right = true; break;
     }
   }
 
   const onKeyup = (event:KeyboardEvent) => {
     switch (event.key) {
-      case 'a': btnA = false; break;
-      case 's': btnB = false; break;
+      case 'a': input.left  = false; break;
+      case 's': input.right = false; break;
     }
   }
 
@@ -237,8 +238,8 @@
 Balls: {balls.length}
 Steps: {substeps}
  Time: {delta.toFixed(3)}
- BtnA: {btnA ? '🟢' : '🔴'}
- BtnB: {btnB ? '🟢' : '🔴'}
+ BtnA: {input.left  ? '🟢' : '🔴'}
+ BtnB: {input.right ? '🟢' : '🔴'}
 </pre>
 
 
