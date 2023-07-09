@@ -120,7 +120,7 @@ export class Collider extends Thing {
     ball.pos.addSelf(delta.scale(fff * this.state.f_coeff));
   }
 
-  static from (name:string, shape:Shape, f:number = 1.0):Collider {
+  static from (name:string, shape:Shape, f:number = 1.2):Collider {
     return new Collider(name, shape, Color.fromTw('blue-500'), {
       f_coeff: f
     } as ColliderState);
@@ -343,4 +343,166 @@ export class Flipper extends Thing {
   }
 
 }
+
+
+
+//
+// Target
+// Keeps some state when it's hit for animation purposes.
+//
+
+interface TargetState extends ThingState {
+  timer: number;
+  hitColor: Color;
+  idleColor: Color;
+}
+
+export class Target extends Thing {
+
+  collide(ball:Ball, Δt:number) {
+    if (!this.state.dropped) {
+      let delta = this.shape.eject(ball);
+      if (delta.len() === 0) return;
+      this.state.timer = 0.3;
+      this.emit(EventType.BOUNCED);
+      ball.pos.addSelf(delta);
+    }
+  }
+
+  update(Δt) {
+    if (this.state.timer >= 0) this.state.timer -= Δt;
+    this.color = this.state.timer >= 0 ? this.state.hitColor : this.state.idleColor;
+    return super.update(Δt);
+  }
+
+  static from (name:string, shape:Shape) {
+    return new Target(name, shape, Color.fromTw('purple-400'), {
+      timer: 0,
+      hitColor: Color.fromTw('purple-400'),
+      idleColor: Color.fromTw('purple-700'),
+    } as TargetState);
+  }
+
+}
+
+
+
+//
+// DropTarget
+// Drops down when struck.
+//
+
+interface DropTargetState extends ThingState {
+  dropped: boolean;
+  timer: number;
+  raiseColor: Color,
+  dropColor: Color,
+}
+
+export class DropTarget extends Thing {
+
+  do(cmd, args = []) {
+    switch (cmd) {
+      case Command.ACTIVATE:
+        this.drop();
+        return;
+          
+      case Command.DEACTIVATE:
+        this.raise();
+        return;
+
+      default:
+        console.warn("Target can't handle", cmd);
+    }
+  }
+
+  collide(ball:Ball, Δt:number) {
+    if (!this.state.dropped) {
+      let delta = this.shape.eject(ball);
+      if (delta.len() === 0) return;
+      ball.pos.addSelf(delta);
+      this.state.timer = 0.1;
+      this.emit(EventType.BOUNCED);
+    }
+  }
+
+  drop () {
+    this.emit(EventType.ACTIVATED);
+    this.color = this.state.dropColor;
+    this.state.dropped = true;
+  }
+
+  raise () {
+    this.emit(EventType.DEACTIVATED);
+    this.color = this.state.raiseColor;
+    this.state.dropped = false;
+  }
+
+  update(Δt) {
+    if (this.state.timer > 0) {
+      this.state.timer -= Δt;
+      if (this.state.timer <= 0 && !this.state.dropped) {
+        this.drop();
+      }
+    }
+
+    return super.update(Δt);
+  }
+
+  static from (name:string, shape:Shape) {
+    return new DropTarget(name, shape, Color.fromTw('orange-400'), {
+      dropped: false,
+      timer: 0,
+      raiseColor: Color.fromTw('orange-400'),
+      dropColor: Color.fromTw('orange-700'),
+    } as DropTargetState);
+  }
+
+}
+
+
+
+
+
+
+
+//
+// Bumper
+// Like a collider but retains some state and has a force multiplier
+//
+
+interface BumperState extends ThingState {
+  factor: number;
+  timer: number;
+  hitColor: Color;
+  idleColor: Color;
+}
+
+export class Bumper extends Thing {
+
+  collide(ball, Δt, fff) {
+    let delta = this.shape.eject(ball);
+    if (delta.len() === 0) return;
+    this.emit(EventType.BOUNCED);
+    this.state.timer = 0.2;
+    ball.pos.addSelf(delta.withLen(this.state.factor));
+  }
+
+  update(Δt) {
+    if (this.state.timer >= 0) this.state.timer -= Δt;
+    this.color = this.state.timer >= 0 ? this.state.hitColor : this.state.idleColor;
+    return super.update(Δt);
+  }
+
+  static from (name:string, shape:Shape, f:number = 1.0):Collider {
+    return new Bumper(name, shape, Color.fromTw('rose-700'), {
+      factor: f,
+      timer: 0,
+      hitColor: Color.fromTw('rose-300'),
+      idleColor: Color.fromTw('rose-700'),
+    } as BumperState);
+  }
+
+}
+
 

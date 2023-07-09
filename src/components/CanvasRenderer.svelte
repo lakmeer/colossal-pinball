@@ -21,8 +21,8 @@
 
   const SHOW_VELOCITY  = false;
   const SHOW_OVERLAY   = false;
-  const SHOW_GRIDLINES = true;
-  const SHOW_TEMPLATE  = true;
+  const SHOW_GRIDLINES = false;
+  const SHOW_TEMPLATE  = false;
 
   const INTERSECTION_RES = 64; // Resolution of collision overlay
 
