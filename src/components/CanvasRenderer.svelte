@@ -9,6 +9,8 @@
   import Color  from '$lib/Color';
   import Pixels from '$lib/Pixels';
 
+  import type Thing from "$lib/Thing";
+
   import { Circle, Arc, Segment, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt } from "$lib/draw2d";
 
@@ -17,7 +19,6 @@
 
   // Config
 
-  const SHOW_TRACES    = false;
   const SHOW_VELOCITY  = false;
   const SHOW_OVERLAY   = false;
   const SHOW_GRIDLINES = true;
@@ -123,37 +124,15 @@
 
     if (SHOW_TEMPLATE) ctx.globalAlpha = 0.6;
 
-    // Zones
-    for (let z of Object.values(table.zones)) {
-      drawShape(z.shape, z.color);
-    }
-
-    // Decoration layer
-    for (let d of Object.values(table.decos)) {
-      drawShape(d.shape, d.color);
-    }
-
-    // Static Colliders (dim if template is displayed)
-    for (let c of Object.values(table.colliders)) {
-      drawShape(c.shape, c.color);
-    }
-
-    // Flippers
-    for (let flipper of Object.values(table.flippers)) {
-      capsuleAt(ctx, flipper.pos, flipper.tip, flipper.rad, flipper.color.toString());
+    // Things
+    for (let t of Object.values(table.things)) {
+      drawShape(t.shape, t.color);
     }
 
     if (SHOW_TEMPLATE) ctx.globalAlpha = 1.0;
 
     // Balls
     for (let ball of balls) {
-
-      // Trace paths
-      if (SHOW_TRACES) {
-        for (let c of Object.values(table.colliders)) {
-          lineAt(ctx, ball.pos, c.shape.closest(ball.pos), 'rgba(255, 255, 255, 0.3)', 1);
-        }
-      }
 
       // Body
       circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
@@ -178,7 +157,9 @@
           let py = floor((y + world.top)/world.h * RES);
           let hits = 0;
 
-          for (let c of Object.values(table.colliders)) hits += c.shape.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
+          for (let t of Object.values(table.things)) {
+            hits += t.shape.intersect(Vec2.fromXY(x + dx/2, y + dy/2)) ? 1 : 0;
+          }
 
           if (hits) intersectionOverlay.setp(px, py, new Color(1, 1, 1, 0.2 * hits));
         }
@@ -195,7 +176,6 @@
   // Lifecycle
 
   $: balls && render();
-  $: table.colliders && render();
 
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares

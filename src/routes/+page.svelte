@@ -12,8 +12,6 @@
 
   import { clamp, pow, floor, min, max, loadImage } from "$lib/utils";
 
-  import Thing from "$lib/Thing";
-
 
   // Config
 
@@ -39,58 +37,48 @@
   //
   // TODO: Spatial binning
   //
-  // - Gravity
-  // - Collide balls with table bounds
-  // - Collide balls with each other
-  // - Collide balls with Things
-  // - Run Thing update and collect events
+  // + Gravity
+  // + Collide balls with table bounds
+  // + Collide balls with each other
+  // + Collide balls with Things
+  // + Run Thing update and collect events
   // - Pass list of events to table script
   // - Run table script
   // - Check remaining events for non-table stuff
   // - Cull balls
   // - Apply verlet integration
 
+  let newEvents = [];
+
   const update = (dt:number) => {
 
     // 'Fractional friction factor' - exponentially adjusted for number of steps
     const fff = pow(1 - (1 - STD_FRICTION), 1/substeps);
 
-    // Reset Zones from last frame
-    for (let z of Object.values(table.zones)) z.reset();
-
-    // Collisions
     for (let a of balls) {
-
-      // Gravity
       a.impart(Vec2.fromXY(0, -GRAVITY));
+      table.bounds.collideInterior(a);
 
-      // Other balls
       for (let b of balls) {
         if (a !== b) b.collide(a);
       }
 
-      // Flippers: TODO: Flipper become Things
-      table.flippers.left.collide(a);
-      table.flippers.right.collide(a);
+      for (let t of Object.values(table.things)) {
+        t.collide(a, dt, fff);
+        t.update(dt).forEach(evt => newEvents.push([ t.name, evt ]));
+      }
 
-      // Collide obstacles
-      for (let c of Object.values(table.colliders)) c.collide(a);
-
-      // Measure Zones
-      for (let z of Object.values(table.zones)) z.apply(a);
-
-      // Cull dead balls
       if (a.cull) balls.splice(balls.indexOf(a), 1);
 
-      // Table boundary
-      table.bounds.collideInterior(a);
-
-      // Components arbitrary update routines
-      for (let z of Object.values(table.zones)) z.update(dt);
-
-      // Apply verlet integration
       a.simulate(dt);
     }
+
+    table.process(newEvents);
+
+    //while (newEvents.length) {
+      //let [ name, evt ] = newEvents.pop();
+      ////console.log(`-- ${name} => ${evt}`);
+    //}
   }
 
 
@@ -110,12 +98,12 @@
 
     //cameraY = nsin(now/2) * table.bounds.h;
 
-    table.flippers.left.active  = btnA;
-    table.flippers.right.active = btnB;
+    //table.flippers.left.active  = btnA;
+    //table.flippers.right.active = btnB;
 
     for (let i = 0; i < substeps; i++) {
-      table.flippers.left.update(dt/substeps);
-      table.flippers.right.update(dt/substeps);
+      //table.flippers.left.update(dt/substeps);
+      //table.flippers.right.update(dt/substeps);
       update(dt/substeps);
     }
 

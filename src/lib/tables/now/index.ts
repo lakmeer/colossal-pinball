@@ -1,26 +1,16 @@
 
 import type Shape from "$lib/Shape";
 import type Table from "$lib/tables";
-import type Zone  from "$lib/Zone";
 
-import Vec2     from "$lib/Vec2";
-import Rect     from "$lib/Rect";
-import Deco     from "$lib/Deco";
-import Color    from "$lib/Color";
-import Flipper  from "$lib/Flipper";
-import Collider from "$lib/Collider";
+import Vec2  from "$lib/Vec2";
+import Rect  from "$lib/Rect";
+import Color from "$lib/Color";
+import Thing from "$lib/Thing";
 
 import { Segment, Circle, Capsule, Arc, Fence, Box } from "$lib/Shape";
-import { Drain, Rollover, Kicker, Lamp } from "$lib/Zone";
+import { Collider, Drain, Flipper, Rollover, Kicker, Lamp } from "$lib/Thing";
 
 import { PI, TAU } from "$lib/utils";
-
-
-// TEMP: Shim interface
-
-enum Event {
-  ROLLOVER_TRIGGER,
-}
 
 
 // TODO adjust positioning to correct for perspective in th graphic
@@ -50,13 +40,15 @@ enum Event {
 
 export default ():Table => {
 
-  const name = "NOW";
-  const bounds = new Rect(-216, 768, 216, 0);
-  const colliders:Record<string,Collider> = {};
-  const zones:Record<string,Zone> = {};
-  const decos:Record<string,Deco> = {};
-  const flippers = {} as Table["flippers"];
-  const wires = [];
+  const it = {
+    name: "NOW",
+    bounds: new Rect(-216, 768, 216, 0),
+    things: {},
+    ballRad: 9,
+    template: null,
+    templateSrc: "/now.png",
+    process: (events:any[]) => {}
+  } as Table;
 
 
   // Settings
@@ -75,12 +67,12 @@ export default ():Table => {
 
   // Shorthands
 
-  const L  = bounds.left;
-  const R  = bounds.right;
-  const W  = bounds.w;
-  const H  = bounds.h;
+  const L  = it.bounds.left;
+  const R  = it.bounds.right;
+  const W  = it.bounds.w;
+  const H  = it.bounds.h;
 
-  const TW = bounds.w - 54; // table width except chute
+  const TW = it.bounds.w - 54; // table width except chute
   const TR = L + TW;   // rightmost position excluding chute
   const TL = L + 16;   // leftmost position excluding outer wall
   const M  = L + TW/2 + 8; // middle line of playfield (fudged)
@@ -89,21 +81,21 @@ export default ():Table => {
   // Adds a collider to the field based on the shape
   // TODO: Formalise this
 
-  const C = (name:string, shape:Shape, color = Color.static()) => {
-    if (colliders[name]) console.warn(`Collider '${name}' already exists`);
-    colliders[name] = new Collider(shape, color);
+  const add = (thing:Thing) => {
+    if (it.things[thing.name]) console.warn(`Thing with name '${thing.name}' already exists`);
+    it.things[thing.name] = thing;
   }
 
-  const Z = (name:string, zone:Zone, color = Color.static()) => {
-    if (zones[name]) console.warn(`Zone '${name}' already exists`);
-    zones[name] = zone;
+  const C = (name:string, shape:Shape, color:Color = Color.fromTw('sky-500')) => {
+    add(Collider.from(name, shape, color));
   }
 
-  const D = (name:string, shape:Shape, color = Color.static()) => {
-    if (decos[name]) console.warn(`Deco '${name}' already exists`);
-    decos[name] = new Deco(shape, color);
+  const T = (name:string, shape:Shape, color:Color) => {
+    add(new Thing(name, shape, color));
   }
 
+
+/*
   const on = (name:string, event:Event, fn:Function) => {
     let thing = get(name);
     wires.push({ name, event, fn });
@@ -114,7 +106,7 @@ export default ():Table => {
     if (!thing) console.warn(`Thing '${name}' does not exist`);
     return thing as T;
   }
-
+*/
 
 
   //
@@ -152,8 +144,8 @@ export default ():Table => {
 
   for (let z = -1.5; z <= 1.5; z++) {
     let x = laneMiddle + laneStride * z;
-    Z(`upper_lane_rollover_${z+1.5}`, Rollover.from(Capsule.at(x, 575, x, 608, 6)));
-    Z(`upper_lane_lamp_${z+1.5}`,     Lamp.from(Circle.at(x, 630, lampRad), 'yellow'));
+    add(Rollover.from(`upper_lane_rollover_${z+1.5}`, Capsule.at(x, 575, x, 608, 6), Color.fromTw('blue-500')));
+    add(Lamp.from(`upper_lane_lamp_${z+1.5}`, Circle.at(x, 630, lampRad), Color.fromTw('yellow-400'), Color.fromTw('yellow-800')));
   }
 
 
@@ -172,17 +164,14 @@ export default ():Table => {
   C(`bumper_left`,      Circle.at(M + 85, 523, 25));
   C(`bumper_right`,     Circle.at(M - 85, 523, 25));
   C(`bumper_mid`,       Circle.at(M     , 492, 25));
-  D(`bumper_mid_top`,   Circle.at(M     , 509, 32), Color.fromTw('cyan-600').alpha(0.5));
-  D(`bumper_left_top`,  Circle.at(M + 85, 540, 32), Color.fromTw('cyan-600').alpha(0.5));
-  D(`bumper_right_top`, Circle.at(M - 85, 540, 32), Color.fromTw('cyan-600').alpha(0.5));
 
 
   // Upper Targets
 
-  C(`tgt_top_left`,       Segment.at(TL + 32, 600, TL + 23, 584), Color.fromTw('red-500'));
-  C(`tgt_top_right`,      Segment.at(TR - 32, 600, TR - 23, 584).flipNormal(), Color.fromTw('red-500'));
-  Z(`tgt_lamp_top_left`,  Lamp.from(Circle.at(TL + 39, 557, lampRad), 'lime'));
-  Z(`tgt_lamp_top_right`, Lamp.from(Circle.at(TR - 39, 557, lampRad), 'lime'));
+  C(`tgt_top_left`,   Segment.at(TL + 32, 600, TL + 23, 584), Color.fromTw('blue-500'));
+  C(`tgt_top_right`,  Segment.at(TR - 32, 600, TR - 23, 584), Color.fromTw('blue-500'));
+  add(Lamp.from(`tgt_lamp_top_left`,  Circle.at(TL + 39, 557, lampRad), Color.fromTw('lime-400'), Color.fromTw('lime-800')));
+  add(Lamp.from(`tgt_lamp_top_right`, Circle.at(TR - 39, 557, lampRad), Color.fromTw('lime-400'), Color.fromTw('lime-800')));
 
 
   // Droptarget banks & slingshots
@@ -196,20 +185,17 @@ export default ():Table => {
     C(`dt_left_bank_${i+1.5}`,  Segment.at(xl + dt_width/2, 408, xl - dt_width/2, 408), Color.fromTw('white'));
     C(`dt_right_bank_${i+1.5}`, Segment.at(xr + dt_width/2, 408, xr - dt_width/2, 408), Color.fromTw('white'));
   }
- 
-  C(`dt_ss_left`,      Fence.at([ M - 147, 419, M - 147, 465, M -  56, 419 ], 6).close(), Color.fromTw('indigo-500'));
-  D(`dt_ss_left_top`,  Fence.at([ M - 147, 429, M - 147, 475, M -  56, 429 ], 6).close(), Color.fromTw('cyan-500').alpha(0.5));
 
-  C(`dt_ss_right`,     Fence.at([ M + 147, 419, M + 147, 465, M +  56, 419 ], 6).close(), Color.fromTw('indigo-500'));
-  D(`dt_ss_right_top`, Fence.at([ M + 147, 429, M + 147, 475, M +  56, 429 ], 6).close(), Color.fromTw('cyan-500').alpha(0.5));
+  C(`dt_ss_left`,  Fence.at([ M - 147, 419, M - 147, 465, M -  56, 419 ], 6).close(), Color.fromTw('indigo-500'));
+  C(`dt_ss_right`, Fence.at([ M + 147, 419, M + 147, 465, M +  56, 419 ], 6).close(), Color.fromTw('indigo-500'));
 
 
   // Midfield rollovers
 
-  Z(`mid_rollover_left`,  Rollover.from(Capsule.at(TL + 16, 424, TL + 16, 455, 6)));
-  Z(`mid_rollover_right`, Rollover.from(Capsule.at(TR - 16, 424, TR - 16, 455, 6)));
-  Z(`mid_rollover_lamp_left`,  Lamp.from(Circle.at(TL + 38, 493, lampRad), 'lime'));
-  Z(`mid_rollover_lamp_right`, Lamp.from(Circle.at(TR - 38, 493, lampRad), 'lime'));
+  add(Rollover.from(`mid_rollover_left`,   Capsule.at(TL + 16, 424, TL + 16, 455, 6), Color.fromTw('purple-500')));
+  add(Rollover.from(`mid_rollover_right`,  Capsule.at(TR - 16, 424, TR - 16, 455, 6), Color.fromTw('purple-500')));
+  add(Lamp.from(`mid_rollover_lamp_left`,  Circle.at(TL + 38, 493, lampRad), Color.fromTw('lime-400'), Color.fromTw('lime-800')));
+  add(Lamp.from(`mid_rollover_lamp_right`, Circle.at(TR - 38, 493, lampRad), Color.fromTw('lime-400'), Color.fromTw('lime-800')));
 
 
   // Midfield guards
@@ -229,18 +215,18 @@ export default ():Table => {
 
   C(`tgt_left_upper`,       Segment.at(TL + 32, 360, TL + 28, 344), Color.fromTw('yellow-500'));
   C(`tgt_right_upper`,      Segment.at(TR - 32, 360, TR - 28, 344).flipNormal(), Color.fromTw('yellow-500'));
-  D(`tgt_lamp_left_upper`,  Circle.at(TL + 58, 331, lampRad), Color.fromTw('lime-500'));
-  D(`tgt_lamp_right_upper`, Circle.at(TR - 58, 331, lampRad), Color.fromTw('lime-500'));
+  T(`tgt_lamp_left_upper`,  Circle.at(TL + 58, 331, lampRad), Color.fromTw('lime-500'));
+  T(`tgt_lamp_right_upper`, Circle.at(TR - 58, 331, lampRad), Color.fromTw('lime-500'));
   C(`tgt_left_lower`,       Segment.at(TL + 27, 324, TL + 21, 307), Color.fromTw('purple-500'));
   C(`tgt_right_lower`,      Segment.at(TR - 27, 324, TR - 21, 307).flipNormal(), Color.fromTw('purple-500'));
-  D(`tgt_lamp_left_lower`,  Circle.at(TL + 53, 296, lampRad), Color.fromTw('blue-500'));
-  D(`tgt_lamp_right_lower`, Circle.at(TR - 53, 296, lampRad), Color.fromTw('blue-500'));
+  T(`tgt_lamp_left_lower`,  Circle.at(TL + 53, 296, lampRad), Color.fromTw('blue-500'));
+  T(`tgt_lamp_right_lower`, Circle.at(TR - 53, 296, lampRad), Color.fromTw('blue-500'));
 
-  on(`tgt_left_upper`, Event.ROLLOVER_TRIGGER, () => {
-    console.log("Detected: tgt_left_upper");
-  });
+  //on(`tgt_left_upper`, Event.ROLLOVER_TRIGGER, () => {
+    //console.log("Detected: tgt_left_upper");
+  //});
 
-  
+
   // Lower Guards
 
   C(`lower_guard_left_top`,      Capsule.at(TL + 11, 386, TL + 31, 372, 9), Color.fromTw('emerald-500'));
@@ -257,10 +243,10 @@ export default ():Table => {
 
   // Outlane rollovers
 
-  Z(`out_rollover_left`,  Rollover.from(Capsule.at(M + 137, 164, M + 137, 189, 6)));
-  Z(`out_rollover_right`, Rollover.from(Capsule.at(M - 137, 164, M - 137, 189, 6)));
-  D(`out_rollover_lamp_left`,  Circle.at(M + 104, 251, lampRad), Color.fromTw('orange-500')); 
-  D(`out_rollover_lamp_right`, Circle.at(M - 104, 251, lampRad), Color.fromTw('orange-500'));
+  add(Rollover.from(`out_rollover_left`,  Capsule.at(M + 137, 164, M + 137, 189, 6), Color.fromTw('emerald-500')));
+  add(Rollover.from(`out_rollover_right`, Capsule.at(M - 137, 164, M - 137, 189, 6), Color.fromTw('emerald-500')));
+  T(`out_rollover_lamp_left`,  Circle.at(M + 104, 251, lampRad), Color.fromTw('orange-500'));
+  T(`out_rollover_lamp_right`, Circle.at(M - 104, 251, lampRad), Color.fromTw('orange-500'));
 
 
   // Outlane kickers
@@ -268,22 +254,20 @@ export default ():Table => {
   C(`kicker_left_rail_outer`,  Arc.at(M, 208, 3, (TW - 9)/2, TAU*5/64, TAU*27/64), Color.fromTw('pink-500'));
   C(`kicker_left_rail_inner`,  Capsule.at(TL + 32, 238, TL + 32, 160, 2), Color.fromTw('pink-500'));
   C(`kicker_left_stopper`,     Circle.at(TL + 25, 157, 9), Color.fromTw('pink-500'));
-  Z(`kicker_left_score_ro`,    Rollover.from(Capsule.att(TL + 15, 200, 6, 30)));
-  Z(`kicker_left_force_kick`,  Kicker.from(Capsule.att(TL + 15, 176, 10, 10, TAU/4), KICKER_STRENGTH));
+  add(Rollover.from(`kicker_left_score_ro`, Capsule.att(TL + 15, 200, 6, 30), Color.fromTw('pink-500')));
+  add(Kicker.from(`kicker_left_force_kick`, Capsule.att(TL + 15, 176, 10, 10, TAU/4), Color.fromTw('rose-500'), KICKER_STRENGTH));
 
   C(`kicker_right_rail_outer`, Arc.at(M, 208, 3, (TW - 9)/2, TAU*5/64, TAU*0/64), Color.fromTw('pink-500'));
   C(`kicker_right_rail_inner`, Capsule.at(TR - 32, 238, TR - 32, 160, 2), Color.fromTw('pink-500'));
   C(`kicker_right_stopper`,    Circle.at(TR - 25, 157, 9), Color.fromTw('pink-500'));
-  Z(`kicker_right_score_ro`,   Rollover.from(Capsule.att(TR - 15, 200, 6, 30)));
-  Z(`kicker_right_force_kick`, Kicker.from(Capsule.att(TR - 15, 176, 10, 10, TAU/4), KICKER_STRENGTH));
+  add(Rollover.from(`kicker_right_score_ro`, Capsule.att(TR - 15, 200, 6, 30), Color.fromTw('pink-500')));
+  add(Kicker.from(`kicker_right_force_kick`, Capsule.att(TR - 15, 176, 10, 10, TAU/4), Color.fromTw('rose-500'), KICKER_STRENGTH));
 
 
   // Lower slingshots
 
-  C(`lower_ss_left`,      Fence.at([ M - 89, 150, M - 119, 198, M - 119, 161 ], 6).close(), Color.fromTw('red-500'));
-  D(`lower_ss_left_top`,  Fence.at([ M - 89, 157, M - 119, 205, M - 119, 168 ], 6).close(), Color.fromTw('yellow-500').alpha(0.5));
-  C(`lower_ss_right`,     Fence.at([ M + 89, 150, M + 119, 198, M + 119, 161 ], 6).close(), Color.fromTw('red-500'));
-  D(`lower_ss_right_top`, Fence.at([ M + 89, 157, M + 119, 205, M + 119, 168 ], 6).close(), Color.fromTw('yellow-500').alpha(0.5));
+  C(`lower_ss_left`,  Fence.at([ M - 89, 150, M - 119, 198, M - 119, 161 ], 6).close(), Color.fromTw('red-500'));
+  C(`lower_ss_right`, Fence.at([ M + 89, 150, M + 119, 198, M + 119, 161 ], 6).close(), Color.fromTw('red-500'));
 
 
   // Flippers
@@ -293,42 +277,46 @@ export default ():Table => {
   let flipperRestAngle = TAU/12;
   let flipperRange = TAU/6;
 
-  flippers.left  = new Flipper(Vec2.fromXY(M - 25 - flipperLength, 138), 
+  add(Flipper.from(`flipper_left`,
+    M - 25 - flipperLength,
+    138,
     flipperRad,
     flipperLength,
-    0  - flipperRestAngle,
-    flipperRange, 50);
+    0 - flipperRestAngle,
+    flipperRange,
+    50));
 
-  flippers.right = new Flipper(Vec2.fromXY(M + 25 + flipperLength, 138), 
+  add(Flipper.from(`flipper_right`,
+    M + 25 + flipperLength,
+    138,
     flipperRad,
     flipperLength,
     PI + flipperRestAngle,
-    -flipperRange, 50);
+    -flipperRange,
+    50));
 
 
   // Central drain
 
-  C(`drain_left`,  Segment.at(TL, 153, M - 34, 80));
-  C(`drain_right`, Segment.at(TR, 153, M + 34, 80).flipNormal());
-  Z(`drain`, Drain.from(Box.fromRect(L, 80, TR, 0)));
+  C(`drain_left`,  Segment.at(TL, 153, M - 34, 80), Color.fromTw('red-500'));
+  C(`drain_right`, Segment.at(TR, 153, M + 34, 80).flipNormal(), Color.fromTw('red-500'));
+  add(Drain.from(`drain`, Box.fromRect(L, 80, TR, 0)));
+
+
+  // Game script
+
+  it.process = (events:Event[]) => {
+    while (events.length) {
+      let event = events.pop();
+      //console.log(event);
+    }
+  }
 
 
   // Done
 
-  console.log(`Loaded table '${name}':
-  ${Object.values(zones).length} zones
-  ${Object.values(colliders).length} colliders
-  ${Object.values(flippers).length} flippers`);
+  console.log(`Loaded table '${it.name}': ${Object.values(it.things).length} things created.`);
 
-  return {
-    bounds,
-    zones,
-    decos,
-    flippers,
-    colliders,
-    template: null,
-    templateSrc: "/now.png",
-    ballRad: ballSize/2,
-  }
+  return it;
 }
 

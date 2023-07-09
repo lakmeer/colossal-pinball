@@ -186,6 +186,15 @@ export class Capsule implements Shape {
     this.pos = this.pos.sub(center).rotate(delta).add(center);
   }
 
+  pivot(delta:number) {
+    this.tip = this.tip.sub(this.pos).rotate(delta).add(this.pos);
+  }
+
+  setPivot(angle:number) {
+    let length = this.tip.sub(this.pos).len();
+    this.tip = this.pos.add(Vec2.fromAngle(angle, length));
+  }
+
   closest(point:Vec2):Vec2 {
     return nearestPointOn(this.pos, this.tip, point).towards(point, this.rad);
   }
