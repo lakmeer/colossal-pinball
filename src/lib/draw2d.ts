@@ -78,3 +78,18 @@ export const textAt = (ctx:CanvasRenderingContext2D, text:string, x:number, y:nu
   ctx.restore();
 }
 
+export const arrowAt = (ctx:CanvasRenderingContext2D, from:Vec2, to:Vec2, width:number, headSize:number, col:string) => {
+  lineAt(ctx, to, from, col, width);
+
+  ctx.fillStyle = col;
+  ctx.save();
+  ctx.translate(to.x, to.y);
+  ctx.rotate(to.sub(from).angle());
+  ctx.beginPath();
+  ctx.moveTo(headSize, 0);
+  ctx.lineTo(-headSize, -headSize/2);
+  ctx.lineTo(-headSize,  headSize/2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}

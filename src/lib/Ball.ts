@@ -51,6 +51,7 @@ export default class Ball {
   }
 
   simulate(dt:number) {
+    // TODO: velocity being lost? Check PBD videos
     const disp = this.pos.sub(this.#lastPos);
     this.#lastPos = this.pos.clone();
     this.vel.set(disp.add(this.acc.scale(dt * dt)).scale(this.friction));
@@ -73,5 +74,18 @@ export default class Ball {
       new Color(1, 1, 1, 1) // Color.random()
     )
   }
+
+  static withVel (pos:Vec2, vel:Vec2, r:number = 5) {
+    let b = new Ball(
+      pos.clone(),
+      Vec2.zero,
+      r,
+      r,
+      new Color(1, 1, 1, 1)
+    )
+    b.impart(vel);
+    return b;
+  }
+
 }
 

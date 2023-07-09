@@ -114,12 +114,17 @@
 
   // Interaction Events
 
+  type Arrow = [Vec2, Vec2];
   let clicked = false;
   let erasing = false;
+  let spawnArrow:Arrow = [Vec2.zero, Vec2.zero];
 
-  const spawn = (pos:Vec2) => {
+  const spawn = (arrow: Arrow) => {
+    let pos = arrow[0];
+    let vel = arrow[1].sub(arrow[0]).scale(50000);
+
     if (balls.length < MAX_BALLS) {
-      balls.push(Ball.randomAt(pos.x, pos.y, table.ballRad));
+      balls.push(Ball.withVel(pos, vel, table.ballRad));
     }
   }
 
@@ -142,19 +147,32 @@
     return Vec2.fromXY(x, -y);
   }
 
-  const spawnAt = (event:MouseEvent) => spawn(mouse2world(event));
   const eraseAt = (event:MouseEvent) => erase(mouse2world(event), 20);
 
   const onMouseDown = (event:MouseEvent) => {
     //@ts-ignore
     if (event.target.tagName !== 'CANVAS') return;
+
+    let pos = mouse2world(event);
+
     switch (event.button) {
-      case 0: spawnAt(event); clicked = true; break;
-      case 1: eraseAt(event); erasing = true; break;
+      case 0:
+        spawnArrow[0].set(pos);
+        spawnArrow[1].set(pos);
+        clicked = true;
+        break;
+      case 1: 
+        spawn(spawnArrow);
+        break;
     }
   }
 
-  const onMouseUp = () => {
+  const onMouseUp = (event:MouseEvent) => {
+    switch (event.button) {
+      case 0:
+        spawn(spawnArrow);
+        break;
+    }
     clicked = false;
     erasing = false;
   }
@@ -162,7 +180,8 @@
   const onMouseMove = (event:MouseEvent) => {
     //@ts-ignore
     if (event.target.tagName !== 'CANVAS') return;
-    if (clicked) spawnAt(event);
+    let pos = mouse2world(event);
+    if (clicked) spawnArrow[0].set(pos);
     if (erasing) eraseAt(event);
   }
 
@@ -220,6 +239,7 @@
     {balls}
     {table}
     {cameraY}
+    {spawnArrow}
     width={innerHeight * table.bounds.aspect}
     height={innerHeight}
   />

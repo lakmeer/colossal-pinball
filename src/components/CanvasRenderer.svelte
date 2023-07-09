@@ -12,7 +12,7 @@
   import type Thing from "$lib/Thing";
 
   import { Circle, Arc, Capsule, Fence, Box } from "$lib/Shape";
-  import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt } from "$lib/draw2d";
+  import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt, arrowAt } from "$lib/draw2d";
 
   import { floor } from "$lib/utils";
 
@@ -34,6 +34,7 @@
 
   export let table:Table;
   export let balls:Ball[] = [];
+  export let spawnArrow:[ Vec2, Vec2];
 
 
   // Canvas
@@ -133,14 +134,17 @@
 
     // Balls
     for (let ball of balls) {
-
-      // Body
       circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
 
-      // Velocity
       if (SHOW_VELOCITY) {
         lineAt(ctx, ball.pos, ball.pos.add(ball.vel.scale(10/TIME_SCALE)), 'rgba(255, 63, 31, 0.7)', 2);
       }
+    }
+
+    // Spawning Arrow
+    if (spawnArrow[0].dist(spawnArrow[1]) > 0.0) {
+      let [a, b] = spawnArrow;
+      arrowAt(ctx, a, b, 3, 8, 'rgba(0, 255, 0, 1)');
     }
 
     // Intersection overlay

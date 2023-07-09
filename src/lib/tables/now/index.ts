@@ -125,7 +125,7 @@ export default ():Table => {
 
   // Stopper
 
-  Collider(`stopper`, Capsule.from(L + 61, 637, L + 66, 644, 13), 4);
+  Collider(`stopper`, Capsule.from(L + 61, 637, L + 66, 644, 13), 2);
 
 
   // Upper lanes
