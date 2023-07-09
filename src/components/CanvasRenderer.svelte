@@ -121,16 +121,16 @@
       lineAt(ctx, Vec2.fromXY(world.left, cameraY), Vec2.fromXY(world.right, cameraY), 'red', 0.5);
     }
 
-    if (SHOW_TEMPLATE) ctx.globalAlpha = 0.4;
+    if (SHOW_TEMPLATE) ctx.globalAlpha = 0.6;
 
     // Zones
-    for (let zone of Object.values(table.zones)) {
-      drawShape(zone.shape, zone.color);
+    for (let z of Object.values(table.zones)) {
+      drawShape(z.shape, z.color);
     }
 
     // Decoration layer
-    for (let deco of Object.values(table.decos)) {
-      drawShape(deco.shape, deco.color);
+    for (let d of Object.values(table.decos)) {
+      drawShape(d.shape, d.color);
     }
 
     // Static Colliders (dim if template is displayed)

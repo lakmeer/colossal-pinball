@@ -11,9 +11,37 @@ import Flipper  from "$lib/Flipper";
 import Collider from "$lib/Collider";
 
 import { Segment, Circle, Capsule, Arc, Fence, Box } from "$lib/Shape";
-import { Drain, Rollover } from "$lib/Zone";
+import { Drain, Rollover, Kicker, Lamp } from "$lib/Zone";
 
 import { PI, TAU } from "$lib/utils";
+
+
+// TEMP: Shim interface
+
+enum Event {
+  ROLLOVER_TRIGGER,
+}
+
+
+// TODO adjust positioning to correct for perspective in th graphic
+
+// FX Ideas
+// - chromatic ball trails
+// - move stripes
+// - cycle face colors
+// - cycle hair colors
+// - basic strobing
+// - paint splashes
+// - paint trails from eyes
+// - background dropout to stripe tunnel, or starfield
+// - face animation
+// - hair animation
+// - particles
+// - silhouette mode
+// - smoke trails on ball
+// - smoke UV offset in bg
+// - target banks get brighter as multiplier increases
+// - e^-x glow outlines
 
 
 //
@@ -28,6 +56,13 @@ export default ():Table => {
   const zones:Record<string,Zone> = {};
   const decos:Record<string,Shape> = {};
   const flippers = {} as Table["flippers"];
+  const wires = [];
+
+
+  // Settings
+
+  const SLINGSHOT_STRENGTH = Vec2.fromAngle(0, 8);
+  const KICKER_STRENGTH    = Vec2.fromAngle(TAU/4, 8);
 
 
   // Vars
@@ -69,6 +104,16 @@ export default ():Table => {
     decos[name] = new Deco(shape, color);
   }
 
+  const on = (name:string, event:Event, fn:Function) => {
+    let thing = get(name);
+    wires.push({ name, event, fn });
+  }
+
+  const get = <T>(name:string):T => {
+    let thing = colliders[name] || zones[name] || decos[name];
+    if (!thing) console.warn(`Thing '${name}' does not exist`);
+    return thing as T;
+  }
 
 
 
@@ -76,14 +121,18 @@ export default ():Table => {
   // Playfield Elements
   //
 
-  // Launch chute and outer walls
-
-  C(`chutewall_inner_btm`, Capsule.at(TR + 6,   0, TR + 6, 339, 6));
-  C(`chutewall_inner_top`, Capsule.at(TR + 6, 398, TR + 6, 547, 6));
-  C(`chutewall_inner_arc`, Arc.at(M + 57, 547, 6, 130, TAU*1/7, 0));
-  C(`chutewall_outer`,     Capsule.at(R - 12, 0, R - 12, 530, 6));
-  C(`leftwall`,            Capsule.at(TL - 6, 0, TL - 6, 530, 6));
+  // Outer walls
   C(`topwall`,             Arc.at(-1, 530, 6, (W - 22)/2, TAU*8/16, TAU*0/16));
+  C(`leftwall`,            Capsule.at(TL - 6, 0, TL - 6, 530, 6));
+  C(`rightwall_inner_btm`, Capsule.at(TR + 6,   0, TR + 6, 339, 6));
+  C(`rightwall_inner_top`, Capsule.at(TR + 6, 398, TR + 6, 547, 6));
+  C(`rightwall_inner_arc`, Arc.at(M + 57, 547, 6, 130, TAU*1/7, 0));
+
+  // Launch chute
+
+  // TODO: one-way gate at the top of the chute
+  C(`chute_wall`,    Capsule.at(R - 12, 0, R - 12, 530, 6));
+  C(`chute_bottom`,  Capsule.att(R - 30, 90, 9, 20, TAU/4));
 
 
   // Stopper
@@ -103,14 +152,14 @@ export default ():Table => {
 
   for (let z = -1.5; z <= 1.5; z++) {
     let x = laneMiddle + laneStride * z;
-    Z(`upper_lane_rollover_${z+1.5}`, Rollover.from(Capsule.at(x, 575, x, 608, 6), Color.fromTw('pink-500')));
-    D(`upper_lane_lamp_${z+1.5}`,     Circle.at(x, 630, lampRad), Color.fromTw('yellow-500'));
+    Z(`upper_lane_rollover_${z+1.5}`, Rollover.from(Capsule.at(x, 575, x, 608, 6)));
+    Z(`upper_lane_lamp_${z+1.5}`,     Lamp.from(Circle.at(x, 630, lampRad), 'yellow'));
   }
 
 
   // Upper guards
 
-  C(`upper_guard_left_a`,  Circle.at(M - 143, 608, 7), Color.fromTw('violet-500'));
+  C(`upper_guard_left_a`,  Circle.at(M - 143, 612, 9), Color.fromTw('violet-500'));
   C(`upper_guard_left_b`,  Capsule.at(M - 167, 509, M - 167, 575, 9), Color.fromTw('violet-500'));
 
   C(`upper_guard_right_a`, Capsule.at(M + 139, 644, M + 133, 627, 9), Color.fromTw('violet-500'));
@@ -132,8 +181,8 @@ export default ():Table => {
 
   C(`tgt_top_left`,       Segment.at(TL + 32, 600, TL + 23, 584), Color.fromTw('red-500'));
   C(`tgt_top_right`,      Segment.at(TR - 32, 600, TR - 23, 584).flipNormal(), Color.fromTw('red-500'));
-  D(`tgt_lamp_top_left`,  Circle.at(TL + 39, 557, lampRad), Color.fromTw('lime-500'));
-  D(`tgt_lamp_top_right`, Circle.at(TR - 39, 557, lampRad), Color.fromTw('lime-500'));
+  Z(`tgt_lamp_top_left`,  Lamp.from(Circle.at(TL + 39, 557, lampRad), 'lime'));
+  Z(`tgt_lamp_top_right`, Lamp.from(Circle.at(TR - 39, 557, lampRad), 'lime'));
 
 
   // Droptarget banks & slingshots
@@ -157,10 +206,13 @@ export default ():Table => {
 
   // Midfield rollovers
 
-  Z(`mid_rollover_left`,  Rollover.from(Capsule.at(TL + 16, 424, TL + 16, 455, 6), Color.fromTw('amber-500')));
-  Z(`mid_rollover_right`, Rollover.from(Capsule.at(TR - 16, 424, TR - 16, 455, 6), Color.fromTw('amber-500')));
-  D(`mid_rollover_lamp_left`,  Circle.at(TL + 38, 493, lampRad), Color.fromTw('lime-500'));
-  D(`mid_rollover_lamp_right`, Circle.at(TR - 38, 493, lampRad), Color.fromTw('lime-500'));
+  Z(`mid_rollover_left`,  Rollover.from(Capsule.at(TL + 16, 424, TL + 16, 455, 6)));
+  Z(`mid_rollover_right`, Rollover.from(Capsule.at(TR - 16, 424, TR - 16, 455, 6)));
+  Z(`mid_rollover_lamp_left`,  Lamp.from(Circle.at(TL + 38, 493, lampRad), 'lime'));
+  Z(`mid_rollover_lamp_right`, Lamp.from(Circle.at(TR - 38, 493, lampRad), 'lime'));
+
+
+  // Midfield guards
 
   C(`mid_guard_left_top`, Arc.at(TL + 22, 482, 1, 20, TAU*3/16, TAU*5/16), Color.fromTw('white'));
   C(`mid_guard_left_mid`, Segment.at(TL + 2, 482, TL + 2, 412), Color.fromTw('white'));
@@ -184,30 +236,46 @@ export default ():Table => {
   D(`tgt_lamp_left_lower`,  Circle.at(TL + 53, 296, lampRad), Color.fromTw('blue-500'));
   D(`tgt_lamp_right_lower`, Circle.at(TR - 53, 296, lampRad), Color.fromTw('blue-500'));
 
+  on(`tgt_left_upper`, Event.ROLLOVER_TRIGGER, () => {
+    get<Rollover>(`tgt_left_upper_lamp`).flash();
+  });
+
   
   // Lower Guards
 
-  C(`lower_guard_left_top`, Capsule.at(TL + 11, 383, TL + 31, 372, 9), Color.fromTw('emerald-500'));
-  C(`lower_guard_left_mid`, Circle.at(TL + 21, 334, 9), Color.fromTw('emerald-500'));
-  C(`lower_guard_left_btm`, Circle.at(TL + 14, 299, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_left_top`,      Capsule.at(TL + 11, 386, TL + 31, 372, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_left_mid`,      Circle.at(TL + 21, 334, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_left_btm`,      Circle.at(TL + 14, 299, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_left_out_post`, Circle.at(TL + 39, 238, 9), Color.fromTw('emerald-500'));
 
-  C(`lower_guard_right_top`, Circle.at(TR - 31, 372, 9), Color.fromTw('emerald-500'));
-  C(`lower_guard_right_mid`, Circle.at(TR - 21, 334, 9), Color.fromTw('emerald-500'));
-  C(`lower_guard_right_btm`, Circle.at(TR - 14, 299, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_right_top`,     Circle.at(TR - 31, 372, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_right_top_ang`, Capsule.att(TR - 8, 359, 2, 47, TAU*2/15), Color.fromTw('rose-500'));
+  C(`lower_guard_right_mid`,     Circle.at(TR - 21, 334, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_right_btm`,     Circle.at(TR - 14, 299, 9), Color.fromTw('emerald-500'));
+  C(`lower_guard_right_out_post`, Circle.at(TR - 39, 238, 9), Color.fromTw('emerald-500'));
 
 
   // Outlane rollovers
 
-  Z(`out_rollover_left`,  Rollover.from(Capsule.at(M + 137, 164, M + 137, 189, 6), Color.fromTw('amber-500')));
-  Z(`out_rollover_right`, Rollover.from(Capsule.at(M - 137, 164, M - 137, 189, 6), Color.fromTw('amber-500')));
+  Z(`out_rollover_left`,  Rollover.from(Capsule.at(M + 137, 164, M + 137, 189, 6)));
+  Z(`out_rollover_right`, Rollover.from(Capsule.at(M - 137, 164, M - 137, 189, 6)));
   D(`out_rollover_lamp_left`,  Circle.at(M + 104, 251, lampRad), Color.fromTw('orange-500')); 
   D(`out_rollover_lamp_right`, Circle.at(M - 104, 251, lampRad), Color.fromTw('orange-500'));
 
 
-  // Outlane hidden
+  // Outlane kickers
 
-  C(`out_hidden_left`,  Arc.at(M, 208, 3, (TW - 9)/2, TAU*5/64, TAU*27/64), Color.fromTw('pink-500'));
-  C(`out_hidden_right`, Arc.at(M, 208, 3, (TW - 9)/2, TAU*5/64, TAU*0/64), Color.fromTw('pink-500'));
+  C(`kicker_left_rail_outer`,  Arc.at(M, 208, 3, (TW - 9)/2, TAU*5/64, TAU*27/64), Color.fromTw('pink-500'));
+  C(`kicker_left_rail_inner`,  Capsule.at(TL + 32, 238, TL + 32, 160, 2), Color.fromTw('pink-500'));
+  C(`kicker_left_stopper`,     Circle.at(TL + 25, 157, 9), Color.fromTw('pink-500'));
+  Z(`kicker_left_score_ro`,    Rollover.from(Capsule.att(TL + 15, 200, 6, 30)));
+  Z(`kicker_left_force_kick`,  Kicker.from(Capsule.att(TL + 15, 176, 10, 10, TAU/4), KICKER_STRENGTH));
+
+  C(`kicker_right_rail_outer`, Arc.at(M, 208, 3, (TW - 9)/2, TAU*5/64, TAU*0/64), Color.fromTw('pink-500'));
+  C(`kicker_right_rail_inner`, Capsule.at(TR - 32, 238, TR - 32, 160, 2), Color.fromTw('pink-500'));
+  C(`kicker_right_stopper`,    Circle.at(TR - 25, 157, 9), Color.fromTw('pink-500'));
+  Z(`kicker_right_score_ro`,   Rollover.from(Capsule.att(TR - 15, 200, 6, 30)));
+  Z(`kicker_right_force_kick`, Kicker.from(Capsule.att(TR - 15, 176, 10, 10, TAU/4), KICKER_STRENGTH));
 
 
   // Lower slingshots

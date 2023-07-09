@@ -8,7 +8,7 @@ import { max, floor, TAU } from "$lib/utils";
 
 // Drawing helpers
 
-export const lineAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, col:string, width:number, cap = 'round') => {
+export const lineAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, col:string, width:number, cap:CanvasLineCap = 'round') => {
   ctx.lineCap = cap;
   ctx.lineWidth = width;
   ctx.strokeStyle = col;

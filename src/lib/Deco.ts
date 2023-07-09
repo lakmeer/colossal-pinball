@@ -1,7 +1,6 @@
 
 import type Shape from './Shape';
-
-import Color from './Color';
+import type Color from './Color';
 
 
 //

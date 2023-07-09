@@ -207,6 +207,12 @@ export class Capsule implements Shape {
     return new Capsule(Vec2.fromXY(x, y), Vec2.fromXY(tipX, tipY), rad);
   }
 
+  static att (x:number, y:number, rad:number, length:number, angle = 0) {
+    const middle = Vec2.fromXY(x, y);
+    const half = Vec2.fromAngle(angle + TAU/4, length/2);
+    return new Capsule(middle.add(half), middle.sub(half), rad);
+  }
+
   static fromAngle (x:number, y:number, angle:number, length:number, rad:number) {
     const pos = Vec2.fromXY(x, y);
     return new Capsule(pos, pos.add(Vec2.fromAngle(angle, length)), rad);

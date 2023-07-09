@@ -41,6 +41,9 @@
     // 'Fractional friction factor' - exponentially adjusted for number of steps
     const fff = pow(1 - (1 - STD_FRICTION), 1/substeps);
 
+    // Reset Zones from last frame
+    for (let z of Object.values(table.zones)) z.reset();
+
     // Collisions
     for (let a of balls) {
 
@@ -56,10 +59,10 @@
       table.flippers.left.collide(a);
       table.flippers.right.collide(a);
 
-      // Playfield obstacles
+      // Collide obstacles
       for (let c of Object.values(table.colliders)) c.collide(a);
 
-      // Zones
+      // Measure Zones
       for (let z of Object.values(table.zones)) z.apply(a);
 
       // Cull dead balls
@@ -67,6 +70,9 @@
 
       // Table boundary
       table.bounds.collideInterior(a);
+
+      // Components arbitrary update routines
+      for (let z of Object.values(table.zones)) z.update(dt);
 
       // Apply verlet integration
       a.simulate(dt);
