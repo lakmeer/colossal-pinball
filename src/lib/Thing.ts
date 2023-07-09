@@ -104,8 +104,10 @@ export class Collider extends Thing {
     ball.pos.addSelf(delta.scale(fff * this.state.f_coeff));
   }
 
-  static from (name:string, shape:Shape, color:Color, f:number = 1.0):Collider {
-    return new Collider(name, shape, color, { f_coeff: f } as ColliderState);
+  static from (name:string, shape:Shape, f:number = 1.0):Collider {
+    return new Collider(name, shape, Color.fromTw('blue-500'), {
+      f_coeff: f
+    } as ColliderState);
   }
 
 }
@@ -121,6 +123,8 @@ export class Collider extends Thing {
 interface RolloverState extends ThingState {
   active: boolean;
   intersectedThisFrame: boolean;
+  activeColor: Color;
+  inactiveColor: Color;
 }
 
 export class Rollover extends Thing {
@@ -132,8 +136,6 @@ export class Rollover extends Thing {
   }
 
   update(Δt) {
-    this.state.active = false;
-
     if (this.state.intersectedThisFrame && !this.state.active) {
       this.state.active = true;
       this.emit(EventType.ACTIVATED);
@@ -145,14 +147,17 @@ export class Rollover extends Thing {
     }
 
     this.state.intersectedThisFrame = false;
+    this.color = this.state.active ? this.state.activeColor : this.state.inactiveColor;
 
     return super.update(Δt);
   }
 
-  static from (name:string, shape:Shape, color:Color):Rollover {
-    return new Rollover(name, shape, color, {
+  static from (name:string, shape:Shape):Rollover {
+    return new Rollover(name, shape, Color.fromTw('emerald-600'), {
       active: false,
-      intersectedThisFrame: false
+      intersectedThisFrame: false,
+      activeColor: Color.fromTw('emerald-300'),
+      inactiveColor: Color.fromTw('emerald-600'),
     } as RolloverState);
   }
 
@@ -247,21 +252,22 @@ export class Kicker extends Thing {
     }
   }
 
-  static from (name:string, shape:Shape, color:Color, force:Vec2) {
-    return new Kicker(name, shape, color, { force } as KickerState);
+  static from (name:string, shape:Shape, force:Vec2) {
+    return new Kicker(name, shape, Color.fromTw('red-600'), { 
+      force
+    } as KickerState);
   }
 
 }
 
 
-import { Capsule } from "$lib/Shape";
-
-const { sin, cos, min, max, sign, abs } = Math;
-
 
 //
 // Flipper
 //
+
+import { Capsule } from "$lib/Shape";
+import { sin, cos, min, max, abs } from "$lib/utils";
 
 interface FlipperState extends ThingState {
   angle: number;
@@ -300,7 +306,8 @@ export class Flipper extends Thing {
   setAngle (angle: number) {
     this.state.angle = max(0, min(angle, this.state.flipRange));
     angle = this.state.restAngle + this.state.angle;
-    this.shape.setPivot(angle);
+    let shape = this.shape as Capsule;
+    shape.setPivot(angle);
   }
 
   static from (name:string, x:number, y:number, rad:number, len:number, restAngle: number, flipRange:number, flipSpeed:number) {

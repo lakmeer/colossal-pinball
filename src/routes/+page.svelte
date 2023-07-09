@@ -65,12 +65,15 @@
 
       for (let t of Object.values(table.things)) {
         t.collide(a, dt, fff);
-        t.update(dt).forEach(evt => newEvents.push([ t.name, evt ]));
       }
 
       if (a.cull) balls.splice(balls.indexOf(a), 1);
 
       a.simulate(dt);
+    }
+
+    for (let t of Object.values(table.things)) {
+      t.update(dt).forEach(evt => newEvents.push([ t.name, evt ]));
     }
 
     table.process(newEvents);
