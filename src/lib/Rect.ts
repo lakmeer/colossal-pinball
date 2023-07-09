@@ -43,10 +43,10 @@ export default class Rect {
 
   intersect(point:Vec2):boolean {
     return (
-      ball.pos.x > this.left   ||
-      ball.pos.x < this.right  ||
-      ball.pos.y > this.bottom ||
-      ball.pos.y < this.top);
+      point.x > this.left   ||
+      point.x < this.right  ||
+      point.y > this.bottom ||
+      point.y < this.top);
   }
 
   collide(ball:Ball) {

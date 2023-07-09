@@ -51,10 +51,6 @@ export const arcAt = (ctx:CanvasRenderingContext2D, pos:Vec2, rad:number, radius
   ctx.stroke();
 }
 
-export const shortArcAt = (ctx:CanvasRenderingContext2D, pos:Vec2, rad:number, col:string, start = 0, end = TAU) => {
-  arcAt(ctx, pos, rad, col, start, end, (end - start) < 0);
-}
-
 export const capsuleAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, rad:number, col:string, normal?:Vec2) => {
   ctx.lineCap = 'round';
   ctx.lineWidth = max(1, rad * 2);

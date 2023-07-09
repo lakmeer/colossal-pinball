@@ -10,7 +10,9 @@
   import type Table from "$lib/tables/";
   import Now from "$lib/tables/now";
 
-  import { clamp, pow, floor, min, max, nsin, loadImage } from "$lib/utils";
+  import { clamp, pow, floor, min, max, loadImage } from "$lib/utils";
+
+  import Thing from "$lib/Thing";
 
 
   // Config
@@ -35,6 +37,18 @@
   //
   // Physics
   //
+  // TODO: Spatial binning
+  //
+  // - Gravity
+  // - Collide balls with table bounds
+  // - Collide balls with each other
+  // - Collide balls with Things
+  // - Run Thing update and collect events
+  // - Pass list of events to table script
+  // - Run table script
+  // - Check remaining events for non-table stuff
+  // - Cull balls
+  // - Apply verlet integration
 
   const update = (dt:number) => {
 
@@ -55,7 +69,7 @@
         if (a !== b) b.collide(a);
       }
 
-      // Flippers
+      // Flippers: TODO: Flipper become Things
       table.flippers.left.collide(a);
       table.flippers.right.collide(a);
 

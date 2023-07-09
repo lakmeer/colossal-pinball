@@ -2,7 +2,7 @@
 import type Ball  from './Ball';
 import type Shape from './Shape';
 
-import Vec2  from './Vec2';
+import type Vec2  from './Vec2';
 import Color from './Color';
 
 

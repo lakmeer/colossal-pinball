@@ -73,10 +73,5 @@ export default class Ball {
       new Color(1, 1, 1, 1) // Color.random()
     )
   }
-
-  static randomWithin(bounds:Rect) {
-    const at = Vec2.random(...bounds.toRange());
-    return Ball.randomAt(at.x, at.y);
-  }
 }
 

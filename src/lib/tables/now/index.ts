@@ -54,7 +54,7 @@ export default ():Table => {
   const bounds = new Rect(-216, 768, 216, 0);
   const colliders:Record<string,Collider> = {};
   const zones:Record<string,Zone> = {};
-  const decos:Record<string,Shape> = {};
+  const decos:Record<string,Deco> = {};
   const flippers = {} as Table["flippers"];
   const wires = [];
 
@@ -237,7 +237,7 @@ export default ():Table => {
   D(`tgt_lamp_right_lower`, Circle.at(TR - 53, 296, lampRad), Color.fromTw('blue-500'));
 
   on(`tgt_left_upper`, Event.ROLLOVER_TRIGGER, () => {
-    get<Rollover>(`tgt_left_upper_lamp`).flash();
+    console.log("Detected: tgt_left_upper");
   });
 
   

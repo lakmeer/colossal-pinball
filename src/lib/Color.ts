@@ -61,6 +61,10 @@ export default class Color extends Array {
     return [this.r, this.g, this.b, this.a];
   }
 
+  scale (amt:number):Color {
+    return new Color(this.r*amt, this.g*amt, this.b*amt, this.a);
+  }
+
   alpha(a:number):Color {
     return new Color(this.r, this.g, this.b, a);
   }

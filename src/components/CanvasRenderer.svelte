@@ -64,7 +64,7 @@
     else if (s instanceof Box)         boxAt(ctx, s.toRect(), c.toString(), s.angle);
     else if (s instanceof Fence) {
       for (let l of s.links) {
-        capsuleAt(ctx, l.pos, l.tip, l.rad, c.toString(), l.normal);
+        capsuleAt(ctx, l.pos, l.tip, l.rad, c.toString());
       }
     }
   }

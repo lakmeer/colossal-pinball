@@ -294,7 +294,7 @@ export class Fence implements Shape {
 
   pos:Vec2;
   rad:number;
-  links: Segment[] = [];
+  links: Capsule[] = [];
   vertices: Vec2[] = [];
 
   constructor(vertices:Vec2[], rad = 1) {
@@ -346,11 +346,6 @@ export class Fence implements Shape {
 
   withRad (rad:number) {
     return new Fence(this.vertices, rad);
-  }
-
-  flipNormals () {
-    this.links.map(seg => seg.flipNormal());
-    return this;
   }
 
   static at (coords:number[], rad:number) {
