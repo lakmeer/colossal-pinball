@@ -63,9 +63,7 @@ export default class Thing {
   }
 
   update (Δt:number):Array<EventType> {
-    const events = this.events.slice();
-    this.events = [];
-    return events;
+    return this.events.slice();
   }
 }
 
@@ -191,14 +189,15 @@ interface LampState extends ThingState {
   timer: number;
 } 
 
+
 export class Lamp extends Thing {
+
+  static FLASH_LEN = 0.6;
 
   do(cmd, args = []) {
     switch (cmd) {
       case Command.LAMP_FLASH:
-        const [ sec ] = args;
-        if (typeof sec !== 'number') return console.warn("Lamp can't flash with", sec);
-        this.state.flashTime = sec as number;
+        this.state.flashTime = Lamp.FLASH_LEN;
         this.on();
         return;
 
@@ -234,10 +233,11 @@ export class Lamp extends Thing {
   update(Δt) {
     if (this.state.flashTime > 0) {
       this.state.flashTime -= Δt;
-    }
+      this.color = this.state.unlit.lerp(this.state.lit, this.state.flashTime/Lamp.FLASH_LEN);
 
-    if (this.state.flashTime <= 0) {
-      this.off();
+      if (this.state.flashTime <= 0) {
+        this.off();
+      }
     }
 
     return super.update(Δt);

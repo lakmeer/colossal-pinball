@@ -1,7 +1,7 @@
 
 import type { Tuple4 } from '$types';
 
-import { randFrom } from '$lib/utils';
+import { lerp, randFrom } from '$lib/utils';
 
 const { floor } = Math;
 
@@ -67,6 +67,15 @@ export default class Color extends Array {
 
   alpha(a:number):Color {
     return new Color(this.r, this.g, this.b, a);
+  }
+
+  lerp (c:Color, amt:number):Color {
+    return new Color(
+      lerp(this.r, c.r, amt),
+      lerp(this.g, c.g, amt),
+      lerp(this.b, c.b, amt),
+      lerp(this.a, c.a, amt),
+    );
   }
 
   toString() {

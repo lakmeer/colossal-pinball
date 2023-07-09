@@ -11,72 +11,10 @@ import * as Things  from "$lib/Thing";
 import { Circle, Capsule, Arc, Fence, Box } from "$lib/Shape";
 
 import type { InputState, EventQueue } from "$types";
-import type { EventType, Command } from "$lib/Thing";
+import { EventType, Command } from "$lib/Thing";
 
 import { PI, TAU } from "$lib/utils";
 
-
-// FX Ideas
-// - chromatic ball trails
-// - move stripes
-// - cycle face colors
-// - cycle hair colors
-// - basic strobing
-// - paint splashes
-// - paint trails from eyes
-// - background dropout to stripe tunnel, or starfield
-// - face animation
-// - hair animation
-// - particles
-// - silhouette mode
-// - smoke trails on ball
-// - smoke UV offset in bg
-// - target banks get brighter as multiplier increases
-// - e^-x glow outlines
-
-// Music sync (If Only)
-//
-// Instrumental - 0:00 - 0:08
-// - Bass throb only
-// - Static
-// Verse 1 - 0:08 - 0:23
-// - Static
-// Verse 2 - 0:23 - 0:39
-// - Kick drum enters
-// - Pulse ball
-// Chorus 1 (soft) - 0:39 - 1:10 - 2x
-// - Pads enter
-// - Smoke trail on ball
-// - Smoke bg
-// - Strobe lights gently
-// Intrumental - 1:10 - 1:26
-// - Snare enters, hard synths
-// - Snap color changes
-//  - Face colors
-//  - Ring colors
-// Verse 3 - 1:26 - 1:42
-// - Pulse traget banks
-// Verse 4 - 1:42 - 1:58
-// - Paint splash
-// Chorus 2 (full) - 1:58 - 2:29 - 2x
-// - Portal bg
-// - Fade face colors
-// - Technicolor lamps
-// - Rainbow ball trail
-// Break - 2:30 - 2:37
-// - Pulse everything
-// Solo - 2:37 - 2:53
-// - Starburst
-// - Drop background for starfield
-// - Screaming face
-// - Hair swirling
-// Solo + High bells - 2:53 - 3:09
-// - Smoke puffs on snare
-// Chorus 3 (full) - 3:09 - 3:40 - 2x
-// - Technicolor art lines
-// - Fireworks
-// Instrumental - 3:40 - 3:56
-// Fadeout
 
 //
 // Generate the Now table
@@ -109,12 +47,12 @@ export default ():Table => {
   let lampRad    = ballRad;
 
 
-  // Shorthands
+  // Shorthand dimensions
 
-  const L  = it.bounds.left;
-  const R  = it.bounds.right;
-  const W  = it.bounds.w;
-  const H  = it.bounds.h;
+  const L = it.bounds.left;
+  const R = it.bounds.right;
+  const W = it.bounds.w;
+  const H = it.bounds.h;
 
   const TW = it.bounds.w - 54; // table width except chute
   const TR = L + TW;   // rightmost position excluding chute
@@ -122,24 +60,47 @@ export default ():Table => {
   const M  = L + TW/2 + 8; // middle line of playfield (fudged)
 
 
-
   // Shorthand constructors
 
-  const add = (thing:Thing) => {
+  const add = (thing:Thing):Thing => {
     if (it.things[thing.name]) console.warn(`Thing with name '${thing.name}' already exists`);
     it.things[thing.name] = thing;
+    return thing;
   }
 
+  //@ts-ignore
   const Deco       = (name, ...args) => add(Things.Deco.from(name, ...args));
+  //@ts-ignore
   const Collider   = (name, ...args) => add(Things.Collider.from(name, ...args));
+  //@ts-ignore
   const Drain      = (name, ...args) => add(Things.Drain.from(name, ...args));
+  //@ts-ignore
   const Flipper    = (name, ...args) => add(Things.Flipper.from(name, ...args));
+  //@ts-ignore
   const Kicker     = (name, ...args) => add(Things.Kicker.from(name, ...args));
+  //@ts-ignore
   const Rollover   = (name, ...args) => add(Things.Rollover.from(name, ...args));
+  //@ts-ignore
   const Lamp       = (name, ...args) => add(Things.Lamp.from(name, ...args));
+  //@ts-ignore
   const Target     = (name, ...args) => add(Things.Target.from(name, ...args));
+  //@ts-ignore
   const DropTarget = (name, ...args) => add(Things.DropTarget.from(name, ...args));
+  //@ts-ignore
   const Bumper     = (name, ...args) => add(Things.Bumper.from(name, ...args));
+
+
+  // Wiring
+
+  let listeners = [ ];
+
+  const on = (thing:Thing, type:EventType, λ:() => void) => {
+    listeners.push([ thing.name, type, λ ]);
+  }
+
+  const get = <T>(name:string):T => {
+    return it.things[name] as T;
+  }
 
 
   //
@@ -179,8 +140,12 @@ export default ():Table => {
 
   for (let z = -1.5; z <= 1.5; z++) {
     let x = laneMiddle + laneStride * z;
-    Rollover(`upper_lane_rollover_${z+1.5}`, Capsule.from(x, 575, x, 608, 8));
-    Lamp(`upper_lane_lamp_${z+1.5}`, Circle.at(x, 630, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+
+    let roll = Rollover(`upper_lane_rollover_${z+1.5}`, Capsule.from(x, 575, x, 608, 8));
+    let lamp = Lamp(`upper_lane_lamp_${z+1.5}`, Circle.at(x, 630, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+
+    on(roll, EventType.ACTIVATED,   () => lamp.do(Command.ACTIVATE));
+    on(roll, EventType.DEACTIVATED, () => lamp.do(Command.DEACTIVATE));
   }
 
 
@@ -196,9 +161,17 @@ export default ():Table => {
 
   // Main Bumpers
 
-  Bumper(`bumper_left`,  Circle.at(M + 85, 523, 25), BUMPER_STRENGTH);
-  Bumper(`bumper_right`, Circle.at(M - 85, 523, 25), BUMPER_STRENGTH);
-  Bumper(`bumper_mid`,   Circle.at(M     , 492, 25), BUMPER_STRENGTH);
+  let bLeft  = Bumper(`bumper_left`,  Circle.at(M + 85, 523, 25), BUMPER_STRENGTH);
+  let bRight = Bumper(`bumper_right`, Circle.at(M - 85, 523, 25), BUMPER_STRENGTH);
+  let bMid   = Bumper(`bumper_mid`,   Circle.at(M     , 492, 25), BUMPER_STRENGTH);
+
+  let lLeft  = Lamp(`bumper_lamp_left`,  Circle.at(M + 85, 523, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
+  let lRight = Lamp(`bumper_lamp_right`, Circle.at(M - 85, 523, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
+  let lMid   = Lamp(`bumper_lamp_mid`,   Circle.at(M     , 492, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
+
+  on(bLeft,  EventType.BOUNCED, () => lLeft.do(Command.LAMP_FLASH));
+  on(bRight, EventType.BOUNCED, () => lRight.do(Command.LAMP_FLASH));
+  on(bMid,   EventType.BOUNCED, () => lMid.do(Command.LAMP_FLASH));
 
 
   // Upper Targets
@@ -214,17 +187,47 @@ export default ():Table => {
   let dt_width  = 14;
   let dt_stride = 26;
 
+  let redBank = {
+    state: [ false, false, false, false ],
+    lamp:  Lamp(`dt_lamp_red`,   Circle.at(M -  128, 440, 20), Color.fromTw('red-900'),   Color.fromTw('red-500'))
+  }
+
+  let whiteBank = {
+    state: [ false, false, false, false ],
+    lamp:  Lamp(`dt_lamp_white`, Circle.at(M +  128, 440, 20), Color.fromTw('gray-600'), Color.fromTw('gray-100'))
+  }
+
+  const setBankState = (bank, ix:number, state:boolean) => {
+    bank.state[ix] = state;
+    if (bank.state.every(v => v)) {
+      bank.lamp.do(Command.ACTIVATE);
+    } else {
+      bank.lamp.do(Command.DEACTIVATE);
+    }
+  }
+
   for (let i = -1.5; i <= 1.5; i++) {
     let xl = M - 99 + dt_stride * i;
     let xr = M + 99 + dt_stride * i;
-    DropTarget(`dt_left_bank_${i+1.5}`,  Capsule.from(xl + dt_width/2, 408, xl - dt_width/2, 408, 2));
-    DropTarget(`dt_right_bank_${i+1.5}`, Capsule.from(xr + dt_width/2, 408, xr - dt_width/2, 408, 2));
+    let ix = i + 1.5;
+
+    let red   = DropTarget(`dt_left_bank_${i+1.5}`,  Capsule.from(xl + dt_width/2, 408, xl - dt_width/2, 408, 2));
+    let white = DropTarget(`dt_right_bank_${i+1.5}`, Capsule.from(xr + dt_width/2, 408, xr - dt_width/2, 408, 2));
+
+    on(red,   EventType.ACTIVATED,   () => setBankState(redBank,   ix, true ));
+    on(red,   EventType.DEACTIVATED, () => setBankState(redBank,   ix, false));
+    on(white, EventType.ACTIVATED,   () => setBankState(whiteBank, ix, true ));
+    on(white, EventType.DEACTIVATED, () => setBankState(whiteBank, ix, false));
   }
 
   Bumper(`dt_ss_left`,   Capsule.at(M - 100, 444, 5, 80,  TAU*11/63), BUMPER_STRENGTH);
   Bumper(`dt_ss_right`,  Capsule.at(M + 100, 444, 5, 80, -TAU*11/63), BUMPER_STRENGTH);
   Collider(`dt_bank_left`,  Fence.at([ M - 147, 419, M - 147, 465, M -  56, 419 ], 6).close());
   Collider(`dt_bank_right`, Fence.at([ M + 147, 419, M + 147, 465, M +  56, 419 ], 6).close());
+
+
+  // Not a real playfield component
+
 
 
   // Midfield rollovers
@@ -340,28 +343,22 @@ export default ():Table => {
 
   // Game script
 
-  let listeners = [
-  ]
-
-  const on = (name, type, λ) => {
-    listeners.push([ name, type, λ ]);
-  }
-
-  const get = <T>(name:string):T => {
-    return it.things[name] as T;
-  }
-
-
-  it.process = (input:InputState, events:EventQueue) => {
+  it.process = (input:InputState) => {
     get<Things.Flipper>(`flipper_left`).state.active  = input.left;
     get<Things.Flipper>(`flipper_right`).state.active = input.right;
 
-    while (events.length) {
-      let [ origin, event ] = events.pop();
+    for (let name in it.things) {
+      let thing = it.things[name];
 
-      listeners.forEach(([ name, type, callback ]) => {
-        console.log(name, type);
-      });
+      while (thing.events.length) {
+        let event = thing.events.pop();
+
+        listeners.forEach(([ name, type, callback ]) => {
+          if (name === thing.name && type === event) {
+            callback();
+          }
+        });
+      }
     }
   }
 

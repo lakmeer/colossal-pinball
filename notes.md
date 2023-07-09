@@ -25,6 +25,68 @@
 - Scripts organisation in table object
 - Are table and gamestate object seperate?
 
+### FX Ideas
+
+- chromatic ball trails
+- move stripes
+- cycle face colors
+- cycle hair colors
+- basic strobing
+- paint splashes
+- paint trails from eyes
+- background dropout to stripe tunnel, or starfield
+- face animation
+- hair animation
+- particles
+- silhouette mode
+- smoke trails on ball
+- smoke UV offset in bg
+- target banks get brighter as multiplier increases
+- e^-x glow outlines
+
+### Music sync (If Only)
+
+- Instrumental - 0:00 - 0:08
+  - Bass throb only
+  - Static
+- Verse 1 - 0:08 - 0:23
+  - Static
+- Verse 2 - 0:23 - 0:39
+  - Kick drum enters
+  - Pulse ball
+- Chorus 1 (soft) - 0:39 - 1:10 - 2x
+  - Pads enter
+  - Smoke trail on ball
+  - Smoke bg
+  - Strobe lights gently
+- Intrumental - 1:10 - 1:26
+  - Snare enters, hard synths
+  - Snap color changes
+   - Face colors
+   - Ring colors
+- Verse 3 - 1:26 - 1:42
+  - Pulse traget banks
+- Verse 4 - 1:42 - 1:58
+  - Paint splash
+- Chorus 2 (full) - 1:58 - 2:29 - 2x
+  - Portal bg
+  - Fade face colors
+  - Technicolor lamps
+  - Rainbow ball trail
+- Break - 2:30 - 2:37
+  - Pulse everything
+- Solo - 2:37 - 2:53
+  - Starburst
+  - Drop background for starfield
+  - Screaming face
+  - Hair swirling
+- Solo + High bells - 2:53 - 3:09
+  - Smoke puffs on snare
+- Chorus 3 (full) - 3:09 - 3:40 - 2x
+  - Technicolor art lines
+  - Fireworks
+- Instrumental - 3:40 - 3:56
+- Fadeout
 
 
 ### Features

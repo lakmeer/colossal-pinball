@@ -13,7 +13,7 @@ export default class Table {
   bounds:     Rect;
   ballRad:    number;
   things:     Record<string,Thing>;
-  process:    (input:InputState, events:any[]) => void;
+  process:    (input:InputState) => void;
   template:   null | HTMLImageElement;
   templateSrc: string;
 }

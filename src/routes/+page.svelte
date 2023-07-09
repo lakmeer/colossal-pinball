@@ -46,14 +46,11 @@
   // + Collide balls with table bounds
   // + Collide balls with each other
   // + Collide balls with Things
-  // + Run Thing update and collect events
-  // - Pass list of events to table script
   // - Run table script
-  // - Check remaining events for non-table stuff
+  //   - Collect events from things
+  //   - Run callbacks against registered events
   // - Cull balls
   // - Apply verlet integration
-
-  let newEvents:EventQueue = [];
 
   const update = (dt:number) => {
 
@@ -78,16 +75,10 @@
     }
 
     for (let t of Object.values(table.things)) {
-      t.update(dt).forEach(evt => newEvents.push([ t.name, evt ]));
+      t.update(dt);
     }
 
-    table.process(input, newEvents);
-
-    while (newEvents.length) {
-      let [ name, evt ] = newEvents.pop();
-      console.log(`Unhandled event -- ${name} => ${evt}`);
-    }
-    newEvents = [];
+    table.process(input);
   }
 
 
