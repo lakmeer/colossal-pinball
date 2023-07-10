@@ -31,7 +31,8 @@ export default ():Table => {
     gravity: 1500,
     template: null,
     templateSrc: "/now.png",
-    process: (input:InputState, events:EventType[]) => {}
+    process: (input:InputState, events:EventType[]) => {},
+    score: 0,
   } as Table;
 
 
@@ -111,6 +112,27 @@ export default ():Table => {
   const M  = L + TW/2 + 8; // middle line of playfield (fudged)
 
 
+  // Game State
+
+  enum ScoringPhase {
+    NONE,
+    RED,
+    WHITE,
+  }
+
+  const state = {
+    score: 0,
+    balls: 3,
+    white: 0,
+    red:   0,
+    phase: ScoringPhase.NONE,
+  }
+
+  const scoreRolloverDependsOnLamp = (r:Things.Rollover, l:Things.Lamp, fn:(lit:boolean) => number) => {
+    on(r, EventType.ACTIVATED, () => state.score += fn(l.state.active));
+  }
+
+
   //
   // Playfield Elements
   // TODO: adjust positioning to correct for perspective in the graphic
@@ -149,8 +171,7 @@ export default ():Table => {
     let roll = Rollover(`upper_lane_rollover_${z+1.5}`, Capsule.from(x, 575, x, 608, rolloverRad));
     let lamp = Lamp(`upper_lane_lamp_${z+1.5}`, Circle.at(x, 630, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
-    on(roll, EventType.ACTIVATED,   () => lamp.do(Command.ACTIVATE));
-    on(roll, EventType.DEACTIVATED, () => lamp.do(Command.DEACTIVATE));
+    scoreRolloverDependsOnLamp(roll, lamp, (lit) => lit ? 300 : 50);
   }
 
 
@@ -163,13 +184,20 @@ export default ():Table => {
   Collider(`upper_guard_right_b`, Capsule.at(TR - 45, 612, postRad, 23, TAU*3/32));
   Collider(`upper_guard_right_c`,  Capsule.at(TR - 15, 538, postRad, 72));
 
-  Target(`tgt_top_left`,   Capsule.at(TL + 29, 587, targetRad, 16, TAU*59/64));
-  Target(`tgt_top_right`,   Capsule.at(TR - 29, 587, targetRad, 16, -TAU*59/64));
-  Lamp(`tgt_lamp_top_left`,  Circle.at(TL + 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  Lamp(`tgt_lamp_top_right`, Circle.at(TR - 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let tgtTL = Target(`tgt_top_left`,   Capsule.at(TL + 29, 587, targetRad, 16, TAU*59/64));
+  let tgtTR = Target(`tgt_top_right`,  Capsule.at(TR - 29, 587, targetRad, 16, -TAU*59/64));
+  let lTgtTL = Lamp(`tgt_lamp_top_left`,  Circle.at(TL + 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lTgtTR = Lamp(`tgt_lamp_top_right`, Circle.at(TR - 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+
+  on(tgtTL, EventType.BOUNCED, () => state.score += lTgtTL.state.active ? 300 : 50);
+  on(tgtTR, EventType.BOUNCED, () => state.score += lTgtTR.state.active ? 300 : 50);
 
 
   // Main Bumpers
+
+  let dLeft  = Deco(`bumper_deco_left`,  Circle.at(M - 85, 523, 36), Color.fromTw('slate-700'));
+  let dMid   = Deco(`bumper_deco_mid`,   Circle.at(M     , 492, 36), Color.fromTw('slate-700'));
+  let dRight = Deco(`bumper_deco_right`, Circle.at(M + 85, 523, 36), Color.fromTw('slate-700'));
 
   let bLeft  = Bumper(`bumper_left`,  Circle.at(M + 85, 523, 25), BUMPER_STRENGTH);
   let bRight = Bumper(`bumper_right`, Circle.at(M - 85, 523, 25), BUMPER_STRENGTH);
@@ -230,10 +258,13 @@ export default ():Table => {
 
   // Midfield rollovers
 
-  Rollover(`mid_rollover_left`,   Capsule.at(TL + 16, 439, rolloverRad, 32));
-  Rollover(`mid_rollover_right`,  Capsule.at(TR - 16, 439, rolloverRad, 32));
-  Lamp(`mid_rollover_lamp_left`,  Circle.at(TL + 38, 493, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  Lamp(`mid_rollover_lamp_right`, Circle.at(TR - 38, 493, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let midROL = Rollover(`mid_rollover_left`,   Capsule.at(TL + 16, 439, rolloverRad, 32));
+  let midROR = Rollover(`mid_rollover_right`,  Capsule.at(TR - 16, 439, rolloverRad, 32));
+  let midROLampL = Lamp(`mid_rollover_lamp_left`,  Circle.at(TL + 38, 493, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let midROLampR = Lamp(`mid_rollover_lamp_right`, Circle.at(TR - 38, 493, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+
+  scoreRolloverDependsOnLamp(midROL, midROLampL, lit => 100 + (lit ? state.red   : 0));
+  scoreRolloverDependsOnLamp(midROR, midROLampR, lit => 100 + (lit ? state.white : 0));
 
 
   // Midfield guards (vertical part is just main wall)
@@ -247,42 +278,48 @@ export default ():Table => {
 
   // Lower Targets
 
-  Target(`tgt_left_upper`,  Capsule.at(TL + 36, 347, targetRad, 16, TAU*29/64));
-  Target(`tgt_left_lower`,  Capsule.at(TL + 25, 310, targetRad, 16, TAU*29/64));
-  Target(`tgt_right_upper`, Capsule.at(TR - 36, 347, targetRad, 16, TAU*35/64));
-  Target(`tgt_right_lower`, Capsule.at(TR - 25, 310, targetRad, 16, TAU*35/64));
+  let tgtL1 = Target(`tgt_left_upper`,  Capsule.at(TL + 36, 347, targetRad, 16, TAU*29/64));
+  let tgtL2 = Target(`tgt_left_lower`,  Capsule.at(TL + 25, 310, targetRad, 16, TAU*29/64));
+  let tgtR1 = Target(`tgt_right_upper`, Capsule.at(TR - 36, 347, targetRad, 16, TAU*35/64));
+  let tgtR2 = Target(`tgt_right_lower`, Capsule.at(TR - 25, 310, targetRad, 16, TAU*35/64));
 
-  Lamp(`tgt_lamp_left_upper`,  Circle.at(TL + 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  Lamp(`tgt_lamp_right_upper`, Circle.at(TR - 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  Lamp(`tgt_lamp_left_lower`,  Circle.at(TL + 53, 296, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  Lamp(`tgt_lamp_right_lower`, Circle.at(TR - 53, 296, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lampL1 = Lamp(`tgt_lamp_left_upper`,  Circle.at(TL + 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lampL2 = Lamp(`tgt_lamp_right_upper`, Circle.at(TR - 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lampR1 = Lamp(`tgt_lamp_left_lower`,  Circle.at(TL + 53, 296, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lampR2 = Lamp(`tgt_lamp_right_lower`, Circle.at(TR - 53, 296, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+
+  on(tgtL1, EventType.BOUNCED, () => state.score += lampL1.state.active ? 300 : 50);
+  on(tgtL2, EventType.BOUNCED, () => state.score += lampL2.state.active ? 300 : 50);
+  on(tgtR1, EventType.BOUNCED, () => state.score += lampR1.state.active ? 300 : 50);
+  on(tgtR2, EventType.BOUNCED, () => state.score += lampR2.state.active ? 300 : 50);
 
 
   // Lower Guards
 
   Collider(`lower_guard_left_top`,       Capsule.at(TL + 25, 376, postRad, 32, TAU*8/64));
   Collider(`lower_guard_left_mid`,       Circle.at(TL + 27, 330, postRad));
-  //Collider(`lower_guard_left_out_post`,  Circle.at(TL + 42, 234, postRad));
 
   Collider(`lower_guard_right_top_ang`,  Capsule.at(TR - 16, 353, postRad, 50, TAU*11/64));
   Collider(`lower_guard_right_mid`,      Circle.at(TR - 27, 330, postRad));
-  //Collider(`lower_guard_right_out_post`, Circle.at(TR - 42, 234, postRad));
 
 
   // Outlane rollovers
 
-  Rollover(`out_rollover_left`,  Capsule.from(M + 136, 164, M + 136, 189, rolloverRad));
-  Rollover(`out_rollover_right`, Capsule.from(M - 136, 164, M - 136, 189, rolloverRad));
-  Lamp(`out_rollover_lamp_left`,  Circle.at(M + 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  Lamp(`out_rollover_lamp_right`, Circle.at(M - 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let outROL = Rollover(`out_rollover_left`,  Capsule.from(M + 136, 164, M + 136, 189, rolloverRad));
+  let outROR = Rollover(`out_rollover_right`, Capsule.from(M - 136, 164, M - 136, 189, rolloverRad));
+  let outLampL = Lamp(`out_rollover_lamp_left`,  Circle.at(M + 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let outLampR = Lamp(`out_rollover_lamp_right`, Circle.at(M - 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+
+  scoreRolloverDependsOnLamp(outROL, outLampL, lit => 100 + (lit ? state.red   : 0));
+  scoreRolloverDependsOnLamp(outROR, outLampR, lit => 100 + (lit ? state.white : 0));
 
 
   // Outlane kickers and rails
 
-  Rollover(`kicker_left_score_ro`,       Capsule.at(TL + 15, 200, rolloverRad, 30));
+  let kickL = Rollover(`kicker_left_score_ro`,  Capsule.at(TL + 15, 200, rolloverRad, 30));
   Bumper(`kicker_left`, Capsule.at(TL + 13, 176, 10, 7, TAU/4), KICKER_STRENGTH);
 
-  Rollover(`kicker_right_score_ro`,       Capsule.at(TR - 15, 200, rolloverRad, 30));
+  let kickR = Rollover(`kicker_right_score_ro`, Capsule.at(TR - 15, 200, rolloverRad, 30));
   Bumper(`kicker_right`, Capsule.at(TR - 13, 176, 10, 7, TAU/4), KICKER_STRENGTH);
 
   Collider(`kicker_left_rail_outer`,     Arc.at(M, 205, 4, (TW - 8)/2, TAU*5/64, TAU*27/64));
@@ -292,6 +329,9 @@ export default ():Table => {
   Collider(`kicker_right_rail_outer`,     Arc.at(M, 205, 4, (TW - 6)/2, TAU*5/64, TAU*0/64));
   Collider(`kicker_right_rail_inner_top`, Arc.at(TR - 90, 203, 4, 60, TAU*7/64, TAU*0/64));
   Collider(`kicker_right_rail_inner`,     Capsule.from(TR - 30, 200, TR - 30, 135, 4));
+
+  scoreRolloverDependsOnLamp(kickL, outLampL, lit => 100 + (lit ? state.red   : 0));
+  scoreRolloverDependsOnLamp(kickR, outLampR, lit => 100 + (lit ? state.white : 0));
 
 
   // Lower slingshots
@@ -338,25 +378,13 @@ export default ():Table => {
 
   // Game script
 
-  enum ScoringPhase {
-    NONE,
-    RED,
-    WHITE,
-  }
-
-  const state = {
-    score: 0,
-    balls: 3,
-    white: 0,
-    red:   0,
-    phase: ScoringPhase.NONE,
-  }
-
   T.process = (input:InputState) => {
     get<Things.Flipper>(`flipper_left`).state.active  = input.left;
     get<Things.Flipper>(`flipper_right`).state.active = input.right;
 
     if (input.launch) get<Things.Launcher>(`launcher`).do(Command.ACTIVATE);
+
+    T.score = state.score;
 
     for (let name in T.things) {
       let thing = T.things[name];

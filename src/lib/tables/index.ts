@@ -17,5 +17,6 @@ export default class Table {
   process:    (input:InputState) => void;
   template:   null | HTMLImageElement;
   templateSrc: string;
+  score:      number;
 }
 

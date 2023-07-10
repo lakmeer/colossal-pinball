@@ -75,8 +75,8 @@ export default class Thing {
 
 export class Deco extends Thing {
 
-  static from (name:string, shape:Shape):Deco {
-    return new Deco(name, shape, Color.fromTw('yellow-400'));
+  static from (name:string, shape:Shape, color = Color.fromTw('yellow-400')):Deco {
+    return new Deco(name, shape, color);
   }
 
 }
@@ -360,12 +360,13 @@ interface TargetState extends ThingState {
 export class Target extends Thing {
 
   collide(ball:Ball, Δt:number) {
-    if (!this.state.dropped) {
-      let delta = this.shape.eject(ball);
-      if (delta.len() === 0) return;
+    let delta = this.shape.eject(ball);
+    if (delta.len() === 0) return;
+    ball.pos.addSelf(delta);
+
+    if (this.state.timer <= 0) {
       this.state.timer = 0.3;
       this.emit(EventType.BOUNCED);
-      ball.pos.addSelf(delta);
     }
   }
 
@@ -517,7 +518,7 @@ interface LauncherState extends ThingState {
 export class Launcher extends Thing {
 
   collide(ball, Δt, fff) {
-    if (this.state.active) {
+    if (this.state.timer > 0) {
       if (this.shape.intersect(ball.pos)) {
         ball.pos.addSelf(this.state.force);
         this.emit(EventType.ACTIVATED);
@@ -528,15 +529,19 @@ export class Launcher extends Thing {
   do (cmd) {
     switch (cmd) {
       case Command.ACTIVATE:
-        this.state.active = true;
+        //this.state.active = true;
+        this.state.timer = 0.1;
         console.log("Bing");
         return;
     }
   }
 
   update(Δt) {
-    if (this.state.active) {
-      //this.state.active = false;
+    if (this.state.timer > 0) {
+      this.state.timer -= Δt;
+    }
+
+    if (this.state.timer <= 0) {
       this.emit(EventType.DEACTIVATED);
     }
 

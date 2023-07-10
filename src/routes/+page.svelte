@@ -105,7 +105,7 @@
     const now = performance.now()/1000;
     const dt = (now - lastTime) * TIME_SCALE;
 
-    cameraY = 2.3 * 100;
+    cameraY = 3.6 * 100;
     cameraY = balls[0] ? balls[0].pos.y : 0;
 
     for (let i = 0; i < substeps; i++) {
@@ -255,7 +255,7 @@
     {cameraY}
     {spawnArrow}
     width={innerWidth}
-    height={innerHeight * table.bounds.h / table.bounds.w}
+    height={innerWidth * table.bounds.h / table.bounds.w}
   />
 </div>
 

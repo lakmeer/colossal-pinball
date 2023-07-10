@@ -22,7 +22,7 @@
   const SHOW_VELOCITY  = false;
   const SHOW_OVERLAY   = true;
   const SHOW_GRIDLINES = true;
-  const SHOW_TEMPLATE  = true;
+  const SHOW_TEMPLATE  = false;
 
   const INTERSECTION_RES = 8; // Resolution of collision overlay
 
@@ -123,7 +123,7 @@
       lineAt(ctx, Vec2.fromXY(world.left, cameraY), Vec2.fromXY(world.right, cameraY), 'red', 0.5);
     }
 
-    if (SHOW_TEMPLATE) ctx.globalAlpha = 1.4;
+    if (SHOW_TEMPLATE) ctx.globalAlpha = 0.5;
 
     // Things
     for (let t of Object.values(table.things)) {
@@ -140,6 +140,10 @@
         lineAt(ctx, ball.pos, ball.pos.add(ball.vel.scale(10/TIME_SCALE)), 'rgba(255, 63, 31, 0.7)', 2);
       }
     }
+
+    // Score
+    textAt(ctx, `000000000`, 140, 71, Color.fromTw('rose-950').toString(), 'right', '50px Ani');
+    textAt(ctx, `${table.score}`, 140, 71, Color.fromTw('red-500').toString(), 'right', '50px Ani');
 
     // Spawning Arrow
     if (spawnArrow[0].dist(spawnArrow[1]) > 0.0) {

@@ -66,9 +66,9 @@ export const capsuleAt = (ctx:CanvasRenderingContext2D, a:Vec2, b:Vec2, rad:numb
   }
 }
 
-export const textAt = (ctx:CanvasRenderingContext2D, text:string, x:number, y:number, col:string, align = "center") => {
+export const textAt = (ctx:CanvasRenderingContext2D, text:string, x:number, y:number, col:string, align = "center", font = "10px monspace") => {
   ctx.fillStyle    = col;
-  ctx.font         = '10px monospace';
+  ctx.font         = font;
   ctx.textAlign    = align as CanvasTextAlign;
   ctx.textBaseline = 'middle';
   ctx.save();
