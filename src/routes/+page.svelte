@@ -9,7 +9,7 @@
 
   import type Table from "$lib/tables/";
 
-  import { clamp, pow, floor, min, max, loadImage } from "$lib/utils";
+  import { clamp, pow, floor, min, max, nsin, loadImage } from "$lib/utils";
 
   import type { InputState, EventQueue } from "$types";
 
@@ -34,6 +34,11 @@
     left:  false,
     right: false,
   };
+
+  let game:GameState = {
+    score: 0,
+    balls: 3,
+  }
 
 
   //
@@ -101,6 +106,7 @@
     const dt = (now - lastTime) * TIME_SCALE;
 
     //cameraY = nsin(now/2) * table.bounds.h;
+    cameraY = 1.3 * 100;
 
     for (let i = 0; i < substeps; i++) {
       update(dt/substeps);
@@ -246,8 +252,8 @@
     {table}
     {cameraY}
     {spawnArrow}
-    width={innerHeight * table.bounds.aspect}
-    height={innerHeight}
+    width={innerWidth}
+    height={innerWidth}
   />
 </div>
 

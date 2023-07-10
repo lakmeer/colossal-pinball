@@ -22,51 +22,24 @@ import { PI, TAU } from "$lib/utils";
 
 export default ():Table => {
 
-  const it = {
+
+  const T = {
     name: "NOW",
     bounds: new Rect(-216, 768, 216, 0),
     things: {},
     ballRad: 10,
     gravity: 1200,
     template: null,
-    //templateSrc: "/now.png",
+    templateSrc: "/now.png",
     process: (input:InputState, events:EventType[]) => {}
   } as Table;
-
-
-  // Settings
-
-  const BUMPER_STRENGTH = 1;
-  const KICKER_STRENGTH = 2;
-  const LAUNCH_STRENGTH = 200000;
-
-
-  // Vars
-
-  let ballRad    = 10;
-  let ballSize   = ballRad * 2;
-  let chuteWidth = ballSize + 2;
-  let lampRad    = ballRad;
-
-
-  // Shorthand dimensions
-
-  const L = it.bounds.left;
-  const R = it.bounds.right;
-  const W = it.bounds.w;
-  const H = it.bounds.h;
-
-  const TW = it.bounds.w - 54; // table width except chute
-  const TR = L + TW;   // rightmost position excluding chute
-  const TL = L + 16;   // leftmost position excluding outer wall
-  const M  = L + TW/2 + 8; // middle line of playfield (fudged)
 
 
   // Shorthand constructors
 
   const add = (thing:Thing):Thing => {
-    if (it.things[thing.name]) console.warn(`Thing with name '${thing.name}' already exists`);
-    it.things[thing.name] = thing;
+    if (T.things[thing.name]) console.warn(`Thing with name '${thing.name}' already exists`);
+    T.things[thing.name] = thing;
     return thing;
   }
 
@@ -103,8 +76,39 @@ export default ():Table => {
   }
 
   const get = <T>(name:string):T => {
-    return it.things[name] as T;
+    return T.things[name] as T;
   }
+
+
+  //
+  // Setup
+  //
+
+  const BUMPER_STRENGTH = 1;
+  const KICKER_STRENGTH = 2;
+  const LAUNCH_STRENGTH = 200000;
+
+
+  // Vars
+
+  let ballRad     = 10;
+  let lampRad     = 9;
+  let rolloverRad = 6;
+  let postRad     = 6;
+  let targetRad   = 2;
+
+
+  // Shorthand dimensions
+
+  const L = T.bounds.left;
+  const R = T.bounds.right;
+  const W = T.bounds.w;
+  const H = T.bounds.h;
+
+  const TW = T.bounds.w - 54; // table width except chute
+  const TR = L + TW;   // rightmost position excluding chute
+  const TL = L + 16;   // leftmost position excluding outer wall
+  const M  = L + TW/2 + 8; // middle line of playfield (fudged)
 
 
   //
@@ -113,10 +117,11 @@ export default ():Table => {
   //
 
   // Outer walls
+
   Collider(`topwall`,             Arc.at(-1, 530, 6, (W - 22)/2, TAU*8/16, TAU*0/16));
-  Collider(`leftwall`,            Capsule.from(TL - 6, 0, TL - 6, 530, 6));
-  Collider(`rightwall_inner_btm`, Capsule.from(TR + 6,   0, TR + 6, 339, 6));
-  Collider(`rightwall_inner_top`, Capsule.from(TR + 6, 398, TR + 6, 547, 6));
+  Collider(`leftwall`,            Capsule.from(TL - 5, 0, TL - 5, 530, 7));
+  Collider(`rightwall_inner_btm`, Capsule.from(TR + 6, 0, TR + 6, 339, 6));
+  Collider(`rightwall_inner_top`, Capsule.from(TR + 5, 394, TR + 5, 547, 7));
   Collider(`rightwall_inner_arc`, Arc.at(M + 57, 547, 6, 130, TAU*1/7, 0));
 
 
@@ -135,18 +140,17 @@ export default ():Table => {
 
   // Upper lanes
 
-  let laneMiddle = M;
   let laneStride = 42;
 
   for (let z = -2; z <= 2; z++) {
-    let x = laneMiddle + laneStride * z;
-    Collider(`upper_lane_guard_${z+2}`, Capsule.from(x, 582, x, 622, 8));
+    let x = M + laneStride * z;
+    Collider(`upper_lane_guard_${z+2}`, Capsule.from(x, 579, x, 622, 7));
   }
 
   for (let z = -1.5; z <= 1.5; z++) {
-    let x = laneMiddle + laneStride * z;
+    let x = M + laneStride * z;
 
-    let roll = Rollover(`upper_lane_rollover_${z+1.5}`, Capsule.from(x, 575, x, 608, 8));
+    let roll = Rollover(`upper_lane_rollover_${z+1.5}`, Capsule.from(x, 575, x, 608, rolloverRad));
     let lamp = Lamp(`upper_lane_lamp_${z+1.5}`, Circle.at(x, 630, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
     on(roll, EventType.ACTIVATED,   () => lamp.do(Command.ACTIVATE));
@@ -154,14 +158,19 @@ export default ():Table => {
   }
 
 
-  // Upper guards
+  // Upper targets and edge guards
 
-  Collider(`upper_guard_left_a`,  Circle.at(M - 143, 612, 9));
-  Collider(`upper_guard_left_b`,  Capsule.from(M - 167, 509, M - 167, 575, 9));
+  Collider(`upper_guard_left_a`,  Circle.at(TL + 39, 604, postRad));
+  Collider(`upper_guard_left_b`,  Capsule.at(TL + 15, 538, postRad, 75));
 
-  Collider(`upper_guard_right_a`, Capsule.from(M + 139, 644, M + 133, 627, 9));
-  Collider(`upper_guard_right_b`, Capsule.from(M + 143, 612, M + 133, 627, 9));
-  Collider(`upper_guard_right_c`, Capsule.from(M + 167, 509, M + 167, 575, 9));
+  Collider(`upper_guard_right_a`, Capsule.at(TR - 46, 635, postRad, 28, TAU*14/32));
+  Collider(`upper_guard_right_b`, Capsule.at(TR - 45, 612, postRad, 23, TAU*3/32));
+  Collider(`upper_guard_right_c`,  Capsule.at(TR - 15, 538, postRad, 75));
+
+  Target(`tgt_top_left`,   Capsule.at(TL + 29, 587, targetRad, 16, TAU*59/64));
+  Target(`tgt_top_right`,   Capsule.at(TR - 29, 587, targetRad, 16, -TAU*59/64));
+  Lamp(`tgt_lamp_top_left`,  Circle.at(TL + 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  Lamp(`tgt_lamp_top_right`, Circle.at(TR - 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
 
   // Main Bumpers
@@ -177,14 +186,6 @@ export default ():Table => {
   on(bLeft,  EventType.BOUNCED, () => lLeft.do(Command.LAMP_FLASH));
   on(bRight, EventType.BOUNCED, () => lRight.do(Command.LAMP_FLASH));
   on(bMid,   EventType.BOUNCED, () => lMid.do(Command.LAMP_FLASH));
-
-
-  // Upper Targets
-
-  Target(`tgt_top_left`,   Capsule.from(TL + 32, 600, TL + 23, 584, 2));
-  Target(`tgt_top_right`,  Capsule.from(TR - 32, 600, TR - 23, 584, 2));
-  Lamp(`tgt_lamp_top_left`,  Circle.at(TL + 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  Lamp(`tgt_lamp_top_right`, Circle.at(TR - 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
 
   // Droptarget banks & slingshots
@@ -225,42 +226,35 @@ export default ():Table => {
     on(white, EventType.DEACTIVATED, () => setBankState(whiteBank, ix, false));
   }
 
-  Bumper(`dt_ss_left`,   Capsule.at(M - 100, 444, 5, 80,  TAU*11/63), BUMPER_STRENGTH);
-  Bumper(`dt_ss_right`,  Capsule.at(M + 100, 444, 5, 80, -TAU*11/63), BUMPER_STRENGTH);
-  Collider(`dt_bank_left`,  Fence.at([ M - 147, 419, M - 147, 465, M -  56, 419 ], 6).close());
-  Collider(`dt_bank_right`, Fence.at([ M + 147, 419, M + 147, 465, M +  56, 419 ], 6).close());
-
-
-  // Not a real playfield component
-
+  Bumper(`dt_ss_left`,   Capsule.at(M - 100, 445, 5, 80,  TAU*22/124), BUMPER_STRENGTH);
+  Bumper(`dt_ss_right`,  Capsule.at(M + 100, 445, 5, 80, -TAU*22/124), BUMPER_STRENGTH);
+  Collider(`dt_bank_left`,  Fence.at([ M - 147, 419, M - 147, 465, M - 53, 419 ], 6).close());
+  Collider(`dt_bank_right`, Fence.at([ M + 147, 419, M + 147, 465, M + 53, 419 ], 6).close());
 
 
   // Midfield rollovers
 
-  Rollover(`mid_rollover_left`,   Capsule.from(TL + 16, 424, TL + 16, 455, 8));
-  Rollover(`mid_rollover_right`,  Capsule.from(TR - 16, 424, TR - 16, 455, 8));
+  Rollover(`mid_rollover_left`,   Capsule.at(TL + 16, 439, rolloverRad, 32));
+  Rollover(`mid_rollover_right`,  Capsule.at(TR - 16, 439, rolloverRad, 32));
   Lamp(`mid_rollover_lamp_left`,  Circle.at(TL + 38, 493, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
   Lamp(`mid_rollover_lamp_right`, Circle.at(TR - 38, 493, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
 
-  // Midfield guards
+  // Midfield guards (vertical part is just main wall)
 
-  Collider(`mid_guard_left_top`, Arc.at(TL + 22, 482, 1, 20, TAU*3/16, TAU*5/16));
-  Collider(`mid_guard_left_mid`, Capsule.from(TL + 2, 482, TL + 2, 412, 1));
-  Collider(`mid_guard_left_btm`, Arc.at(TL + 22, 412, 1, 20, TAU*3/16, TAU*8/16));
-
-  Collider(`mid_guard_right_top`, Arc.at(TR - 22, 482, 1, 20, TAU*3/16, TAU*0/16));
-  Collider(`mid_guard_right_mid`, Capsule.from(TR - 2, 412, TR - 2, 482, 1));
-  Collider(`mid_guard_right_btm`, Arc.at(TR - 22, 412, 1, 20, TAU*3/16, TAU*13/16));
-  Collider(`mid_guard_right_end`, Capsule.from(TR - 14, 393, TR + 6, 393, 1));
+  Collider(`mid_guard_left_top`, Arc.at(TL + 21, 476, 2, 20, TAU*3/16, TAU*5/16));
+  Collider(`mid_guard_left_btm`, Arc.at(TL + 21, 411, 2, 20, TAU*3/16, TAU*8/16));
+  Collider(`mid_guard_right_top`, Arc.at(TR - 24, 474, 2, 24, TAU*6/32, TAU*0/32));
+  Collider(`mid_guard_right_btm`, Arc.at(TR - 24, 411, 2, 24, TAU*6/32, TAU*26/32));
+  Collider(`mid_guard_right_end`, Capsule.from(TR - 16, 389, TR, 389, 2));
 
 
   // Lower Targets
 
-  Target(`tgt_left_upper`,  Capsule.from(TL + 32, 360, TL + 28, 344, 2));
-  Target(`tgt_right_upper`, Capsule.from(TR - 32, 360, TR - 28, 344, 2));
-  Target(`tgt_left_lower`,  Capsule.from(TL + 27, 324, TL + 21, 307, 2));
-  Target(`tgt_right_lower`, Capsule.from(TR - 27, 324, TR - 21, 307, 2));
+  Target(`tgt_left_upper`,  Capsule.at(TL + 36, 347, targetRad, 16, TAU*29/64));
+  Target(`tgt_left_lower`,  Capsule.at(TL + 25, 310, targetRad, 16, TAU*29/64));
+  Target(`tgt_right_upper`, Capsule.at(TR - 36, 347, targetRad, 16, TAU*35/64));
+  Target(`tgt_right_lower`, Capsule.at(TR - 25, 310, targetRad, 16, TAU*35/64));
 
   Lamp(`tgt_lamp_left_upper`,  Circle.at(TL + 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
   Lamp(`tgt_lamp_right_upper`, Circle.at(TR - 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
@@ -270,39 +264,38 @@ export default ():Table => {
 
   // Lower Guards
 
-  Collider(`lower_guard_left_top`,       Capsule.from(TL + 11, 386, TL + 31, 372, 9));
-  Collider(`lower_guard_left_mid`,       Circle.at(TL + 21, 334, 9));
-  Collider(`lower_guard_left_btm`,       Circle.at(TL + 14, 299, 9));
-  Collider(`lower_guard_left_out_post`,  Circle.at(TL + 39, 238, 9));
+  Collider(`lower_guard_left_top`,       Capsule.at(TL + 25, 376, postRad, 32, TAU*8/64));
+  Collider(`lower_guard_left_mid`,       Circle.at(TL + 27, 330, postRad));
+  Collider(`lower_guard_left_out_post`,  Circle.at(TL + 42, 234, postRad));
 
-  Collider(`lower_guard_right_top`,      Circle.at(TR - 31, 372, 9));
-  Collider(`lower_guard_right_top_ang`,  Capsule.at(TR - 11, 357, 6, 47, TAU*2/16));
-  Collider(`lower_guard_right_mid`,      Circle.at(TR - 21, 334, 9));
-  Collider(`lower_guard_right_btm`,      Circle.at(TR - 14, 299, 9));
-  Collider(`lower_guard_right_out_post`, Circle.at(TR - 39, 238, 9));
+  Collider(`lower_guard_right_top_ang`,  Capsule.at(TR - 16, 353, postRad, 50, TAU*11/64));
+  Collider(`lower_guard_right_mid`,      Circle.at(TR - 27, 330, postRad));
+  Collider(`lower_guard_right_out_post`, Circle.at(TR - 42, 234, postRad));
 
 
   // Outlane rollovers
 
-  Rollover(`out_rollover_left`,  Capsule.from(M + 136, 164, M + 136, 189, 8));
-  Rollover(`out_rollover_right`, Capsule.from(M - 136, 164, M - 136, 189, 8));
+  Rollover(`out_rollover_left`,  Capsule.from(M + 136, 164, M + 136, 189, rolloverRad));
+  Rollover(`out_rollover_right`, Capsule.from(M - 136, 164, M - 136, 189, rolloverRad));
   Lamp(`out_rollover_lamp_left`,  Circle.at(M + 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
   Lamp(`out_rollover_lamp_right`, Circle.at(M - 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
 
   // Outlane kickers
 
-  Collider(`kicker_left_rail_outer`,  Arc.at(M, 208, 3, (TW - 9)/2, TAU*5/64, TAU*27/64));
-  Collider(`kicker_left_rail_inner`,  Capsule.from(TL + 32, 238, TL + 32, 160, 2));
-  Collider(`kicker_left_stopper`,     Circle.at(TL + 25, 157, 9));
-  Rollover(`kicker_left_score_ro`, Capsule.at(TL + 15, 200, 8, 30));
-  Bumper(`kicker_left`,            Capsule.at(TL + 15, 176, 10, 10, TAU/4), KICKER_STRENGTH);
+  Collider(`kicker_left_rail_outer`,     Arc.at(M, 205, 6, (TW - 7)/2, TAU*5/64, TAU*27/64));
+  Collider(`kicker_left_rail_inner_top`, Arc.at(TL + 88, 200, 2, 60, TAU*6/64, TAU*26/64));
+  Collider(`kicker_left_rail_inner`,     Capsule.from(TL + 28, 200, TL + 28, 160, 2));
+  Collider(`kicker_left_stopper`,        Circle.at(TL + 25, 153, postRad));
+  Rollover(`kicker_left_score_ro`,       Capsule.at(TL + 15, 200, rolloverRad, 30));
+  Bumper(`kicker_left`, Capsule.at(TL + 15, 176, 10, 10, TAU/4), KICKER_STRENGTH);
 
-  Collider(`kicker_right_rail_outer`, Arc.at(M, 208, 3, (TW - 9)/2, TAU*5/64, TAU*0/64));
-  Collider(`kicker_right_rail_inner`, Capsule.from(TR - 32, 238, TR - 32, 160, 2));
-  Collider(`kicker_right_stopper`,    Circle.at(TR - 25, 157, 9));
-  Rollover(`kicker_right_score_ro`, Capsule.at(TR - 15, 200, 8, 30));
-  Bumper(`kicker_right`,            Capsule.at(TR - 15, 176, 10, 10, TAU/4), KICKER_STRENGTH);
+  Collider(`kicker_right_rail_outer`,     Arc.at(M, 205, 6, (TW - 7)/2, TAU*5/64, TAU*0/64));
+  Collider(`kicker_right_rail_inner_top`, Arc.at(TR - 88, 200, 2, 60, TAU*6/64, TAU*0/64));
+  Collider(`kicker_right_rail_inner`,     Capsule.from(TR - 28, 200, TR - 28, 160, 2));
+  Collider(`kicker_right_stopper`,        Circle.at(TR - 25, 153, postRad));
+  Rollover(`kicker_right_score_ro`,       Capsule.at(TR - 15, 200, rolloverRad, 30));
+  Bumper(`kicker_right`, Capsule.at(TR - 15, 176, 10, 10, TAU/4), KICKER_STRENGTH);
 
 
   // Lower slingshots
@@ -348,14 +341,27 @@ export default ():Table => {
 
   // Game script
 
-  it.process = (input:InputState) => {
+  const state = {
+
+
+    score: 0,
+    balls: 3,
+    white: 0,
+    red: 0,
+
+  }
+
+
+
+
+  T.process = (input:InputState) => {
     get<Things.Flipper>(`flipper_left`).state.active  = input.left;
     get<Things.Flipper>(`flipper_right`).state.active = input.right;
 
     if (input.launch) get<Things.Launcher>(`launcher`).do(Command.ACTIVATE);
 
-    for (let name in it.things) {
-      let thing = it.things[name];
+    for (let name in T.things) {
+      let thing = T.things[name];
 
       while (thing.events.length) {
         let event = thing.events.pop();
@@ -372,8 +378,8 @@ export default ():Table => {
 
   // Done
 
-  console.log(`Loaded table '${it.name}': ${Object.values(it.things).length} things created.`);
+  console.log(`Loaded table '${T.name}': ${Object.values(T.things).length} things created.`);
 
-  return it;
+  return T;
 }
 

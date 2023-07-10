@@ -20,11 +20,11 @@
   // Config
 
   const SHOW_VELOCITY  = false;
-  const SHOW_OVERLAY   = false;
-  const SHOW_GRIDLINES = false;
-  const SHOW_TEMPLATE  = false;
+  const SHOW_OVERLAY   = true;
+  const SHOW_GRIDLINES = true;
+  const SHOW_TEMPLATE  = true;
 
-  const INTERSECTION_RES = 64; // Resolution of collision overlay
+  const INTERSECTION_RES = 8; // Resolution of collision overlay
 
   const GRID_RES   = 10; // World space between gridlines
   const GRID_MAJOR = 10; // Landmark line every n gridlines
@@ -123,7 +123,7 @@
       lineAt(ctx, Vec2.fromXY(world.left, cameraY), Vec2.fromXY(world.right, cameraY), 'red', 0.5);
     }
 
-    if (SHOW_TEMPLATE) ctx.globalAlpha = 0.6;
+    if (SHOW_TEMPLATE) ctx.globalAlpha = 0.4;
 
     // Things
     for (let t of Object.values(table.things)) {
