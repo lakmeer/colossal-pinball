@@ -26,9 +26,10 @@ export default ():Table => {
     name: "NOW",
     bounds: new Rect(-216, 768, 216, 0),
     things: {},
-    ballRad: 9,
+    ballRad: 10,
+    gravity: 1200,
     template: null,
-    templateSrc: "/now.png",
+    //templateSrc: "/now.png",
     process: (input:InputState, events:EventType[]) => {}
   } as Table;
 
@@ -37,11 +38,12 @@ export default ():Table => {
 
   const BUMPER_STRENGTH = 1;
   const KICKER_STRENGTH = 2;
+  const LAUNCH_STRENGTH = 200000;
 
 
   // Vars
 
-  let ballRad    = 9;
+  let ballRad    = 10;
   let ballSize   = ballRad * 2;
   let chuteWidth = ballSize + 2;
   let lampRad    = ballRad;
@@ -72,6 +74,8 @@ export default ():Table => {
   const Deco       = (name, ...args) => add(Things.Deco.from(name, ...args));
   //@ts-ignore
   const Collider   = (name, ...args) => add(Things.Collider.from(name, ...args));
+  //@ts-ignore
+  const Launcher   = (name, ...args) => add(Things.Launcher.from(name, ...args));
   //@ts-ignore
   const Drain      = (name, ...args) => add(Things.Drain.from(name, ...args));
   //@ts-ignore
@@ -119,6 +123,7 @@ export default ():Table => {
   // Launch chute
 
   // TODO: one-way gate at the top of the chute
+  Launcher(`launcher`,      Capsule.at(R - 30, 120, ballRad+2, 36), Vec2.at(0, -LAUNCH_STRENGTH));
   Collider(`chute_wall`,    Capsule.from(R - 12, 0, R - 12, 530, 6));
   Collider(`chute_bottom`,  Capsule.at(R - 30, 90, 9, 20, TAU/4));
 
@@ -346,6 +351,8 @@ export default ():Table => {
   it.process = (input:InputState) => {
     get<Things.Flipper>(`flipper_left`).state.active  = input.left;
     get<Things.Flipper>(`flipper_right`).state.active = input.right;
+
+    if (input.launch) get<Things.Launcher>(`launcher`).do(Command.ACTIVATE);
 
     for (let name in it.things) {
       let thing = it.things[name];

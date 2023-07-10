@@ -462,10 +462,6 @@ export class DropTarget extends Thing {
 
 
 
-
-
-
-
 //
 // Bumper
 // Like a collider but retains some state and has a force multiplier
@@ -505,4 +501,53 @@ export class Bumper extends Thing {
 
 }
 
+
+
+//
+// Launcher
+// Waits until activated before affecting the ball
+//
+
+interface LauncherState extends ThingState {
+  force:  number;
+  active: boolean;
+}
+
+export class Launcher extends Thing {
+
+  collide(ball, Δt, fff) {
+    if (this.state.active) {
+      if (this.shape.intersect(ball.pos)) {
+        ball.pos.addSelf(this.state.force);
+        this.emit(EventType.ACTIVATED);
+      }
+    }
+  }
+
+  do (cmd) {
+    switch (cmd) {
+      case Command.ACTIVATE:
+        this.state.active = true;
+        console.log("Bing");
+        return;
+    }
+  }
+
+  update(Δt) {
+    if (this.state.active) {
+      this.state.active = false;
+      this.emit(EventType.DEACTIVATED);
+    }
+
+    return super.update(Δt);
+  }
+
+  static from (name:string, shape:Shape, force:Vec2):Collider {
+    return new Launcher(name, shape, Color.fromTw('slate-400'), {
+      force:  force,
+      active: false,
+    } as LauncherState);
+  }
+
+}
 

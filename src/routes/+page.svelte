@@ -16,8 +16,7 @@
 
   // Config
 
-  const GRAVITY       = 500;
-  const TIME_SCALE    = 1.0;
+  const TIME_SCALE    = 1;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
   const MAX_BALLS     = 100;
   const STD_FRICTION  = 0.98;
@@ -58,7 +57,7 @@
     const fff = pow(1 - (1 - STD_FRICTION), 1/substeps);
 
     for (let a of balls) {
-      a.impart(Vec2.fromXY(0, -GRAVITY));
+      a.impart(Vec2.fromXY(0, -table.gravity));
       table.bounds.collideInterior(a);
 
       for (let b of balls) {
@@ -78,7 +77,12 @@
       t.update(dt);
     }
 
+    // Run game script
     table.process(input);
+
+    // Launcher only stays active for one frame
+    input.launch = false;
+
   }
 
 
@@ -120,8 +124,9 @@
   let spawnArrow:Arrow = [Vec2.zero, Vec2.zero];
 
   const spawn = (arrow: Arrow) => {
+    let span = arrow[1].sub(arrow[0]);
     let pos = arrow[0];
-    let vel = arrow[1].sub(arrow[0]).scale(50000);
+    let vel = span.scale(100000);
 
     if (balls.length < MAX_BALLS) {
       balls.push(Ball.withVel(pos, vel, table.ballRad));
@@ -189,6 +194,7 @@
     switch (event.key) {
       case 'a': input.left  = true; break;
       case 's': input.right = true; break;
+      case ' ': input.launch = true; break;
     }
   }
 

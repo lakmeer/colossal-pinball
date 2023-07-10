@@ -12,6 +12,7 @@ export default class Table {
   name:       string;
   bounds:     Rect;
   ballRad:    number;
+  gravity:    number;
   things:     Record<string,Thing>;
   process:    (input:InputState) => void;
   template:   null | HTMLImageElement;

@@ -10,6 +10,7 @@ export type Tuple4 = [ number, number, number, number ];
 export type InputState = {
   left: boolean;
   right: boolean;
+  launch: boolean;
 }
 
 export type EventQueue = Array<[ string, EventType ]>;
