@@ -119,7 +119,7 @@ export class Collider extends Thing {
   }
 
   static from (name:string, shape:Shape, f:number = 1.2):Collider {
-    return new Collider(name, shape, Color.fromTw('blue-500'), {
+    return new Collider(name, shape, Color.fromTw('slate-400'), {
       f_coeff: f
     } as ColliderState);
   }
@@ -511,6 +511,7 @@ export class Bumper extends Thing {
 interface LauncherState extends ThingState {
   force:  number;
   active: boolean;
+  timer:  number;
 }
 
 export class Launcher extends Thing {
@@ -535,7 +536,7 @@ export class Launcher extends Thing {
 
   update(Δt) {
     if (this.state.active) {
-      this.state.active = false;
+      //this.state.active = false;
       this.emit(EventType.DEACTIVATED);
     }
 
@@ -543,9 +544,10 @@ export class Launcher extends Thing {
   }
 
   static from (name:string, shape:Shape, force:Vec2):Collider {
-    return new Launcher(name, shape, Color.fromTw('slate-400'), {
+    return new Launcher(name, shape, Color.fromTw('yellow-500'), {
       force:  force,
       active: false,
+      timer:  0,
     } as LauncherState);
   }
 

@@ -86,7 +86,7 @@ export default ():Table => {
 
   const BUMPER_STRENGTH = 1;
   const KICKER_STRENGTH = 2;
-  const LAUNCH_STRENGTH = 200000;
+  const LAUNCH_STRENGTH = 400;
 
 
   // Vars
@@ -126,15 +126,11 @@ export default ():Table => {
 
 
   // Launch chute
-
   // TODO: one-way gate at the top of the chute
-  Launcher(`launcher`,      Capsule.at(R - 30, 120, ballRad+2, 36), Vec2.at(0, -LAUNCH_STRENGTH));
+
+  Launcher(`launcher`,      Capsule.at(R - 30, 120, ballRad+2, 36), Vec2.at(0, LAUNCH_STRENGTH));
   Collider(`chute_wall`,    Capsule.from(R - 12, 0, R - 12, 530, 6));
   Collider(`chute_bottom`,  Capsule.at(R - 30, 90, 9, 20, TAU/4));
-
-
-  // Stopper
-
   Collider(`stopper`, Capsule.from(L + 61, 637, L + 66, 644, 13), 2);
 
 
@@ -161,11 +157,11 @@ export default ():Table => {
   // Upper targets and edge guards
 
   Collider(`upper_guard_left_a`,  Circle.at(TL + 39, 604, postRad));
-  Collider(`upper_guard_left_b`,  Capsule.at(TL + 15, 538, postRad, 75));
+  Collider(`upper_guard_left_b`,  Capsule.at(TL + 15, 538, postRad, 77));
 
-  Collider(`upper_guard_right_a`, Capsule.at(TR - 46, 635, postRad, 28, TAU*14/32));
+  Collider(`upper_guard_right_a`, Capsule.at(TR - 48, 635, postRad, 26, TAU*14/32));
   Collider(`upper_guard_right_b`, Capsule.at(TR - 45, 612, postRad, 23, TAU*3/32));
-  Collider(`upper_guard_right_c`,  Capsule.at(TR - 15, 538, postRad, 75));
+  Collider(`upper_guard_right_c`,  Capsule.at(TR - 15, 538, postRad, 72));
 
   Target(`tgt_top_left`,   Capsule.at(TL + 29, 587, targetRad, 16, TAU*59/64));
   Target(`tgt_top_right`,   Capsule.at(TR - 29, 587, targetRad, 16, -TAU*59/64));
@@ -242,11 +238,11 @@ export default ():Table => {
 
   // Midfield guards (vertical part is just main wall)
 
-  Collider(`mid_guard_left_top`, Arc.at(TL + 21, 476, 2, 20, TAU*3/16, TAU*5/16));
-  Collider(`mid_guard_left_btm`, Arc.at(TL + 21, 411, 2, 20, TAU*3/16, TAU*8/16));
-  Collider(`mid_guard_right_top`, Arc.at(TR - 24, 474, 2, 24, TAU*6/32, TAU*0/32));
+  Collider(`mid_guard_left_top`,  Arc.at(TL + 20, 476, 2, 20, TAU*3/16, TAU*5/16));
+  Collider(`mid_guard_left_btm`,  Arc.at(TL + 20, 411, 2, 20, TAU*3/16, TAU*8/16));
+  Collider(`mid_guard_right_top`, Arc.at(TR - 24, 476, 2, 24, TAU*6/32, TAU*0/32));
   Collider(`mid_guard_right_btm`, Arc.at(TR - 24, 411, 2, 24, TAU*6/32, TAU*26/32));
-  Collider(`mid_guard_right_end`, Capsule.from(TR - 16, 389, TR, 389, 2));
+  Collider(`mid_guard_right_end`, Capsule.from(TR - 16, 389, TR + 2, 389, 2));
 
 
   // Lower Targets
@@ -266,11 +262,11 @@ export default ():Table => {
 
   Collider(`lower_guard_left_top`,       Capsule.at(TL + 25, 376, postRad, 32, TAU*8/64));
   Collider(`lower_guard_left_mid`,       Circle.at(TL + 27, 330, postRad));
-  Collider(`lower_guard_left_out_post`,  Circle.at(TL + 42, 234, postRad));
+  //Collider(`lower_guard_left_out_post`,  Circle.at(TL + 42, 234, postRad));
 
   Collider(`lower_guard_right_top_ang`,  Capsule.at(TR - 16, 353, postRad, 50, TAU*11/64));
   Collider(`lower_guard_right_mid`,      Circle.at(TR - 27, 330, postRad));
-  Collider(`lower_guard_right_out_post`, Circle.at(TR - 42, 234, postRad));
+  //Collider(`lower_guard_right_out_post`, Circle.at(TR - 42, 234, postRad));
 
 
   // Outlane rollovers
@@ -281,24 +277,25 @@ export default ():Table => {
   Lamp(`out_rollover_lamp_right`, Circle.at(M - 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
 
-  // Outlane kickers
+  // Outlane kickers and rails
 
-  Collider(`kicker_left_rail_outer`,     Arc.at(M, 205, 6, (TW - 7)/2, TAU*5/64, TAU*27/64));
-  Collider(`kicker_left_rail_inner_top`, Arc.at(TL + 88, 200, 2, 60, TAU*6/64, TAU*26/64));
-  Collider(`kicker_left_rail_inner`,     Capsule.from(TL + 28, 200, TL + 28, 160, 2));
-  Collider(`kicker_left_stopper`,        Circle.at(TL + 25, 153, postRad));
   Rollover(`kicker_left_score_ro`,       Capsule.at(TL + 15, 200, rolloverRad, 30));
-  Bumper(`kicker_left`, Capsule.at(TL + 15, 176, 10, 10, TAU/4), KICKER_STRENGTH);
+  Bumper(`kicker_left`, Capsule.at(TL + 13, 176, 10, 7, TAU/4), KICKER_STRENGTH);
 
-  Collider(`kicker_right_rail_outer`,     Arc.at(M, 205, 6, (TW - 7)/2, TAU*5/64, TAU*0/64));
-  Collider(`kicker_right_rail_inner_top`, Arc.at(TR - 88, 200, 2, 60, TAU*6/64, TAU*0/64));
-  Collider(`kicker_right_rail_inner`,     Capsule.from(TR - 28, 200, TR - 28, 160, 2));
-  Collider(`kicker_right_stopper`,        Circle.at(TR - 25, 153, postRad));
   Rollover(`kicker_right_score_ro`,       Capsule.at(TR - 15, 200, rolloverRad, 30));
-  Bumper(`kicker_right`, Capsule.at(TR - 15, 176, 10, 10, TAU/4), KICKER_STRENGTH);
+  Bumper(`kicker_right`, Capsule.at(TR - 13, 176, 10, 7, TAU/4), KICKER_STRENGTH);
+
+  Collider(`kicker_left_rail_outer`,     Arc.at(M, 205, 4, (TW - 8)/2, TAU*5/64, TAU*27/64));
+  Collider(`kicker_left_rail_inner_top`, Arc.at(TL + 90, 203, 4, 60, TAU*7/64, TAU*25/64));
+  Collider(`kicker_left_rail_inner`,     Capsule.from(TL + 30, 200, TL + 30, 135, 4));
+
+  Collider(`kicker_right_rail_outer`,     Arc.at(M, 205, 4, (TW - 6)/2, TAU*5/64, TAU*0/64));
+  Collider(`kicker_right_rail_inner_top`, Arc.at(TR - 90, 203, 4, 60, TAU*7/64, TAU*0/64));
+  Collider(`kicker_right_rail_inner`,     Capsule.from(TR - 30, 200, TR - 30, 135, 4));
 
 
   // Lower slingshots
+  // TODO: Only bounce if hit with threshold velocity
 
   Bumper(`lower_ss_left`,   Capsule.at(M - 100, 176, 3, 40,  TAU*1/11), BUMPER_STRENGTH);
   Bumper(`lower_ss_right`,  Capsule.at(M + 100, 176, 3, 40, -TAU*1/11), BUMPER_STRENGTH);
@@ -318,7 +315,7 @@ export default ():Table => {
     138,
     flipperRad,
     flipperLength,
-    0 - flipperRestAngle,
+    flipperRestAngle * -1,
     flipperRange,
     50);
 
@@ -327,7 +324,7 @@ export default ():Table => {
     138,
     flipperRad,
     flipperLength,
-    PI + flipperRestAngle,
+    flipperRestAngle + TAU/2,
     -flipperRange,
     50);
 
@@ -341,18 +338,19 @@ export default ():Table => {
 
   // Game script
 
+  enum ScoringPhase {
+    NONE,
+    RED,
+    WHITE,
+  }
+
   const state = {
-
-
     score: 0,
     balls: 3,
     white: 0,
-    red: 0,
-
+    red:   0,
+    phase: ScoringPhase.NONE,
   }
-
-
-
 
   T.process = (input:InputState) => {
     get<Things.Flipper>(`flipper_left`).state.active  = input.left;
