@@ -28,7 +28,7 @@ export default ():Table => {
     bounds: new Rect(-216, 768, 216, 0),
     things: {},
     ballRad: 10,
-    gravity: 1200,
+    gravity: 1500,
     template: null,
     templateSrc: "/now.png",
     process: (input:InputState, events:EventType[]) => {}

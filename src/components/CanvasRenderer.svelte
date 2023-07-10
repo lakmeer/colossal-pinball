@@ -123,7 +123,7 @@
       lineAt(ctx, Vec2.fromXY(world.left, cameraY), Vec2.fromXY(world.right, cameraY), 'red', 0.5);
     }
 
-    if (SHOW_TEMPLATE) ctx.globalAlpha = 0.4;
+    if (SHOW_TEMPLATE) ctx.globalAlpha = 1.4;
 
     // Things
     for (let t of Object.values(table.things)) {

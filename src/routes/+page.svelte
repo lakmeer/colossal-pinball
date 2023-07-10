@@ -16,7 +16,7 @@
 
   // Config
 
-  const TIME_SCALE    = 1;
+  const TIME_SCALE    = 0.7;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
   const MAX_BALLS     = 100;
   const STD_FRICTION  = 0.98;
@@ -105,8 +105,8 @@
     const now = performance.now()/1000;
     const dt = (now - lastTime) * TIME_SCALE;
 
-    //cameraY = nsin(now/2) * table.bounds.h;
-    cameraY = 1.3 * 100;
+    cameraY = 2.3 * 100;
+    cameraY = balls[0] ? balls[0].pos.y : 0;
 
     for (let i = 0; i < substeps; i++) {
       update(dt/substeps);
@@ -157,6 +157,8 @@
     let y = cy * table.bounds.h - table.bounds.top;
     return Vec2.fromXY(x, -y);
   }
+    //const aspectCorr = height/width;
+    //ctx.translate(world.right, cameraY/world.h * (aspectCorr * world.w - world.h) - aspectCorr * world.w);
 
   const eraseAt = (event:MouseEvent) => erase(mouse2world(event), 20);
 
@@ -253,7 +255,7 @@
     {cameraY}
     {spawnArrow}
     width={innerWidth}
-    height={innerWidth}
+    height={innerHeight * table.bounds.h / table.bounds.w}
   />
 </div>
 
