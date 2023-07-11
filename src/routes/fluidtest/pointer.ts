@@ -1,5 +1,16 @@
 
 export default class Pointer {
+
+  id: number;
+  texcoordX: number;
+  texcoordY: number;
+  prevTexcoordX: number;
+  prevTexcoordY: number;
+  deltaX: number;
+  deltaY: number;
+  down: boolean;
+  moved: boolean;
+
   constructor () {
     this.id = -1;
     this.texcoordX = 0;
