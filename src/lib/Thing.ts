@@ -510,7 +510,7 @@ export class Bumper extends Thing {
 //
 
 interface LauncherState extends ThingState {
-  force:  number;
+  force:  Vec2;
   active: boolean;
   timer:  number;
 }

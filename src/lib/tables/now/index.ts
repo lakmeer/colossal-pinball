@@ -38,10 +38,10 @@ export default ():Table => {
 
   // Shorthand constructors
 
-  const add = (thing:Thing):Thing => {
+  const add = <T extends Thing>(thing:T):T => {
     if (T.things[thing.name]) console.warn(`Thing with name '${thing.name}' already exists`);
     T.things[thing.name] = thing;
-    return thing;
+    return thing as T;
   }
 
   //@ts-ignore

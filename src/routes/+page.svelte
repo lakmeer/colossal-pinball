@@ -31,14 +31,10 @@
 
   let cameraY = 0;
   let input:InputState = {
-    left:  false,
-    right: false,
+    left:   false,
+    right:  false,
+    launch: false,
   };
-
-  let game:GameState = {
-    score: 0,
-    balls: 3,
-  }
 
 
   //
