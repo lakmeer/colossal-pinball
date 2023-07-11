@@ -22,7 +22,6 @@ import { PI, TAU } from "$lib/utils";
 
 export default ():Table => {
 
-
   const T = {
     name: "NOW",
     bounds: new Rect(-216, 768, 216, 0),
@@ -33,6 +32,8 @@ export default ():Table => {
     templateSrc: "/now.png",
     process: (input:InputState, events:EventType[]) => {},
     score: 0,
+    ballsInPlay: 0,
+    balls: 0,
   } as Table;
 
 
@@ -41,6 +42,8 @@ export default ():Table => {
   // TODO: Move table def to now/index.ts
   // TODO: Make Table a class
   // TODO: There are slignshots in the upper vertical side guards
+  // TODO: Ditch registering component names, just use variables
+  // TODO: Lamp colors
 
 
   // Shorthand constructors
@@ -94,6 +97,7 @@ export default ():Table => {
   //
 
   const BUMPER_STRENGTH = 1;
+  const SLINGS_STRENGTH = 0.3;
   const KICKER_STRENGTH = 2;
   const LAUNCH_STRENGTH = 400;
 
@@ -168,6 +172,9 @@ export default ():Table => {
 
   let laneStride = 42;
 
+  let laneRollovers = [];
+  let laneLamps     = [];
+
   for (let z = -2; z <= 2; z++) {
     let x = M + laneStride * z;
     Collider(`upper_lane_guard_${z+2}`, Capsule.from(x, 579, x, 622, 7));
@@ -175,9 +182,13 @@ export default ():Table => {
 
   for (let z = -1.5; z <= 1.5; z++) {
     let x = M + laneStride * z;
+    let ix = z + 1.5;
 
-    let roll = Rollover(`upper_lane_rollover_${z+1.5}`, Capsule.from(x, 575, x, 608, rolloverRad));
-    let lamp = Lamp(`upper_lane_lamp_${z+1.5}`, Circle.at(x, 630, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+    let roll = Rollover(`upper_lane_rollover_${ix}`, Capsule.from(x, 575, x, 608, rolloverRad));
+    let lamp = Lamp(`upper_lane_lamp_${ix}`, Circle.at(x, 630, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+
+    laneRollovers[ix] = roll;
+    laneLamps[ix]     = lamp;
 
     scoreRolloverDependsOnLamp(roll, lamp, (lit) => lit ? 300 : 50);
   }
@@ -192,32 +203,24 @@ export default ():Table => {
   Collider(`upper_guard_right_b`, Capsule.at(TR - 45, 612, postRad, 23, TAU*3/32));
   Collider(`upper_guard_right_c`,  Capsule.at(TR - 15, 538, postRad, 72));
 
-  let tgtTL = Target(`tgt_top_left`,   Capsule.at(TL + 29, 587, targetRad, 16, TAU*59/64));
-  let tgtTR = Target(`tgt_top_right`,  Capsule.at(TR - 29, 587, targetRad, 16, -TAU*59/64));
-  let lTgtTL = Lamp(`tgt_lamp_top_left`,  Circle.at(TL + 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  let lTgtTR = Lamp(`tgt_lamp_top_right`, Circle.at(TR - 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-
-  on(tgtTL, EventType.BOUNCED, () => state.score += lTgtTL.state.active ? 300 : 50);
-  on(tgtTR, EventType.BOUNCED, () => state.score += lTgtTR.state.active ? 300 : 50);
-
 
   // Main Bumpers
 
-  let dLeft  = Deco(`bumper_deco_left`,  Circle.at(M - 85, 523, 36), Color.fromTw('slate-700'));
-  let dMid   = Deco(`bumper_deco_mid`,   Circle.at(M     , 492, 36), Color.fromTw('slate-700'));
-  let dRight = Deco(`bumper_deco_right`, Circle.at(M + 85, 523, 36), Color.fromTw('slate-700'));
+  Deco(`bumper_deco_left`,  Circle.at(M - 85, 523, 36), Color.fromTw('slate-700'));
+  Deco(`bumper_deco_mid`,   Circle.at(M     , 492, 36), Color.fromTw('slate-700'));
+  Deco(`bumper_deco_right`, Circle.at(M + 85, 523, 36), Color.fromTw('slate-700'));
 
-  let bLeft  = Bumper(`bumper_left`,  Circle.at(M + 85, 523, 25), BUMPER_STRENGTH);
-  let bRight = Bumper(`bumper_right`, Circle.at(M - 85, 523, 25), BUMPER_STRENGTH);
-  let bMid   = Bumper(`bumper_mid`,   Circle.at(M     , 492, 25), BUMPER_STRENGTH);
+  let bumperLeft  = Bumper(`bumper_left`,  Circle.at(M + 85, 523, 25), BUMPER_STRENGTH);
+  let bumperRight = Bumper(`bumper_right`, Circle.at(M - 85, 523, 25), BUMPER_STRENGTH);
+  let bumperMid   = Bumper(`bumper_mid`,   Circle.at(M     , 492, 25), BUMPER_STRENGTH);
 
-  let lLeft  = Lamp(`bumper_lamp_left`,  Circle.at(M + 85, 523, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
-  let lRight = Lamp(`bumper_lamp_right`, Circle.at(M - 85, 523, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
-  let lMid   = Lamp(`bumper_lamp_mid`,   Circle.at(M     , 492, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
+  let lamp_bumperLeft  = Lamp(`bumper_lamp_left`,  Circle.at(M + 85, 523, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
+  let lamp_bumperRight = Lamp(`bumper_lamp_right`, Circle.at(M - 85, 523, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
+  let lamp_bumperMid   = Lamp(`bumper_lamp_mid`,   Circle.at(M     , 492, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
 
-  on(bLeft,  EventType.BOUNCED, () => lLeft.do(Command.LAMP_FLASH));
-  on(bRight, EventType.BOUNCED, () => lRight.do(Command.LAMP_FLASH));
-  on(bMid,   EventType.BOUNCED, () => lMid.do(Command.LAMP_FLASH));
+  on(bumperLeft,  EventType.BOUNCED, () => console.log("TODO: Bumper score based on lamp"));
+  on(bumperRight, EventType.BOUNCED, () => console.log("TODO: Bumper score based on lamp"));
+  on(bumperMid,   EventType.BOUNCED, () => console.log("TODO: Bumper score based on lamp"));
 
 
   // Droptarget banks & slingshots
@@ -258,8 +261,8 @@ export default ():Table => {
     on(white, EventType.DEACTIVATED, () => setBankState(whiteBank, ix, false));
   }
 
-  Bumper(`dt_ss_left`,   Capsule.at(M - 100, 445, 5, 80,  TAU*22/124), BUMPER_STRENGTH);
-  Bumper(`dt_ss_right`,  Capsule.at(M + 100, 445, 5, 80, -TAU*22/124), BUMPER_STRENGTH);
+  Bumper(`dt_ss_left`,   Capsule.at(M - 100, 445, 5, 80,  TAU*22/124), SLINGS_STRENGTH);
+  Bumper(`dt_ss_right`,  Capsule.at(M + 100, 445, 5, 80, -TAU*22/124), SLINGS_STRENGTH);
   Collider(`dt_bank_left`,  Fence.at([ M - 147, 419, M - 147, 465, M - 53, 419 ], 6).close());
   Collider(`dt_bank_right`, Fence.at([ M + 147, 419, M + 147, 465, M + 53, 419 ], 6).close());
 
@@ -284,22 +287,28 @@ export default ():Table => {
   Collider(`mid_guard_right_end`, Capsule.from(TR - 16, 389, TR + 2, 389, 2));
 
 
-  // Lower Targets
+  // Static Targets
 
-  let tgtL1 = Target(`tgt_left_upper`,  Capsule.at(TL + 36, 347, targetRad, 16, TAU*29/64));
-  let tgtL2 = Target(`tgt_left_lower`,  Capsule.at(TL + 25, 310, targetRad, 16, TAU*29/64));
-  let tgtR1 = Target(`tgt_right_upper`, Capsule.at(TR - 36, 347, targetRad, 16, TAU*35/64));
-  let tgtR2 = Target(`tgt_right_lower`, Capsule.at(TR - 25, 310, targetRad, 16, TAU*35/64));
+  let tgtTopLeft  = Target(`tgt_top_left`,  Capsule.at(TL + 29, 587, targetRad, 16, TAU*59/64));
+  let tgtMidLeft  = Target(`tgt_mid_left`,  Capsule.at(TL + 36, 347, targetRad, 16, TAU*29/64));
+  let tgtBtmLeft  = Target(`tgt_btm_left`,  Capsule.at(TL + 25, 310, targetRad, 16, TAU*29/64));
+  let tgtTopRight = Target(`tgt_top_right`, Capsule.at(TR - 29, 587, targetRad, 16, -TAU*59/64));
+  let tgtMidRight = Target(`tgt_mid_right`, Capsule.at(TR - 36, 347, targetRad, 16, TAU*35/64));
+  let tgtBtmRight = Target(`tgt_btm_right`, Capsule.at(TR - 25, 310, targetRad, 16, TAU*35/64));
 
-  let lampL1 = Lamp(`tgt_lamp_left_upper`,  Circle.at(TL + 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  let lampL2 = Lamp(`tgt_lamp_right_upper`, Circle.at(TR - 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  let lampR1 = Lamp(`tgt_lamp_left_lower`,  Circle.at(TL + 53, 296, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  let lampR2 = Lamp(`tgt_lamp_right_lower`, Circle.at(TR - 53, 296, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lamp_tgtTopLeft  = Lamp(`tgt_lamp_top_left`,  Circle.at(TL + 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lamp_tgtMidLeft  = Lamp(`tgt_lamp_mid_left`,  Circle.at(TL + 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lamp_tgtBtmLeft  = Lamp(`tgt_lamp_btm_left`,  Circle.at(TL + 53, 296, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lamp_tgtTopRight = Lamp(`tgt_lamp_top_right`, Circle.at(TR - 39, 557, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lamp_tgtMidRight = Lamp(`tgt_lamp_mid_right`, Circle.at(TR - 58, 331, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let lamp_tgtBtmRight = Lamp(`tgt_lamp_btm_right`, Circle.at(TR - 53, 296, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
-  on(tgtL1, EventType.BOUNCED, () => state.score += lampL1.state.active ? 300 : 50);
-  on(tgtL2, EventType.BOUNCED, () => state.score += lampL2.state.active ? 300 : 50);
-  on(tgtR1, EventType.BOUNCED, () => state.score += lampR1.state.active ? 300 : 50);
-  on(tgtR2, EventType.BOUNCED, () => state.score += lampR2.state.active ? 300 : 50);
+  on(tgtTopLeft,  EventType.BOUNCED, () => state.score += lamp_tgtTopLeft.state.active  ? 300 : 50);
+  on(tgtMidLeft,  EventType.BOUNCED, () => state.score += lamp_tgtMidLeft.state.active  ? 300 : 50);
+  on(tgtBtmLeft,  EventType.BOUNCED, () => state.score += lamp_tgtBtmLeft.state.active  ? 300 : 50);
+  on(tgtTopRight, EventType.BOUNCED, () => state.score += lamp_tgtTopRight.state.active ? 300 : 50);
+  on(tgtMidRight, EventType.BOUNCED, () => state.score += lamp_tgtMidRight.state.active ? 300 : 50);
+  on(tgtBtmRight, EventType.BOUNCED, () => state.score += lamp_tgtBtmRight.state.active ? 300 : 50);
 
 
   // Lower Guards
@@ -345,8 +354,8 @@ export default ():Table => {
   // Lower slingshots
   // TODO: Only bounce if hit with threshold velocity
 
-  Bumper(`lower_ss_left`,   Capsule.at(M - 100, 176, 3, 40,  TAU*1/11), BUMPER_STRENGTH);
-  Bumper(`lower_ss_right`,  Capsule.at(M + 100, 176, 3, 40, -TAU*1/11), BUMPER_STRENGTH);
+  Bumper(`lower_ss_left`,   Capsule.at(M - 100, 176, 3, 40,  TAU*1/11), SLINGS_STRENGTH);
+  Bumper(`lower_ss_right`,  Capsule.at(M + 100, 176, 3, 40, -TAU*1/11), SLINGS_STRENGTH);
   Collider(`lower_ss_left_body`,  Fence.at([ M - 89, 150, M - 119, 198, M - 119, 161 ], 6).close());
   Collider(`lower_ss_right_body`, Fence.at([ M + 89, 150, M + 119, 198, M + 119, 161 ], 6).close());
 
@@ -381,16 +390,152 @@ export default ():Table => {
 
   Collider(`drain_wall_left`,  Capsule.from(TL, 144, M - 36, 71, 8));
   Collider(`drain_wall_right`, Capsule.from(TR, 144, M + 36, 71, 8));
-  Drain(`drain`, Box.fromRect(L, 80, TR, 0));
+ 
+  let drain = Drain(`drain`, Box.fromRect(L, 80, TR, 0));
+
+  on(drain, EventType.DRAINED, () => {
+    if (T.ballsInPlay == 0) {
+      drainedLastBall();
+    }
+  });
 
 
   // Game script
+
+  // TODO:
+  //
+  // - Red & White bonuses
+  //   - Each droptarget awards 100pts
+  //   - Goes up by 100pts when droptargets hit
+  //   - Gets awarded by Red and White rollovers (outlane, kicker and midfield)
+  //   - Bonus pays out when used by a rollover
+  //   - Resets when used
+  //   - TBD: What happens when all 4 are dropped by the bonus isnt used yet?
+  // - Upper lane rollovers award 50 or 300 for matching lamp
+  // - Midfield and outlane rollovers award 100 plus color bonus
+  //   - Does this reset the bonus counter?
+  // - Static targets award 50 or 300 for matching lamp
+  // - Bumpers don't award except when lit (10pts)
+  // - Slingshots dont award (??)
+  // - Replay balls
+  //   - Score matching - random digit generated at start of game
+  //   - If final score matches last digit, get a free ball
+  // - Seed Roller
+  //   - Called at zero when new game starts
+  //   - Incremented when score increases and tens column doesn't match??
+  // - Alternationg Relay
+  //   - MIGHT only trigger when tens column of score changes (not sure)
+  // - Tilting doesn't lock the game
+  //   - But tilting would be nice
+  // - Max 15 balls
+  // - Extra ball awarded at score milestones
+
+
+  enum ScoreMode { MODE_A, MODE_B }
+  type LaneCombo = [ number, number, number, number ];
+
+  let laneSeed    = 0; // 0 -> 9
+  let scoreMode = ScoreMode.MODE_A;
+
+  const setLaneLamps = (combo:LaneCombo) => {
+    for (let ix in laneLamps) {
+      laneLamps[ix].do(combo[ix] ? Command.ACTIVATE : Command.DEACTIVATE);
+    }
+  }
+
+  const advanceLaneSeed = () => {
+    laneSeed = (laneSeed + 1) % 10;
+    setLaneLamps([
+      [ 1,0,0,0 ],
+      [ 0,1,0,0 ],
+      [ 0,0,1,0 ],
+      [ 0,0,0,1 ],
+      [ 1,0,0,0 ],
+      [ 0,1,0,0 ],
+      [ 0,0,1,0 ],
+      [ 0,0,0,1 ],
+      [ 1,0,0,0 ],
+      [ 0,0,0,1 ],
+    ][laneSeed]);
+    switchScoreMode();
+  }
+
+  function switchScoreMode () {
+    if (scoreMode == ScoreMode.MODE_A) {
+      scoreMode = ScoreMode.MODE_B;
+      lamp_bumperLeft.do(Command.DEACTIVATE);
+      lamp_bumperMid.do(Command.ACTIVATE);
+      lamp_bumperRight.do(Command.DEACTIVATE);
+      lamp_tgtTopLeft.do(Command.ACTIVATE);
+      lamp_tgtMidLeft.do(Command.DEACTIVATE);
+      lamp_tgtBtmLeft.do(Command.ACTIVATE);
+      lamp_tgtTopRight.do(Command.DEACTIVATE);
+      lamp_tgtMidRight.do(Command.ACTIVATE);
+      lamp_tgtBtmRight.do(Command.DEACTIVATE);
+    } else {
+      scoreMode = ScoreMode.MODE_A;
+      lamp_bumperLeft.do(Command.ACTIVATE);
+      lamp_bumperMid.do(Command.DEACTIVATE);
+      lamp_bumperRight.do(Command.ACTIVATE);
+      lamp_tgtTopLeft.do(Command.DEACTIVATE);
+      lamp_tgtMidLeft.do(Command.ACTIVATE);
+      lamp_tgtBtmLeft.do(Command.DEACTIVATE);
+      lamp_tgtTopRight.do(Command.ACTIVATE);
+      lamp_tgtMidRight.do(Command.DEACTIVATE);
+      lamp_tgtBtmRight.do(Command.ACTIVATE);
+    }
+  }
+
+  // TODO: How to communicate to the main game to spawn a new ball and
+  //  where to put it? Should probably put this control with the table.
+  //  In which case almost all the state moves inside to Table, and only
+  //  the physics loop lives outside.
+  //
+  // NOTE: Prioritise Table as consumer of the API
+
+  function newRound () {
+
+
+  }
+
+  function newGame () {
+    clearState();
+
+    T.balls = 5;
+  }
+
+  function drainedLastBall () {
+    if (T.balls > 0) {
+      newRound();
+    } else {
+      console.log("GAME OVER");
+      clearState();
+    }
+  }
+
+  function clearState () {
+    T.ballsInPlay = 0;
+    T.score = 0;
+    T.balls = 0;
+  }
+
+  function launchBall () {
+    get<Things.Launcher>(`launcher`).do(Command.ACTIVATE);
+  }
+
+
+  // TODO: Table.newGameState()?
 
   T.process = (input:InputState) => {
     get<Things.Flipper>(`flipper_left`).state.active  = input.left;
     get<Things.Flipper>(`flipper_right`).state.active = input.right;
 
-    if (input.launch) get<Things.Launcher>(`launcher`).do(Command.ACTIVATE);
+    if (input.launch) {
+      advanceLaneSeed();
+      //if (T.gamemode === GameMode.WAITING && T.ballsInPlay > 0) {
+        //launchBall();
+      //}
+    }
 
     T.score = state.score;
 

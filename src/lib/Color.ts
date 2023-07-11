@@ -78,6 +78,13 @@ export default class Color extends Array {
     );
   }
 
+  setFrom (c:Color):Color {
+    this[0] = c[0];
+    this[1] = c[1];
+    this[2] = c[2];
+    this[3] = c[3];
+  }
+
   toString() {
     return `rgba(${floor(this.r*255)}, ${floor(this.g*255)}, ${floor(this.b*255)}, ${this.a})`;
   }

@@ -12,6 +12,7 @@ export enum EventType {
   BALL_ENTER,
   BALL_LEAVE,
   BOUNCED,
+  DRAINED,
   ACTIVATED,
   DEACTIVATED,
   BTN_LEFT,
@@ -90,7 +91,10 @@ export class Deco extends Thing {
 export class Drain extends Thing {
 
   collide(ball) {
-    if (this.shape.intersect(ball.pos)) ball.cull = true;
+    if (this.shape.intersect(ball.pos)) {
+      ball.cull = true;
+      this.emit(EventType.DRAINED);
+    }
   }
 
   static from (name:string, shape:Shape):Drain {
@@ -186,7 +190,8 @@ export class Rollover extends Thing {
 interface LampState extends ThingState {
   lit:   Color;
   unlit: Color;
-  timer: number;
+  active: boolean;
+  target: Color;
 } 
 
 
@@ -197,8 +202,8 @@ export class Lamp extends Thing {
   do(cmd, args = []) {
     switch (cmd) {
       case Command.LAMP_FLASH:
-        this.state.flashTime = Lamp.FLASH_LEN;
-        this.on();
+        this.state.target = this.state.unlit;
+        this.color.setFrom(this.state.lit);
         return;
 
       case Command.LAMP_STROBE:
@@ -206,12 +211,10 @@ export class Lamp extends Thing {
         return;
 
       case Command.ACTIVATE:
-        this.state.flashTime = 0;
         this.on();
         return;
 
       case Command.DEACTIVATE:
-        this.state.flashTime = 0;
         this.off();
         return;
 
@@ -221,30 +224,29 @@ export class Lamp extends Thing {
   }
 
   on() {
-    this.color = this.state.lit;
+    this.state.target = this.state.lit;
+    this.state.active = true;
     this.emit(EventType.ACTIVATED);
   }
 
   off() {
-    this.color = this.state.unlit;
+    this.state.active = false;
+    this.state.target = this.state.unlit;
     this.emit(EventType.DEACTIVATED);
   }
 
   update(Δt) {
-    if (this.state.flashTime > 0) {
-      this.state.flashTime -= Δt;
-      this.color = this.state.unlit.lerp(this.state.lit, this.state.flashTime/Lamp.FLASH_LEN);
-
-      if (this.state.flashTime <= 0) {
-        this.off();
-      }
-    }
-
+    this.color = this.color.lerp(this.state.target, Δt * 10);
     return super.update(Δt);
   }
 
   static from (name: string, shape:Shape, unlit:Color, lit:Color):Lamp {
-    return new Lamp(name, shape, unlit, { unlit, lit } as LampState);
+    return new Lamp(name, shape, unlit, {
+      unlit,
+      lit,
+      active: false,
+      target: unlit
+    } as LampState);
   }
 }
 
@@ -481,7 +483,7 @@ export class Bumper extends Thing {
     let delta = this.shape.eject(ball);
     if (delta.len() === 0) return;
     this.emit(EventType.BOUNCED);
-    this.state.timer = 0.2;
+    this.state.timer = 0.03;
     ball.pos.addSelf(delta.withLen(this.state.factor));
   }
 

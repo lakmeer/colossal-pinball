@@ -144,9 +144,12 @@
 
     // Score
     currentScore = lerp(currentScore, table.score, 0.1);
-
     textAt(ctx, `888888`, 140, 40, Color.fromTw('rose-950').toString(), 'right', '50px dseg7');
     textAt(ctx, `${ceil(currentScore)}`, 140, 40, Color.fromTw('red-500').toString(), 'right', '50px dseg7');
+
+    // Balls
+    textAt(ctx, `8`,              -190, 40, Color.fromTw('emerald-950').toString(), 'left', '50px dseg7');
+    textAt(ctx, `${table.balls}`, -190, 40, Color.fromTw('green-500').toString(),   'left', '50px dseg7');
 
     // Spawning Arrow
     if (spawnArrow[0].dist(spawnArrow[1]) > 0.0) {
