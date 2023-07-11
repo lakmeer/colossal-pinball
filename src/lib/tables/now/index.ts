@@ -36,6 +36,13 @@ export default ():Table => {
   } as Table;
 
 
+  // TODO: Collect used colors under semantic names
+  // TODO: Define presets of Thing primitives for this table
+  // TODO: Move table def to now/index.ts
+  // TODO: Make Table a class
+  // TODO: There are slignshots in the upper vertical side guards
+
+
   // Shorthand constructors
 
   const add = <T extends Thing>(thing:T):T => {
@@ -44,6 +51,7 @@ export default ():Table => {
     return thing as T;
   }
 
+  // TODO: A better type-safe way of doing this pattern
   //@ts-ignore
   const Deco       = (name, ...args) => add(Things.Deco.from(name, ...args));
   //@ts-ignore

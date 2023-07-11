@@ -18,12 +18,170 @@
   - Event trigger names on obstacle components
   - Table state
 
-## nnoww
 
-- Template table
-- Event queue for scripting?
+## nnNOWww
+
 - Scripts organisation in table object
 - Are table and gamestate object seperate?
+
+### Rules
+
+#### Transcribed Ruleset (from the cabinet)
+
+    Instructions
+    - 1, 2, 3 OR 4 PLAYERS - 5 BALLS PER PLAYER
+    - Insert one coin and wait for the machine to reset before inserting
+      coin for second player.
+    - Players take turns shooting as shown on back glass.
+    - Points are scored as indicated.
+    - Hitting a drop target scores 100 points and adds 100 points to
+      corresponding bonus.
+    - A tilt does not disqualify a player.
+    - 1 replay for matching last number in score to number
+      that appears on back glass after game is over.
+
+#### Implementable rules
+
+- 5 balls issues to new player
+- 100pts per droptarget
+  - Does this mean just one or the whole bank?
+  - In that case, does anything special happen when the bank is complete?
+  - When does the bank reset?
+- Red & White bonuses
+  - Goes up by 100pts when droptargets reward 100pts (either single or bank TBD)
+  - Gets awarded by Red and White rollovers (outlane, kicker and midfield)
+- Upper lane rollovers award 50 or 300 for matching lamp
+- Midfield and outlane rollovers award 100 plus color bonus
+  - Does this reset the bonus counter?
+- Static targets award 50 or 300 for matching lamp
+- Bumpers don't award except when lit (10pts)
+- Slingshots dont award
+- Replay balls
+    - Score matching - no way to know what the matched score is.
+    - Use random lot instead?
+- Seed Roller
+  - Rolls over from 9 to 0
+  - Get set to 9 on init
+  - Called at zero when new game starts
+  - Incremented when score increases and tens column doesn't match??
+  - ALSO triggers the alternating relay
+  - Cases:
+
+                   LANE
+         ZTN    1  2  3  4
+        ------ ------------
+        0,4,8   1  0  0  0
+        1,5     0  1  0  0
+        2,6     0  0  1  0
+        3,7,9   0  0  0  1
+
+- Alternationg Relay
+  - Switched the state of the lamp bonuses, but there's only two states:
+  - MIGHT only trigger when tens column of score changes (not sure)
+  - STATE A:
+    - Left bumper off
+    - Mid bumper on
+    - Right bumper off
+    - Top left tgt on
+    - Mid left tgt off
+    - Btm left tgt on
+    - Top right tgt off
+    - Mid right tgt on
+    - Btm right tgt off
+  - STATE B:
+    - Left bumper on
+    - Mid bumper off
+    - Right bumper on
+    - Top left tgt off
+    - Mid left tgt on
+    - Btm left tgt off
+    - Top right tgt on
+    - Mid right tgt off
+    - Btm right tgt on
+  - How do upper lane lamps get lit?
+- Tilting doesn't lock the game
+  - But tilting would be nice
+
+
+#### Script Analysis (loserman76)
+
+- Bumpers award 1pt when unlit and 10pts when lit
+- ? Droptargets seem to have their own lights, maybe this is just a state thing
+- Target banks reset on new round
+- Target banks reset when special bonus is awarded by rollovers (incl multiplier)
+- Droptargets award 100pts and inc special bonus by 1
+- Bonus pays out in 100pts * current value
+- Max 15 balls
+
+- Newgame sequence
+  - From bootup mode
+    - Spend a credit
+    - Startup sounds
+    - Set match reel (literally random)
+    - InProgress=true
+    - BonusMultiplier=1
+  - From reset timer (???)
+    - InProgress=true
+    - For each player
+      - Reset score
+      - Reset replay payouts
+      - @nd lane light on
+      - Reset droptargets
+      - Bonus lights on
+      - Run ZeroToNine from 9 (will inc to 0 first)
+
+- New ball sequence
+  - If you've run out of balls or credits
+    - Reset flippers
+    - Lights off
+    - Bumpers off
+    - Check for points-match replay
+  - Otherwise start a new round
+    - Reset droptargets
+    - Reset bonus multiplier
+
+#### Script analysis (spanish)
+
+- Not object labels yay
+- Appears to award 10pts for slingshots?
+- In this one, droptargets award 50 and light the corresponding arrow lamp
+- There are 8 slignshots in this version, each one awards 10 points always
+- Award extra credits at certain score milestones?
+
+        ' Up = current player
+        ' AwardSpecial adds a credit
+        ' I think the credit1..3 are just for tracking which have been awarded already
+        sub displayscore()
+          if score(up) >= 6000 and credit1(up)=false then
+            awardspecial
+            credit1(up)=true
+          end if
+          if score(up) >= 7500 and credit2(up)=false then
+            awardspecial
+            credit2(up)=true
+          end if
+          if score(up) >= 9900 and credit3(up)=false then
+            awardspecial
+            credit3(up)=true
+          end if
+        end sub
+- Bumpers push harder when more points are awarded?
+  - Seems to award 5 points if unlit
+
+        sub bumper1_hit()
+          if bumper1.state=1 then
+            addscore(10)
+            bumper1.force=6
+            playsound "bumper100"
+          else
+            addscore(5)
+            playsound "bumper2"
+            bumper1.force=4
+          end if
+        End Sub
+
+
+
 
 ### FX Ideas
 
@@ -88,6 +246,9 @@
 - Instrumental - 3:40 - 3:56
 - Fadeout
 
+
+
+## COLOSSAL
 
 ### Features
 
