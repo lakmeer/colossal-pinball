@@ -14,7 +14,7 @@
   import { Circle, Arc, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt, arrowAt } from "$lib/draw2d";
 
-  import { floor } from "$lib/utils";
+  import { floor, ceil, lerp } from "$lib/utils";
 
 
   // Config
@@ -35,6 +35,7 @@
   export let table:Table;
   export let balls:Ball[] = [];
   export let spawnArrow:[ Vec2, Vec2];
+  export let currentScore = table.score;
 
 
   // Canvas
@@ -142,8 +143,10 @@
     }
 
     // Score
+    currentScore = lerp(currentScore, table.score, 0.1);
+
     textAt(ctx, `888888`, 140, 40, Color.fromTw('rose-950').toString(), 'right', '50px dseg7');
-    textAt(ctx, `${table.score}`, 140, 40, Color.fromTw('red-500').toString(), 'right', '50px dseg7');
+    textAt(ctx, `${ceil(currentScore)}`, 140, 40, Color.fromTw('red-500').toString(), 'right', '50px dseg7');
 
     // Spawning Arrow
     if (spawnArrow[0].dist(spawnArrow[1]) > 0.0) {

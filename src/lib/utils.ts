@@ -4,7 +4,7 @@ import type Vec2 from './Vec2';
 
 // Re-export std math functions
 
-export const { random, min, max, abs, sqrt, floor, pow, sin, cos, atan2, PI } = Math;
+export const { random, min, max, abs, sqrt, floor, ceil, pow, sin, cos, atan2, PI } = Math;
 export const TAU = PI * 2;
 
 
