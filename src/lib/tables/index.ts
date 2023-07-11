@@ -9,6 +9,7 @@ import type { InputState } from "$types";
 // Table Type
 
 export default class Table {
+
   name:       string;
   bounds:     Rect;
   ballRad:    number;
@@ -18,5 +19,9 @@ export default class Table {
   template:   null | HTMLImageElement;
   templateSrc: string;
   score:      number;
+  balls:      Ball[]; number; // player's stock
+
+  onRequestNewBall: ((pos:Vec2) => Ball) => void;
+
 }
 

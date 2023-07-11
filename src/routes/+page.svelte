@@ -39,18 +39,8 @@
 
   //
   // Physics
-  //
   // TODO: Spatial binning
   //
-  // + Gravity
-  // + Collide balls with table bounds
-  // + Collide balls with each other
-  // + Collide balls with Things
-  // - Run table script
-  //   - Collect events from things
-  //   - Run callbacks against registered events
-  // - Cull balls
-  // - Apply verlet integration
 
   const update = (dt:number) => {
 
@@ -81,7 +71,14 @@
     // Run game script
     table.process(input);
 
-    // Launcher only stays active for one frame
+    // Add new balls when the game calls for it
+    table.onRequestNewBall((pos:Vec2) => {
+      if (balls.length < MAX_BALLS) {
+        balls.push(Ball.withVel(pos, Vec2.fromXY(0, 0), table.ballRad));
+      }
+    });
+
+    // Launch button only stays active for one frame
     input.launch = false;
 
   }
@@ -111,8 +108,8 @@
     lastTime = now;
     balls = balls; // poke
 
-    // if delta is the time taken to simulate this whole frame, then
-    // we can calculate how many substeps we can pack into the next frame
+    // If delta is the time taken to simulate this whole frame, then we can
+    // calculate how many substeps we can afford to pack into the next frame
     delta = performance.now() - start;
     substeps = max(8, min(100, floor(substeps * (1000/60)/delta * SUBSTEP_LIMIT)));
   }

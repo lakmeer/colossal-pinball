@@ -123,14 +123,15 @@ export default ():Table => {
   const TL = L + 16;   // leftmost position excluding outer wall
   const M  = L + TW/2 + 8; // middle line of playfield (fudged)
 
+  const BALL_DROP_POSITION = Vec2.fromXY(TR + ballRad, 120);
+
 
   // Game State
 
   const state = {
     score: 0,
-    balls: 3,
-    white: 0,
-    red:   0,
+    balls: 5,
+    awaitNewBall: true
   }
 
   const scoreRolloverDependsOnLamp = (r:Things.Rollover, l:Things.Lamp, fn:(lit:boolean) => number) => {
@@ -388,20 +389,12 @@ export default ():Table => {
   // Game script
 
   // TODO:
-  //
   // - Red & White bonuses
-  //   - Each droptarget awards 100pts
-  //   - Goes up by 100pts when droptargets hit
   //   - Gets awarded by Red and White rollovers (outlane, kicker and midfield)
   //   - Bonus pays out when used by a rollover
   //   - Resets when used
-  //   - TBD: What happens when all 4 are dropped by the bonus isnt used yet?
-  // - Upper lane rollovers award 50 or 300 for matching lamp
-  // - Midfield and outlane rollovers award 100 plus color bonus
-  //   - Does this reset the bonus counter?
-  // - Static targets award 50 or 300 for matching lamp
-  // - Bumpers don't award except when lit (10pts)
-  // - Slingshots dont award (??)
+  // - Bumpers don't award except when lit (10pts) (or award 1 pt? or 5?)
+  // - Slingshots dont award (?? probably)
   // - Replay balls
   //   - Score matching - random digit generated at start of game
   //   - If final score matches last digit, get a free ball
@@ -411,7 +404,7 @@ export default ():Table => {
   // - Alternationg Relay
   //   - MIGHT only trigger when tens column of score changes (not sure)
   // - Tilting doesn't lock the game
-  //   - But tilting would be nice
+  //   - But implement tilting for ball control
   // - Max 15 balls
   // - Extra ball awarded at score milestones
 
@@ -517,7 +510,6 @@ export default ():Table => {
   scoreRolloverDependsOnLamp(kickR,  outLampR, lit => 100 + 100 * (lit ? whiteBank.multiplier : 0));
 
 
-
   //
   // Game Flow
   //
@@ -531,16 +523,17 @@ export default ():Table => {
     //
     // NOTE: Prioritise Table as consumer of the API
 
+    state.awaitNewBall = true;
   }
 
   function newGame () {
     clearState();
 
-    T.balls = 5;
+    state.balls = 5;
   }
 
   function drainedLastBall () {
-    if (T.balls > 0) {
+    if (state.balls > 0) {
       newRound();
     } else {
       console.log("GAME OVER");
@@ -566,9 +559,8 @@ export default ():Table => {
     get<Things.Flipper>(`flipper_right`).state.active = input.right;
 
     if (input.launch) {
-      advanceLaneSeed();
       //if (T.gamemode === GameMode.WAITING && T.ballsInPlay > 0) {
-        //launchBall();
+        launchBall();
       //}
     }
 
@@ -586,6 +578,13 @@ export default ():Table => {
           }
         });
       }
+    }
+  }
+
+  T.onRequestNewBall = (fn) => {
+    if (state.awaitNewBall) {
+      fn(BALL_DROP_POSITION);
+      state.awaitNewBall = false;
     }
   }
 
