@@ -142,8 +142,8 @@
     }
 
     // Score
-    textAt(ctx, `000000000`, 140, 71, Color.fromTw('rose-950').toString(), 'right', '50px Ani');
-    textAt(ctx, `${table.score}`, 140, 71, Color.fromTw('red-500').toString(), 'right', '50px Ani');
+    textAt(ctx, `888888`, 140, 40, Color.fromTw('rose-950').toString(), 'right', '50px dseg7');
+    textAt(ctx, `${table.score}`, 140, 40, Color.fromTw('red-500').toString(), 'right', '50px dseg7');
 
     // Spawning Arrow
     if (spawnArrow[0].dist(spawnArrow[1]) > 0.0) {

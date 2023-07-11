@@ -42,14 +42,14 @@
 
 #### Implementable rules
 
-- 5 balls issues to new player
-- 100pts per droptarget
-  - Does this mean just one or the whole bank?
-  - In that case, does anything special happen when the bank is complete?
-  - When does the bank reset?
+- 5 balls issued to new player
 - Red & White bonuses
-  - Goes up by 100pts when droptargets reward 100pts (either single or bank TBD)
+  - Each droptarget awards 100pts
+  - Goes up by 100pts when droptargets hit
   - Gets awarded by Red and White rollovers (outlane, kicker and midfield)
+  - Bonus pays out when used by a rollover
+  - Resets when used
+  - TBD: What happens when all 4 are dropped by the bonus isnt used yet?
 - Upper lane rollovers award 50 or 300 for matching lamp
 - Midfield and outlane rollovers award 100 plus color bonus
   - Does this reset the bonus counter?
@@ -101,17 +101,13 @@
   - How do upper lane lamps get lit?
 - Tilting doesn't lock the game
   - But tilting would be nice
+- Max 15 balls
+- Extra ball awarded at score milestones
 
 
 #### Script Analysis (loserman76)
 
 - Bumpers award 1pt when unlit and 10pts when lit
-- ? Droptargets seem to have their own lights, maybe this is just a state thing
-- Target banks reset on new round
-- Target banks reset when special bonus is awarded by rollovers (incl multiplier)
-- Droptargets award 100pts and inc special bonus by 1
-- Bonus pays out in 100pts * current value
-- Max 15 balls
 
 - Newgame sequence
   - From bootup mode
@@ -142,11 +138,8 @@
 
 #### Script analysis (spanish)
 
-- Not object labels yay
-- Appears to award 10pts for slingshots?
-- In this one, droptargets award 50 and light the corresponding arrow lamp
 - There are 8 slignshots in this version, each one awards 10 points always
-- Award extra credits at certain score milestones?
+- Awards extra credits at certain score milestones?
 
         ' Up = current player
         ' AwardSpecial adds a credit
@@ -165,6 +158,7 @@
             credit3(up)=true
           end if
         end sub
+
 - Bumpers push harder when more points are awarded?
   - Seems to award 5 points if unlit
 
@@ -179,8 +173,6 @@
             bumper1.force=4
           end if
         End Sub
-
-
 
 
 ### FX Ideas
