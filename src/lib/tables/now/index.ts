@@ -126,18 +126,11 @@ export default ():Table => {
 
   // Game State
 
-  enum ScoringPhase {
-    NONE,
-    RED,
-    WHITE,
-  }
-
   const state = {
     score: 0,
     balls: 3,
     white: 0,
     red:   0,
-    phase: ScoringPhase.NONE,
   }
 
   const scoreRolloverDependsOnLamp = (r:Things.Rollover, l:Things.Lamp, fn:(lit:boolean) => number) => {
@@ -225,41 +218,38 @@ export default ():Table => {
 
   // Droptarget banks & slingshots
 
-  let dt_width  = 14;
-  let dt_stride = 26;
+  type TargetBank = {
+    targets: [ Things.DropTarget ],
+    lamp:  Things.Lamp | null,
+    multiplier: number;
+  }
 
-  let redBank = {
-    state: [ false, false, false, false ],
-    lamp:  Lamp(`dt_lamp_red`,   Circle.at(M -  128, 440, 20), Color.fromTw('red-900'),   Color.fromTw('red-500'))
+  let redBank:TargetBank = {
+    targets: [],
+    lamp: null,
+    multiplier: 0,
   }
 
   let whiteBank = {
-    state: [ false, false, false, false ],
-    lamp:  Lamp(`dt_lamp_white`, Circle.at(M +  128, 440, 20), Color.fromTw('gray-600'), Color.fromTw('gray-100'))
+    targets: [],
+    lamp: null,
+    multiplier: 0,
   }
 
-  const setBankState = (bank, ix:number, state:boolean) => {
-    bank.state[ix] = state;
-    if (bank.state.every(v => v)) {
-      bank.lamp.do(Command.ACTIVATE);
-    } else {
-      bank.lamp.do(Command.DEACTIVATE);
-    }
-  }
+  let dt_width  = 14;
+  let dt_stride = 26;
 
   for (let i = -1.5; i <= 1.5; i++) {
     let xl = M - 99 + dt_stride * i;
     let xr = M + 99 + dt_stride * i;
     let ix = i + 1.5;
 
-    let red   = DropTarget(`dt_left_bank_${i+1.5}`,  Capsule.from(xl + dt_width/2, 408, xl - dt_width/2, 408, 2));
-    let white = DropTarget(`dt_right_bank_${i+1.5}`, Capsule.from(xr + dt_width/2, 408, xr - dt_width/2, 408, 2));
-
-    on(red,   EventType.ACTIVATED,   () => setBankState(redBank,   ix, true ));
-    on(red,   EventType.DEACTIVATED, () => setBankState(redBank,   ix, false));
-    on(white, EventType.ACTIVATED,   () => setBankState(whiteBank, ix, true ));
-    on(white, EventType.DEACTIVATED, () => setBankState(whiteBank, ix, false));
+    redBank.targets[ix]   = DropTarget(`dt_left_bank_${i+1.5}`,  Capsule.from(xl + dt_width/2, 408, xl - dt_width/2, 408, 2));
+    whiteBank.targets[ix] = DropTarget(`dt_right_bank_${i+1.5}`, Capsule.from(xr + dt_width/2, 408, xr - dt_width/2, 408, 2));
   }
+
+  redBank.lamp   = Lamp(`dt_lamp_red`,   Circle.at(M -  128, 440, 20), Color.fromTw('red-900'),   Color.fromTw('red-500'))
+  whiteBank.lamp = Lamp(`dt_lamp_white`, Circle.at(M +  128, 440, 20), Color.fromTw('gray-600'), Color.fromTw('gray-100'))
 
   Bumper(`dt_ss_left`,   Capsule.at(M - 100, 445, 5, 80,  TAU*22/124), SLINGS_STRENGTH);
   Bumper(`dt_ss_right`,  Capsule.at(M + 100, 445, 5, 80, -TAU*22/124), SLINGS_STRENGTH);
@@ -324,11 +314,8 @@ export default ():Table => {
 
   let outROL = Rollover(`out_rollover_left`,  Capsule.from(M + 136, 164, M + 136, 189, rolloverRad));
   let outROR = Rollover(`out_rollover_right`, Capsule.from(M - 136, 164, M - 136, 189, rolloverRad));
-  let outLampL = Lamp(`out_rollover_lamp_left`,  Circle.at(M + 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-  let outLampR = Lamp(`out_rollover_lamp_right`, Circle.at(M - 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
-
-  scoreRolloverDependsOnLamp(outROL, outLampL, lit => 100 + (lit ? state.red   : 0));
-  scoreRolloverDependsOnLamp(outROR, outLampR, lit => 100 + (lit ? state.white : 0));
+  let outLampL = Lamp(`out_rollover_lamp_left`,  Circle.at(M - 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+  let outLampR = Lamp(`out_rollover_lamp_right`, Circle.at(M + 104, 251, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
 
   // Outlane kickers and rails
@@ -347,8 +334,6 @@ export default ():Table => {
   Collider(`kicker_right_rail_inner_top`, Arc.at(TR - 90, 203, 4, 60, TAU*7/64, TAU*0/64));
   Collider(`kicker_right_rail_inner`,     Capsule.from(TR - 30, 200, TR - 30, 135, 4));
 
-  scoreRolloverDependsOnLamp(kickL, outLampL, lit => 100 + (lit ? state.red   : 0));
-  scoreRolloverDependsOnLamp(kickR, outLampR, lit => 100 + (lit ? state.white : 0));
 
 
   // Lower slingshots
@@ -431,6 +416,10 @@ export default ():Table => {
   // - Extra ball awarded at score milestones
 
 
+  //
+  // Target and Bumper Lamp Logic
+  //
+
   enum ScoreMode { MODE_A, MODE_B }
   type LaneCombo = [ number, number, number, number ];
 
@@ -486,15 +475,61 @@ export default ():Table => {
     }
   }
 
-  // TODO: How to communicate to the main game to spawn a new ball and
-  //  where to put it? Should probably put this control with the table.
-  //  In which case almost all the state moves inside to Table, and only
-  //  the physics loop lives outside.
+
   //
-  // NOTE: Prioritise Table as consumer of the API
+  // Droptarget Bonus Logic and Rollovers
+  //
+
+  const updateBank = (bank:TargetBank) => {
+    bank.multiplier = bank.targets.map(v => v.state.dropped).filter(v => v).length;
+
+    if (bank.targets.every(v => v.state.dropped)) {
+      bank.lamp.do(Command.ACTIVATE);
+    } else {
+      bank.lamp.do(Command.DEACTIVATE);
+    }
+  }
+
+  const resetBank = (bank:TargetBank) => {
+    bank.targets.forEach(tgt => tgt.do(Command.DEACTIVATE));
+    updateBank(bank);
+  }
+
+  redBank.targets.forEach(tgt => {
+    on(tgt, EventType.ACTIVATED, () => {
+      updateBank(redBank);
+      state.score += 100;
+    });
+  })
+
+  whiteBank.targets.forEach(tgt => {
+    on(tgt, EventType.ACTIVATED, () => {
+      updateBank(whiteBank);
+      state.score += 100;
+    });
+  })
+
+  outLampL.do(Command.ACTIVATE);
+
+  scoreRolloverDependsOnLamp(outROL, outLampL, lit => 100 + 100 * (lit ? redBank.multiplier   : 0));
+  scoreRolloverDependsOnLamp(outROR, outLampR, lit => 100 + 100 * (lit ? whiteBank.multiplier : 0));
+  scoreRolloverDependsOnLamp(kickL,  outLampL, lit => 100 + 100 * (lit ? redBank.multiplier   : 0));
+  scoreRolloverDependsOnLamp(kickR,  outLampR, lit => 100 + 100 * (lit ? whiteBank.multiplier : 0));
+
+
+
+  //
+  // Game Flow
+  //
 
   function newRound () {
 
+    // TODO: How to communicate to the main game to spawn a new ball and
+    //  where to put it? Should probably put this control with the table.
+    //  In which case almost all the state moves inside to Table, and only
+    //  the physics loop lives outside.
+    //
+    // NOTE: Prioritise Table as consumer of the API
 
   }
 
