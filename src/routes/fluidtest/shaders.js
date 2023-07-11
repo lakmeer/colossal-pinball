@@ -260,7 +260,7 @@ export const splatTex = `
         vec3 sample = texture2D(uTexture, vUv * vec2(1.0, -1.0)).xyz;
         vec3 splat = exp(-dot(p, p) / radius) * sample;
         vec3 base = texture2D(uTarget, vUv).xyz;
-        gl_FragColor = vec4(base + splat, 1.0);
+        gl_FragColor = vec4(base + splat * 0.7, 1.0);
     }
 `;
 
@@ -271,28 +271,19 @@ export const display = `
     varying vec2 vUv;
 
     uniform sampler2D uTexture;
-    uniform sampler2D uBloom;
-    uniform sampler2D uSunrays;
-    uniform sampler2D uDithering;
-    uniform vec2 ditherScale;
-    uniform vec2 texelSize;
-
     uniform sampler2D bgTexture;
 
-    vec3 linearToGamma (vec3 color) {
-      color = max(color, vec3(0));
-      return max(1.055 * pow(color, vec3(0.416666667)) - 0.055, vec3(0));
+    float degamma (float n) {
+      n = max(1.0 - n, 0.0);
+      return 1.0 - max(1.055 * pow(n, 0.416666667) - 0.055, 0.0);
     }
 
     void main () {
-        vec3 c = texture2D(uTexture, vUv).rgb;
-        vec3 v = texture2D(bgTexture, vUv * vec2(1.0, -1.0)).rgb;
+      vec3 c = texture2D(uTexture, vUv).rgb;
+      vec3 v = texture2D(bgTexture, vUv * vec2(1.0, -1.0)).rgb;
 
-        float a = max(c.r, max(c.g, c.b));
-
-        //                                  | 
-        // TODO: Tune brightness blowout    v 
-        gl_FragColor = vec4(mix(v, c + v * 0.4, a), 1.0);
+      float a = max(c.r, max(c.g, c.b));
+      gl_FragColor = vec4(mix(v, c, degamma(a)), 1.0);
     }
 `;
 

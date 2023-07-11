@@ -319,16 +319,6 @@
       textureSplat(pointer.texcoordX, pointer.texcoordY, dx, dy);
     }
 
-    function multipleSplats (amount) {
-      for (let i = 0; i < amount; i++) {
-        const x = Math.random();
-        const y = Math.random();
-        const dx = 1000 * (Math.random() - 0.5);
-        const dy = 1000 * (Math.random() - 0.5);
-        textureSplat(x, y, dx, dy);
-      }
-    }
-
     function textureSplat (x, y, dx, dy) {
       splatProgram.bind();
       gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
