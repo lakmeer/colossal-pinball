@@ -4,24 +4,24 @@
   import type Ball  from '$lib/Ball';
   import type Table from "$lib/tables";
   import type Shape from "$lib/Shape";
+  import type Thing from "$lib/Thing";
 
   import Vec2   from '$lib/Vec2';
   import Color  from '$lib/Color';
   import Pixels from '$lib/Pixels';
 
-  import type Thing from "$lib/Thing";
+  import FluidBG from '$comp/FluidBG.svelte';
 
   import { Circle, Arc, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt, arrowAt } from "$lib/draw2d";
-
   import { floor, ceil, lerp } from "$lib/utils";
 
 
   // Config
 
   const SHOW_VELOCITY  = false;
-  const SHOW_OVERLAY   = true;
-  const SHOW_GRIDLINES = true;
+  const SHOW_OVERLAY   = false;
+  const SHOW_GRIDLINES = false;
   const SHOW_TEMPLATE  = false;
 
   const INTERSECTION_RES = 8; // Resolution of collision overlay
@@ -79,8 +79,7 @@
     if (!canvas || !ctx) return;
 
     // Clear
-    ctx.fillStyle = '#222';
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
 
     // Transform to world space
     const aspectCorr = height/width;
@@ -201,14 +200,25 @@
 </script>
 
 
-<canvas bind:this={canvas} {width} {height} />
+<div class="CanvasRenderer">
+  <canvas bind:this={canvas} {width} {height} />
+  <FluidBG pointer-x={40} pointer-y={30} {width} {height} />
+</div>
 
 
 <style>
   canvas {
-    background: #212121;
     image-rendering: pixelated;
     max-width: 100vw;
     max-height: 100vh;
+  }
+
+  .CanvasRenderer :global(.FluidBG) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
   }
 </style>

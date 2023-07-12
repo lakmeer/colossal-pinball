@@ -98,8 +98,8 @@
     const now = performance.now()/1000;
     const dt = (now - lastTime) * TIME_SCALE;
 
-    cameraY = 3.6 * 100;
-    cameraY = balls[0] ? balls[0].pos.y : 0;
+    //cameraY = 3.6 * 100;
+    //cameraY = balls[0] ? balls[0].pos.y : 0;
 
     for (let i = 0; i < substeps; i++) {
       update(dt/substeps);
@@ -235,20 +235,29 @@
       document.removeEventListener('keyup',     onKeyup);
     }
   });
+
+
+  let clientWidth;
+  let clientHeight;
+
+  $: console.log(clientWidth, clientHeight, table.bounds.aspect);
 </script>
 
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<div>
-  <CanvasRenderer
-    {balls}
-    {table}
-    {cameraY}
-    {spawnArrow}
-    width={innerWidth}
-    height={innerWidth * table.bounds.h / table.bounds.w}
-  />
+
+<div class="outer">
+  <div class="inner" style="--aspect: {table.bounds.aspect}" bind:clientWidth bind:clientHeight>
+    <CanvasRenderer
+      {balls}
+      {table}
+      {cameraY}
+      {spawnArrow}
+      width={clientWidth}
+      height={clientHeight}
+    />
+  </div>
 </div>
 
 <pre class="debug">
@@ -269,15 +278,23 @@ Steps: {substeps}
     z-index: 1;
   }
 
-  div {
+  .outer {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
     display: grid;
-    background: #111;
+    background: #111111;
     place-items: center;
+  }
+
+  .inner {
+    position: relative;
+    width:      100vw; 
+    height:     calc(100vw/var(--aspect));
+    max-width:  calc(100vh*var(--aspect));
+    max-height: 100vh;
   }
 
   pre {

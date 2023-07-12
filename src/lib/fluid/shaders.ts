@@ -258,9 +258,14 @@ export const splatTex = `
         p.x *= aspectRatio;
 
         vec3 sample = texture2D(uTexture, vUv * vec2(1.0, -1.0)).xyz;
-        vec3 splat = exp(-dot(p, p) / radius) * sample;
+        float splat = exp(-dot(p, p) / radius);
         vec3 base = texture2D(uTarget, vUv).xyz;
-        gl_FragColor = vec4(base + splat * 0.7, 1.0);
+
+        if (vUv.x < 0.5) {
+          gl_FragColor = vec4(base + sample * splat, 1.0);
+        } else {
+          gl_FragColor = vec4(mix(base, sample, splat * 3.0), 1.0);
+        }
     }
 `;
 
@@ -284,6 +289,10 @@ export const display = `
 
       float a = max(c.r, max(c.g, c.b));
       gl_FragColor = vec4(mix(v, c, degamma(a)), 1.0);
+      // working ^^
+
+      gl_FragColor = vec4(mix(v, vec3(1.0,0.0,0.0), degamma(a)), 1.0);
+      gl_FragColor = vec4(c, 1.0); // just the ink layer
     }
 `;
 
