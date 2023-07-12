@@ -14,6 +14,8 @@ const MAX_VEL = 1000;
 
 export default class Ball {
 
+  id: number;
+
   pos:   Vec2;
   vel:   Vec2;
   acc:   Vec2;

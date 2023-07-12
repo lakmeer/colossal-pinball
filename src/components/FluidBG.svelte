@@ -58,6 +58,7 @@
 
   // Simulation section
 
+  //@ts-ignore shut up
   onMount(async () => {
 
     let lastUpdateTime = Date.now();

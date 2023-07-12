@@ -26,7 +26,7 @@
 
   import Now from "$lib/tables/now";
 
-  let table:Table  = Now();
+  let table:Table  = new Now();
   let balls:Ball[] = [];
 
   let cameraY = 0;
@@ -51,8 +51,8 @@
     const fff = pow(1 - (1 - STD_FRICTION), 1/substeps);
 
     for (let a of balls) {
-      a.impart(Vec2.fromXY(0, -table.gravity));
-      table.bounds.collideInterior(a);
+      a.impart(Vec2.fromXY(0, -table.config.gravity));
+      table.config.bounds.collideInterior(a);
 
       for (let b of balls) {
         if (a !== b) b.collide(a);
@@ -77,7 +77,7 @@
     // Add new balls when the game calls for it
     table.onRequestNewBall((pos:Vec2) => {
       if (balls.length < MAX_BALLS) {
-        balls.push(Ball.withVel(pos, Vec2.fromXY(0, 0), table.ballRad));
+        balls.push(Ball.withVel(pos, Vec2.fromXY(0, 0), table.config.ballRad));
       }
     });
 
@@ -131,7 +131,7 @@
     let vel = span.scale(100000);
 
     if (balls.length < MAX_BALLS) {
-      balls.push(Ball.withVel(pos, vel, table.ballRad));
+      balls.push(Ball.withVel(pos, vel, table.config.ballRad));
     }
   }
 
@@ -149,8 +149,8 @@
     let rect = el.getBoundingClientRect();
     let cx = clamp((clientX - rect.left) / rect.width);
     let cy = clamp((clientY - rect.top) / rect.height);
-    let x = cx * table.bounds.w + table.bounds.left;
-    let y = cy * table.bounds.h - table.bounds.top;
+    let x = cx * table.config.bounds.w + table.config.bounds.left;
+    let y = cy * table.config.bounds.h - table.config.bounds.top;
     return Vec2.fromXY(x, -y);
   }
     //const aspectCorr = height/width;
@@ -218,8 +218,6 @@
   //@ts-ignore shut up
   onMount(async () => {
 
-    if (table.templateSrc) table.template = await loadImage(table.templateSrc);
-
     render();
 
     document.addEventListener('mousedown', onMouseDown);
@@ -245,7 +243,7 @@
 
 
 <div class="outer">
-  <div class="inner" style="--aspect: {table.bounds.aspect}" bind:clientWidth bind:clientHeight>
+  <div class="inner" style="--aspect: {table.config.bounds.aspect}" bind:clientWidth bind:clientHeight>
     <CanvasRenderer
       {balls}
       {table}

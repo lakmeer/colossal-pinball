@@ -78,7 +78,7 @@ export default class Color extends Array {
     );
   }
 
-  setFrom (c:Color):Color {
+  setFrom (c:Color):void {
     this[0] = c[0];
     this[1] = c[1];
     this[2] = c[2];
