@@ -36,6 +36,9 @@
     launch: false,
   };
 
+  let clientWidth;
+  let clientHeight;
+
 
   //
   // Physics
@@ -235,12 +238,6 @@
       document.removeEventListener('keyup',     onKeyup);
     }
   });
-
-
-  let clientWidth;
-  let clientHeight;
-
-  $: console.log(clientWidth, clientHeight, table.bounds.aspect);
 </script>
 
 

@@ -254,18 +254,14 @@ export const splatTex = `
     uniform float radius;
 
     void main () {
-        vec2 p = vUv - point.xy;
-        p.x *= aspectRatio;
+      vec2 p = vUv - point.xy;
+      p.x *= aspectRatio;
 
-        vec3 sample = texture2D(uTexture, vUv * vec2(1.0, -1.0)).xyz;
-        float splat = exp(-dot(p, p) / radius);
-        vec3 base = texture2D(uTarget, vUv).xyz;
+      vec3 sample = texture2D(uTexture, vUv * vec2(1.0, -1.0)).xyz;
+      float splat = exp(-dot(p, p) / (radius * 0.7));
+      vec3 base = texture2D(uTarget, vUv).xyz;
 
-        if (vUv.x < 0.5) {
-          gl_FragColor = vec4(base + sample * splat, 1.0);
-        } else {
-          gl_FragColor = vec4(mix(base, sample, splat * 3.0), 1.0);
-        }
+      gl_FragColor = vec4(base + sample * splat * 0.6, 1.0);
     }
 `;
 
@@ -276,6 +272,7 @@ export const display = `
     varying vec2 vUv;
 
     uniform sampler2D uTexture;
+    uniform sampler2D uVelocity;
     uniform sampler2D bgTexture;
 
     float degamma (float n) {
@@ -286,13 +283,11 @@ export const display = `
     void main () {
       vec3 c = texture2D(uTexture, vUv).rgb;
       vec3 v = texture2D(bgTexture, vUv * vec2(1.0, -1.0)).rgb;
+      //vec3 d = texture2D(uVelocity, vUv).rgb;
 
       float a = max(c.r, max(c.g, c.b));
-      gl_FragColor = vec4(mix(v, c, degamma(a)), 1.0);
-      // working ^^
 
-      gl_FragColor = vec4(mix(v, vec3(1.0,0.0,0.0), degamma(a)), 1.0);
-      gl_FragColor = vec4(c, 1.0); // just the ink layer
+      gl_FragColor = vec4(mix(v, c, degamma(a)), 1.0);
     }
 `;
 

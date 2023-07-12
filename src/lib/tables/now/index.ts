@@ -101,6 +101,10 @@ export default ():Table => {
   const KICKER_STRENGTH = 2;
   const LAUNCH_STRENGTH = 400;
 
+  // TODO: Score config here as const
+  // const POINTS_BUMPER_UNLIT = 1; 
+  // etc
+
 
   // Vars
 
@@ -212,9 +216,9 @@ export default ():Table => {
   let lamp_bumperRight = Lamp(`bumper_lamp_right`, Circle.at(M - 85, 523, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
   let lamp_bumperMid   = Lamp(`bumper_lamp_mid`,   Circle.at(M     , 492, 15), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
 
-  on(bumperLeft,  EventType.BOUNCED, () => console.log("TODO: Bumper score based on lamp"));
-  on(bumperRight, EventType.BOUNCED, () => console.log("TODO: Bumper score based on lamp"));
-  on(bumperMid,   EventType.BOUNCED, () => console.log("TODO: Bumper score based on lamp"));
+  on(bumperLeft,  EventType.BOUNCED, () => state.score += lamp_bumperLeft.state.active  ? 10 : 1);
+  on(bumperMid,   EventType.BOUNCED, () => state.score += lamp_bumperMid.state.active   ? 10 : 1);
+  on(bumperRight, EventType.BOUNCED, () => state.score += lamp_bumperRight.state.active ? 10 : 1);
 
 
   // Droptarget banks & slingshots
@@ -411,6 +415,7 @@ export default ():Table => {
 
   //
   // Target and Bumper Lamp Logic
+  // TODO: Create score wrapper function to advance lane lamps
   //
 
   enum ScoreMode { MODE_A, MODE_B }
@@ -585,6 +590,9 @@ export default ():Table => {
     if (state.awaitNewBall) {
       fn(BALL_DROP_POSITION);
       state.awaitNewBall = false;
+
+      // TEMP
+      advanceLaneSeed();
     }
   }
 

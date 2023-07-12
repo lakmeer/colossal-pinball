@@ -62,7 +62,6 @@
   const drawShape = (s:Shape, c:Color) => {
     if      (s instanceof Arc)         arcAt(ctx, s.pos, s.rad, s.radius, c.toString(), s.start, s.end);
     else if (s instanceof Circle)   circleAt(ctx, s.pos, s.rad, c.toString(), s.invert);
-    //else if (s instanceof Segment) capsuleAt(ctx, s.pos, s.tip, 1, c.toString(), s.normal);
     else if (s instanceof Capsule) capsuleAt(ctx, s.pos, s.tip, s.rad, c.toString());
     else if (s instanceof Box)         boxAt(ctx, s.toRect(), c.toString(), s.angle);
     else if (s instanceof Fence) {
@@ -135,6 +134,7 @@
     // Balls
     for (let ball of balls) {
       circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
+      textAt(ctx, ball.id, ball.pos.x, ball.pos.y, '#000', 'center', '10px dseg7');
 
       if (SHOW_VELOCITY) {
         lineAt(ctx, ball.pos, ball.pos.add(ball.vel.scale(10/TIME_SCALE)), 'rgba(255, 63, 31, 0.7)', 2);
@@ -146,7 +146,7 @@
     textAt(ctx, `888888`, 140, 40, Color.fromTw('rose-950').toString(), 'right', '50px dseg7');
     textAt(ctx, `${ceil(currentScore)}`, 140, 40, Color.fromTw('red-500').toString(), 'right', '50px dseg7');
 
-    // Balls
+    // Ball count
     textAt(ctx, `8`,              -190, 40, Color.fromTw('emerald-950').toString(), 'left', '50px dseg7');
     textAt(ctx, `${table.balls}`, -190, 40, Color.fromTw('green-500').toString(),   'left', '50px dseg7');
 
@@ -190,6 +190,13 @@
 
   $: balls && render();
 
+  function toCanvasCoords(ball: Ball): [ number, number, number ] {
+    let [ x, y ] = ball.pos.scale(1, -1);
+    x = (ball.pos.x - world.left)   / world.w * width;
+    y = (ball.pos.y - world.bottom) / world.h * height;
+    return [ ball.id, x, height - y ];
+  }
+
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
 
@@ -202,15 +209,16 @@
 
 <div class="CanvasRenderer">
   <canvas bind:this={canvas} {width} {height} />
-  <FluidBG pointer-x={40} pointer-y={30} {width} {height} />
+  <FluidBG ballCoords={balls.map(toCanvasCoords)} {width} {height} />
 </div>
 
 
 <style>
   canvas {
     image-rendering: pixelated;
-    max-width: 100vw;
+    max-width:  100vw;
     max-height: 100vh;
+    background: #0004;
   }
 
   .CanvasRenderer :global(.FluidBG) {
@@ -219,6 +227,6 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1;
+    z-index: -1;
   }
 </style>

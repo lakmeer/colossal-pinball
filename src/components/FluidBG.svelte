@@ -51,10 +51,9 @@
   export let bgSource = "/now.png";
   export let width = 512;
   export let height = 512;
-  export let pointerX = 0;
-  export let pointerY = 0;
+  export let ballCoords = [];
 
-  let syntheticPointer = new Pointer();
+  let pointers = [];
 
 
   // Simulation section
@@ -66,13 +65,13 @@
     let config = {
       SIM_RESOLUTION: 128,
       DYE_RESOLUTION: 1024,
-      DENSITY_DISSIPATION: 2.0,   // small values make smoke linger
-      VELOCITY_DISSIPATION: 1.1,
-      PRESSURE: 0.8,              // pressure > 1 explodes simulation
+      DENSITY_DISSIPATION:  1.3,  // small values make smoke linger
+      VELOCITY_DISSIPATION: 1.1,  // large values move pixels further
+      PRESSURE: 0.9,              // pressure > 1 explodes simulation
       PRESSURE_ITERATIONS: 20,    // sim steps, default 20
-      CURL: 20,                   // default 30. > ~150 explodes simulation. might be fun to vary
-      SPLAT_RADIUS: 0.1, // bigger radius is brighter but drags more pixels
-      SPLAT_FORCE: 630,  // drags pixels further before fading but creates wavefronts
+      CURL: 50,                   // default 30. > ~150 explodes simulation. might be fun to vary
+      SPLAT_RADIUS: 0.05,          // bigger radius is brighter but drags more pixels
+      SPLAT_FORCE: 630,           // drags pixels further before fading but creates wavefronts
     }
 
 
@@ -201,36 +200,6 @@
       return target;
     }
 
-    function update () {
-
-      // TODO: provide render loop externally
-
-      const dt = calcDeltaTime();
-      if (resizeCanvas()) initFramebuffers();
-
-      if (canvas) {
-        syntheticPointer.onMove(canvas,
-          canvas.width/2  + canvas.width/4 * Math.sin(Date.now()/500),
-          canvas.height/2 + canvas.width/4 * Math.cos(Date.now()/500));
-      }
-
-      if (syntheticPointer.moved) {
-        syntheticPointer.moved = false;
-        splatPointer(syntheticPointer);
-      }
-
-      step(dt);
-
-      // Render
-      displayMaterial.bind();
-      gl.uniform1i(displayMaterial.uniforms.uTexture, dye.read.attach(0));
-      gl.uniform1i(displayMaterial.uniforms.bgTexture, bgTexture.attach(6));
-      blit(null);
-
-      // Loop
-      rafref = requestAnimationFrame(update);
-    }
-
     function calcDeltaTime () {
       let now = Date.now();
       let dt = (now - lastUpdateTime) / 1000;
@@ -356,57 +325,50 @@
 
 
     //
-    // Event Listeners
+    // Main Update
     //
 
-    canvas.addEventListener('mousedown', e => {
-    console.log('x');
-      syntheticPointer.onDown(canvas, e.offsetX, e.offsetY);
-    });
+    function update () {
 
-    canvas.addEventListener('mousemove', e => {
-    console.log('y');
-      syntheticPointer.onMove(canvas, e.offsetX, e.offsetY);
-    });
+      // TODO: provide render loop externally
+      // TODO: scale splat radius by velocity
 
-    window.addEventListener('mouseup', () => {
-      syntheticPointer.onUp();
-    });
+      const dt = calcDeltaTime();
+      if (resizeCanvas()) initFramebuffers();
 
-    /*
-    canvas.addEventListener('touchstart', e => {
-      e.preventDefault();
-      const touches = e.targetTouches;
-      while (touches.length >= pointers.length)
-      pointers.push(new Pointer());
-      for (let i = 0; i < touches.length; i++) {
-        let posX = scaleByPixelRatio(touches[i].pageX);
-        let posY = scaleByPixelRatio(touches[i].pageY);
-        updatePointerDownData(canvas, pointers[i + 1], touches[i].identifier, posX, posY);
+      // Update pointer locations from ball coords
+      if (canvas) {
+        ballCoords.map(([ id, x, y ]) => {
+          let pointer = pointers.find(p => p.id === id);
+          if (!pointer) {
+            pointer = new Pointer(id);
+            pointers.push(pointer);
+          }
+          pointer.onMove(canvas, x, y);
+        });
       }
-    });
 
-    canvas.addEventListener('touchmove', e => {
-      e.preventDefault();
-      const touches = e.targetTouches;
-      for (let i = 0; i < touches.length; i++) {
-        let pointer = pointers[i + 1];
-        if (!pointer.down) continue;
-        let posX = scaleByPixelRatio(touches[i].pageX);
-        let posY = scaleByPixelRatio(touches[i].pageY);
-        updatePointerMoveData(canvas, pointer, posX, posY);
-      }
-    }, false);
+      // Splat from pointers
+      pointers.forEach(p => {
+        if (p.moved) {
+          splatPointer(p);
+          p.moved = false;
+        }
+      });
 
-    window.addEventListener('touchend', e => {
-      const touches = e.changedTouches;
-      for (let i = 0; i < touches.length; i++) {
-        let pointer = pointers.find(p => p.id == touches[i].identifier);
-        if (pointer == null) continue;
-        updatePointerUpData(canvas, pointer);
-      }
-    });
-    */
+      // Simulation
+      step(dt);
+
+      // Render
+      displayMaterial.bind();
+      gl.uniform1i(displayMaterial.uniforms.uTexture,  dye.read.attach(0));
+      gl.uniform1i(displayMaterial.uniforms.uVelocity, velocity.read.attach(1));
+      gl.uniform1i(displayMaterial.uniforms.bgTexture, bgTexture.attach(2));
+      blit(null);
+
+      // Loop
+      rafref = requestAnimationFrame(update);
+    }
 
 
     //
@@ -482,9 +444,6 @@
     // Main display material
     const displayShader = compileShader(gl.FRAGMENT_SHADER, SHADER_SRC.display);
     const displayMaterial = new Program(gl, baseVertexShader, displayShader);
-
-    // Default points
-    let pointers = [ new Pointer() ];
 
     // Begin
     initFramebuffers();

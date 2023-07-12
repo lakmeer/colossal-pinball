@@ -531,9 +531,7 @@ export class Launcher extends Thing {
   do (cmd) {
     switch (cmd) {
       case Command.ACTIVATE:
-        //this.state.active = true;
         this.state.timer = 0.1;
-        console.log("Bing");
         return;
     }
   }

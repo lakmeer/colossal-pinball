@@ -27,7 +27,10 @@ export default class Ball {
   cull: boolean = false;
   friction: number = 1;
 
+  static #id = 0;
+
   constructor (pos:Vec2, vel:Vec2, rad:number, mass:number, color:Color) {
+    this.id    = Ball.#id++;
     this.pos   = pos;
     this.vel   = vel;
     this.acc   = Vec2.fromXY(0, 0);
