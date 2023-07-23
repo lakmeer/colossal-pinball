@@ -12,12 +12,12 @@
 
   import { Circle, Arc, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt, arrowAt } from "$lib/draw2d";
-  import { ceil, lerp } from "$lib/utils";
+  import { ceil, lerp, loadImage } from "$lib/utils";
 
 
   // Config
 
-  const SHOW_VELOCITY  = false;
+  const SHOW_VELOCITY  = true;
   const SHOW_GRIDLINES = false;
 
   const GRID_RES   = 10; // World space between gridlines
@@ -134,6 +134,12 @@
     }
 
     ctx.restore();
+
+    // Top layer
+    if (topImg) {
+      ctx.globalAlpha = 0.9;
+      ctx.drawImage(topImg, 0, 0 + height * 0.01, width, height * 1.004);
+    }
   }
 
 
@@ -147,16 +153,20 @@
     return [ ball.id, x, height - y ];
   }
 
+  // temp
+  let topImg:HTMLImageElement;
+
   //@ts-ignore shut up
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
+    topImg = await loadImage('/top.png');
   });
 </script>
 
 
 <div class="CanvasRenderer">
   <canvas bind:this={canvas} {width} {height} />
-  <FluidBG ballCoords={balls.map(toCanvasCoords)} {width} {height} />
+  <FluidBG src="/now.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
 </div>
 
 

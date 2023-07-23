@@ -52,7 +52,7 @@
 
     for (let a of balls) {
       a.impart(Vec2.fromXY(0, -table.config.gravity));
-      table.config.bounds.collideInterior(a);
+      a.simulate(dt);
 
       for (let b of balls) {
         if (a !== b) b.collide(a);
@@ -64,7 +64,7 @@
 
       if (a.cull) balls.splice(balls.indexOf(a), 1);
 
-      a.simulate(dt);
+      table.config.bounds.collideInterior(a);
     }
 
     for (let t of Object.values(table.things)) {

@@ -41,7 +41,7 @@ export default class Now extends Table {
     this.config = {
       bounds: new Rect(-216, 768, 216, 0),
       ballRad: 10,
-      gravity: 1500,
+      gravity: 2000,
     };
 
     this.gameState = {
@@ -100,10 +100,11 @@ export default class Now extends Table {
     // Setup
     //
 
-    const BUMPER_STRENGTH = 1;
+    const BUMPER_STRENGTH = 0.3;
     const SLINGS_STRENGTH = 0.3;
-    const KICKER_STRENGTH = 2;
-    const LAUNCH_STRENGTH = 400;
+    const KICKER_STRENGTH = 0.5;
+    const LAUNCH_STRENGTH = 0.01;
+    const FLIPPER_SPEED   = 30;
 
     // TODO: Score config here as const
     // const POINTS_BUMPER_UNLIT = 1; 
@@ -323,7 +324,7 @@ export default class Now extends Table {
     // Outlane kickers and rails
 
     let kickL = Rollover(`kicker_left_score_ro`,  Capsule.at(TL + 15, 200, rolloverRad, 30));
-    Bumper(`kicker_left`, Capsule.at(TL + 13, 176, 10, 7, TAU/4), KICKER_STRENGTH);
+    Bumper(`kicker_left`, Capsule.at(TL + 14, 176, 10, 7, TAU/4), KICKER_STRENGTH);
 
     let kickR = Rollover(`kicker_right_score_ro`, Capsule.at(TR - 15, 200, rolloverRad, 30));
     Bumper(`kicker_right`, Capsule.at(TR - 13, 176, 10, 7, TAU/4), KICKER_STRENGTH);
@@ -337,12 +338,12 @@ export default class Now extends Table {
     Collider(`kicker_right_rail_inner`,     Capsule.from(TR - 30, 200, TR - 30, 135, 4));
 
 
-
     // Lower slingshots
     // TODO: Only bounce if hit with threshold velocity
+    // TODO: Move slightly out of the wal to allow ball catching
 
-    Bumper(`lower_ss_left`,   Capsule.at(M - 100, 176, 3, 40,  TAU*1/11), SLINGS_STRENGTH);
-    Bumper(`lower_ss_right`,  Capsule.at(M + 100, 176, 3, 40, -TAU*1/11), SLINGS_STRENGTH);
+    Bumper(`lower_ss_left`,  Capsule.at(M - 104, 180, 4, 40,  TAU*1/11), SLINGS_STRENGTH);
+    Bumper(`lower_ss_right`, Capsule.at(M + 104, 180, 4, 40, -TAU*1/11), SLINGS_STRENGTH);
     Collider(`lower_ss_left_body`,  Fence.at([ M - 89, 150, M - 119, 198, M - 119, 161 ], 6).close());
     Collider(`lower_ss_right_body`, Fence.at([ M + 89, 150, M + 119, 198, M + 119, 161 ], 6).close());
 
@@ -361,7 +362,7 @@ export default class Now extends Table {
       flipperLength,
       flipperRestAngle * -1,
       flipperRange,
-      50);
+      FLIPPER_SPEED);
 
     Flipper(`flipper_right`,
       M + 25 + flipperLength,
@@ -370,7 +371,7 @@ export default class Now extends Table {
       flipperLength,
       flipperRestAngle + TAU/2,
       -flipperRange,
-      50);
+      FLIPPER_SPEED);
 
 
     // Central drain

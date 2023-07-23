@@ -285,7 +285,7 @@ export class Kicker extends Thing {
 //
 
 import { Capsule } from "$lib/Shape";
-import { sin, cos, min, max, abs } from "$lib/utils";
+import { sin, cos, min, max, abs, nearestPointOn } from "$lib/utils";
 
 interface FlipperState extends ThingState {
   angle: number;
@@ -318,8 +318,32 @@ export class Flipper extends Thing {
   collide(ball, Δt, fff) {
     let delta = this.shape.eject(ball);
     if (delta.len() === 0) return;
-    this.emit(EventType.BOUNCED);
     ball.pos.addSelf(delta).scale(fff);
+    this.emit(EventType.BOUNCED);
+
+    // Work this out later: probably just further displace the ball according
+    // to the imparted velolcity from the angular motion. It should get accounted for
+    // at the simulation step later.
+    return;
+
+    /*
+    let dir = delta.norm();
+
+    let shape = this.shape as Capsule;
+
+    let contactPoint = 
+      nearestPointOn(shape.pos, shape.tip, ball.pos)
+        .add(dir.scale(this.shape.rad))
+        .sub(ball.pos)
+        .sub(this.shape.pos);
+
+    let surfaceVel = contactPoint.perp().scale(this.state.angVel);
+
+    let v = ball.vel.dot(dir);
+    let vnew = surfaceVel.dot(dir);
+
+    ball.vel.addSelf(dir.scale(vnew - v));
+    */
   }
 
   setAngle (angle: number) {
@@ -482,6 +506,7 @@ export class Bumper extends Thing {
   collide(ball, Δt, fff) {
     let delta = this.shape.eject(ball);
     if (delta.len() === 0) return;
+
     this.emit(EventType.BOUNCED);
     this.state.timer = 0.03;
     ball.pos.addSelf(delta.withLen(this.state.factor));

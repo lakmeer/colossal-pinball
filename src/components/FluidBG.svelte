@@ -48,7 +48,7 @@
   let canvas;
   let rafref = 0;
 
-  export let bgSource = "/now.png";
+  export let src;
   export let width = 512;
   export let height = 512;
   export let ballCoords = [];
@@ -415,7 +415,7 @@
     let pressure;
 
     // Load textures
-    let bgTexture = createTextureAsync(gl, bgSource);
+    let bgTexture = createTextureAsync(gl, src);
 
     // Compile shaders
     const baseVertexShader       = compileShader(gl.VERTEX_SHADER,   SHADER_SRC.baseVertex);

@@ -3,9 +3,9 @@ import type Rect from './Rect';
 import Vec2  from './Vec2';
 import Color from './Color';
 
-import { rand } from '$lib/utils';
+import { rand, PI } from '$lib/utils';
 
-const MAX_VEL = 1000;
+const MAX_VEL = 100000;
 
 
 //
@@ -57,25 +57,37 @@ export default class Ball {
 
   simulate(dt:number) {
     // TODO: velocity being lost? Check PBD videos
+    // Vertlet
+
     const disp = this.pos.sub(this.#lastPos);
-    this.#lastPos = this.pos.clone();
+    this.#lastPos.set(this.pos);
     this.vel.set(disp.add(this.acc.scale(dt * dt)).scale(this.friction));
     if (this.vel.len() > MAX_VEL * dt) this.vel.setLen(MAX_VEL * dt);
     this.pos.addSelf(this.vel);
     this.acc = Vec2.fromXY(0, 0);
     this.friction = 1;
+
+    /*
+    const disp = this.pos.sub(this.#lastPos);
+    this.#lastPos.set(this.pos);
+    this.vel.addSelf(disp * dt * dt);
+    this.vel.addSelf(this.acc.scale(dt));
+    if (this.vel.len() > MAX_VEL * dt) this.vel.setLen(MAX_VEL * dt);
+    this.pos.addSelf(this.vel.scale(dt));
+    this.acc = Vec2.fromXY(0, 0);
+    this.friction = 1;
+*/
   }
 
 
   // Static
 
   static randomAt(x:number, y:number, r:number = 5) {
-    const z = rand(r, r);
     return new Ball(
       Vec2.fromXY(x, y),
       Vec2.fromXY(0, 0),
-      z,
-      z,
+      r,
+      r*r*PI,
       new Color(1, 1, 1, 1) // Color.random()
     )
   }
@@ -85,7 +97,7 @@ export default class Ball {
       pos.clone(),
       Vec2.zero,
       r,
-      r,
+      r*r*PI,
       new Color(1, 1, 1, 1)
     )
     b.impart(vel);
