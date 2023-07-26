@@ -287,7 +287,8 @@ export const display = `
 
       float a = max(c.r, max(c.g, c.b));
 
-      gl_FragColor = vec4(mix(v, c, degamma(a)), 1.0);
+      // Hax: *1.2 cos the brightness is weirdly low
+      gl_FragColor = vec4(mix(v * 1.2, c, degamma(a)), 1.0);
     }
 `;
 

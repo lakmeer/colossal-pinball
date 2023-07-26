@@ -17,7 +17,7 @@
 
   // Config
 
-  const SHOW_VELOCITY  = true;
+  const SHOW_VELOCITY  = false;
   const SHOW_GRIDLINES = false;
 
   const GRID_RES   = 10; // World space between gridlines
@@ -137,8 +137,9 @@
 
     // Top layer
     if (topImg) {
-      ctx.globalAlpha = 0.9;
-      ctx.drawImage(topImg, 0, 0 + height * 0.01, width, height * 1.004);
+      ctx.globalAlpha = 0.5;
+      ctx.drawImage(topImg, 0, 0, width, height);
+      ctx.globalAlpha = 1.0;
     }
   }
 
@@ -159,14 +160,17 @@
   //@ts-ignore shut up
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
-    topImg = await loadImage('/top.png');
+    topImg = await loadImage('/NowPlayfieldPlastics_trimmed.png');
   });
 </script>
 
 
 <div class="CanvasRenderer">
   <canvas bind:this={canvas} {width} {height} />
-  <FluidBG src="/now.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
+  <!--
+  <FluidBG src="/now_old.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
+  -->
+  <FluidBG src="/NowPlayfield_trimmed.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
 </div>
 
 

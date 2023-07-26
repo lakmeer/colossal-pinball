@@ -93,9 +93,10 @@
   let rafref   = 0;
   let substeps = 8;
   let delta    = 0;
+  let running = false;
 
   const render = () => {
-    rafref = requestAnimationFrame(render);
+    if (running) rafref = requestAnimationFrame(render);
 
     const start = performance.now();
     const now = performance.now()/1000;
@@ -218,6 +219,7 @@
   //@ts-ignore shut up
   onMount(async () => {
 
+    running = true;
     render();
 
     document.addEventListener('mousedown', onMouseDown);
@@ -227,6 +229,7 @@
     document.addEventListener('keyup',     onKeyup);
 
     return () => {
+      running = false;
       cancelAnimationFrame(rafref);
 
       document.removeEventListener('mousedown', onMouseDown);
