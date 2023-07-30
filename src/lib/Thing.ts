@@ -583,3 +583,32 @@ export class Launcher extends Thing {
 
 }
 
+
+//
+// Gate
+// Only collides in one direction
+//
+
+interface GateState extends ThingState {
+  normal: Vec2
+}
+
+export class Gate extends Thing {
+
+  collide(ball, Δt, fff) {
+    let delta = this.shape.eject(ball);
+    if (delta.len() === 0) return;
+    if (ball.vel.dot(this.state.normal) < 0) return;
+    ball.pos.addSelf(delta);
+    this.emit(EventType.BOUNCED);
+  }
+
+  static from (name:string, shape:Shape, normal:Vec2):Collider {
+    return new Gate(name, shape, Color.fromTw('purple-500'), {
+      normal: normal,
+    } as GateState);
+  }
+
+}
+
+

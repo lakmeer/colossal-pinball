@@ -81,6 +81,8 @@ export default class Now extends Table {
     const DropTarget = (name, ...args) => add(Things.DropTarget.from(name, ...args));
     //@ts-ignore
     const Bumper     = (name, ...args) => add(Things.Bumper.from(name, ...args));
+    //@ts-ignore
+    const Gate       = (name, ...args) => add(Things.Gate.from(name, ...args));
 
 
     // Wiring
@@ -164,12 +166,12 @@ export default class Now extends Table {
 
 
     // Launch chute
-    // TODO: one-way gate at the top of the chute
 
     let launcher = Launcher(`launcher`, Capsule.at(R - 30, 120, ballRad+2, 36), Vec2.at(0, LAUNCH_STRENGTH));
     Collider(`chute_wall`,   Capsule.from(R - 5, 0, R - 5, TT - greatRadius, 5));
     Collider(`chute_bottom`, Capsule.at(R - 30, 90, 9, 20, TAU/4));
     Collider(`stopper`, Capsule.at(TL + 56, TT - 100, 16, 10, TAU*13/32), 2);
+    Gate(`launch_gate`, Capsule.at(TR - 32, TT - 97, 8, 32, TAU*23/63), Vec2.at(1, -1).norm());
 
 
     // Upper lanes

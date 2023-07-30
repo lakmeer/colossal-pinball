@@ -137,9 +137,9 @@
 
     // Top layer
     if (topImg) {
-      ctx.globalAlpha = 0.5;
+      //ctx.globalAlpha = 1.5;
       ctx.drawImage(topImg, 0, 0, width, height);
-      ctx.globalAlpha = 1.0;
+      //ctx.globalAlpha = 1.0;
     }
   }
 
@@ -160,7 +160,7 @@
   //@ts-ignore shut up
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
-    topImg = await loadImage('/NowPlayfieldPlastics_trimmed.png');
+    topImg = await loadImage('/plastics.png');
   });
 </script>
 
@@ -170,7 +170,7 @@
   <!--
   <FluidBG src="/now_old.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
   -->
-  <FluidBG src="/NowPlayfield_trimmed.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
+  <FluidBG src="/playfield.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
 </div>
 
 
