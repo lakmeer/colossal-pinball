@@ -70,6 +70,18 @@
   const render = () => {
     if (!canvas || !ctx) return;
 
+    // Update shader
+
+    if (balls.length) {
+      let pos = balls[0].pos;
+      ballPos = Vec2.fromXY(
+        (pos.x - world.left) / world.w,
+        (world.top  - pos.y) / world.h
+      );
+    }
+
+    return;
+
     // Clear
     ctx.clearRect(0, 0, width, height);
 
@@ -142,6 +154,7 @@
       ctx.drawImage(topImg, 0, 0, width, height);
       //ctx.globalAlpha = 1.0;
     }
+
   }
 
 
@@ -160,10 +173,12 @@
 
   //@ts-ignore shut up
   onMount(async () => {
-    //ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
+    ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
     //topImg = await loadImage('/plastics.png');
 
   });
+
+  let ballPos = Vec2.zero;
 </script>
 
 
@@ -173,7 +188,7 @@
   <FluidBG src="/now_old.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
   <FluidBG src="/playfield.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
   -->
-  <LayerRenderer />
+  <LayerRenderer {ballPos} {width} {height} />
 </div>
 
 
