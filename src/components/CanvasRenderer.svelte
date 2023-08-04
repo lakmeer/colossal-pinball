@@ -9,6 +9,7 @@
   import Color  from '$lib/Color';
 
   import FluidBG from '$comp/FluidBG.svelte';
+  import LayerRenderer from '$comp/LayerRenderer.svelte';
 
   import { Circle, Arc, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt, arrowAt } from "$lib/draw2d";
@@ -159,8 +160,9 @@
 
   //@ts-ignore shut up
   onMount(async () => {
-    ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
-    topImg = await loadImage('/plastics.png');
+    //ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
+    //topImg = await loadImage('/plastics.png');
+
   });
 </script>
 
@@ -169,8 +171,9 @@
   <canvas bind:this={canvas} {width} {height} />
   <!--
   <FluidBG src="/now_old.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
-  -->
   <FluidBG src="/playfield.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
+  -->
+  <LayerRenderer />
 </div>
 
 
@@ -180,6 +183,8 @@
     max-width:  100vw;
     max-height: 100vh;
     background: #0004;
+    z-index: 2;
+    position: relative;
   }
 
   .CanvasRenderer :global(.FluidBG) {
