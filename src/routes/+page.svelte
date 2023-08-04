@@ -16,7 +16,7 @@
 
   // Config
 
-  const TIME_SCALE    = 0.7;
+  const TIME_SCALE    = 0.6;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
   const MAX_BALLS     = 100;
   const STD_FRICTION  = 0.98;

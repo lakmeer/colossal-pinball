@@ -41,7 +41,7 @@ export default class Now extends Table {
     this.config = {
       bounds: new Rect(-256, 970, 256, 0),
       ballRad: 13,
-      gravity: 1500,
+      gravity: 2000,
     };
 
     this.gameState = {

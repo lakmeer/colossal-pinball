@@ -80,8 +80,6 @@
       );
     }
 
-    return;
-
     // Clear
     ctx.clearRect(0, 0, width, height);
 
@@ -118,18 +116,20 @@
 
     // Things
     for (let t of Object.values(table.things)) {
-      drawShape(t.shape, t.color);
+      // drawShape(t.shape, t.color);
     }
 
     // Balls
     for (let ball of balls) {
-      circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
-      textAt(ctx, `${ball.id}`, ball.pos.x, ball.pos.y, '#000', 'center', '10px dseg7');
+      //circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
+      //textAt(ctx, `${ball.id}`, ball.pos.x, ball.pos.y, '#000', 'center', '10px dseg7');
 
       if (SHOW_VELOCITY) {
         lineAt(ctx, ball.pos, ball.pos.add(ball.vel.scale(10/TIME_SCALE)), 'rgba(255, 63, 31, 0.7)', 2);
       }
     }
+
+    ctx.globalAlpha = 1;
 
     // Score
     currentScore = lerp(currentScore, table.gameState.score, 0.1);
@@ -200,6 +200,7 @@
     background: #0004;
     z-index: 2;
     position: relative;
+    pointer-events: none;
   }
 
   .CanvasRenderer :global(.FluidBG) {

@@ -26,6 +26,8 @@
   let u_tex_labels:HTMLImageElement;
   let u_tex_plastics:HTMLImageElement;
 
+  let u_tex_noise:HTMLImageElement;
+
   onMount(async () => {
 
     // Load layers
@@ -42,6 +44,8 @@
     u_tex_labels   = await loadImage('/layers/ScoringLabels.webp');
     u_tex_misc     = await loadImage('/layers/Combined.webp');
     u_tex_plastics = await loadImage('/layers/Plastics.webp');
+
+    u_tex_noise    = await loadImage('/noise.png');
 
   });
 
@@ -63,6 +67,8 @@
     {u_tex_lanes}
     {u_tex_labels}
     {u_tex_plastics}
+
+    {u_tex_noise}
 
     u_ball_pos={[ ballPos.x * width, height - ballPos.y * height ]}
 
