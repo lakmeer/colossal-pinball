@@ -1,28 +1,35 @@
 
 # TODO
 
-- Change the intersection overlay to a collision overlay, test
-  each point with a fake Ball and mark how far it gets moved,
-  use this value to create a heatmap over the table.
 - Whole game state as object, pass to renderer, make reactive
-- Better debug ball spawner (drag and release, middle-click repeats last spawn)
-
-- Table
-  - Split into horizontal chunks
-  - Simulate any chunks with balls in, and their neighbours
-  - Minimap
-  - Launcher
+- Spatial binning?
 - Table definition
-  - Helper function that takes a name, builds a string-indexed object so that
-    playfield components can be referenced by scripts
-  - Event trigger names on obstacle components
-  - Table state
-
+  - Remove string-indexing helper function, reference object by variable
+- Tilting
+- Graphics
+  - Ring mask - inner, outer, default - can probably fit on base layer
+  - Outer perimeter, drain ramps, great circle, etc
+  - Add left margin
+  - Rework label mask as - red: indicators, green: white, blue: blue/orange
+  - Other walls
+  - Proper launcher graphic
+  - '100' smaller
+  - Lane walls
+  - All black outlines
+  - Lighting layer
+  - Chrome ball
+  - Move indicators to lamp layer
+    - Frees up a channel on the label layer
+    - Lamps can keep thier indicators in hyper mode
+    - Add extra invisible indicators for rollover lamps
+  - Plastics white layer should include black outlines (or plastic color layer should include black cutouts)
+  - Midfield edge rails
+  - Targets and droptargets
+  - Targets don't seem to line up with plastics?
+  - Improve colorscheme
+- Basic sound fx
 
 ## nnNOWww
-
-- Scripts organisation in table object
-- Are table and gamestate object seperate?
 
 ### Rules
 
@@ -39,71 +46,6 @@
     - A tilt does not disqualify a player.
     - 1 replay for matching last number in score to number
       that appears on back glass after game is over.
-
-#### Implementable rules
-
-- 5 balls issued to new player
-- Red & White bonuses
-  - Each droptarget awards 100pts
-  - Goes up by 100pts when droptargets hit
-  - Gets awarded by Red and White rollovers (outlane, kicker and midfield)
-  - Bonus pays out when used by a rollover
-  - Resets when used
-  - TBD: What happens when all 4 are dropped by the bonus isnt used yet?
-- Upper lane rollovers award 50 or 300 for matching lamp
-- Midfield and outlane rollovers award 100 plus color bonus
-  - Does this reset the bonus counter?
-- Static targets award 50 or 300 for matching lamp
-- Bumpers don't award except when lit (10pts)
-- Slingshots dont award
-- Replay balls
-    - Score matching - no way to know what the matched score is.
-    - Use random lot instead?
-- Seed Roller
-  - Rolls over from 9 to 0
-  - Get set to 9 on init
-  - Called at zero when new game starts
-  - Incremented when score increases and tens column doesn't match??
-  - ALSO triggers the alternating relay
-  - Cases:
-
-                   LANE
-         ZTN    1  2  3  4
-        ------ ------------
-        0,4,8   1  0  0  0
-        1,5     0  1  0  0
-        2,6     0  0  1  0
-        3,7,9   0  0  0  1
-
-- Alternationg Relay
-  - Switched the state of the lamp bonuses, but there's only two states:
-  - MIGHT only trigger when tens column of score changes (not sure)
-  - STATE A:
-    - Left bumper off
-    - Mid bumper on
-    - Right bumper off
-    - Top left tgt on
-    - Mid left tgt off
-    - Btm left tgt on
-    - Top right tgt off
-    - Mid right tgt on
-    - Btm right tgt off
-  - STATE B:
-    - Left bumper on
-    - Mid bumper off
-    - Right bumper on
-    - Top left tgt off
-    - Mid left tgt on
-    - Btm left tgt off
-    - Top right tgt on
-    - Mid right tgt off
-    - Btm right tgt on
-  - How do upper lane lamps get lit?
-- Tilting doesn't lock the game
-  - But tilting would be nice
-- Max 15 balls
-- Extra ball awarded at score milestones
-
 
 #### Script Analysis (loserman76)
 
@@ -159,40 +101,25 @@
           end if
         end sub
 
-- Bumpers push harder when more points are awarded?
-  - Seems to award 5 points if unlit
-
-        sub bumper1_hit()
-          if bumper1.state=1 then
-            addscore(10)
-            bumper1.force=6
-            playsound "bumper100"
-          else
-            addscore(5)
-            playsound "bumper2"
-            bumper1.force=4
-          end if
-        End Sub
-
-
 ### FX Ideas
 
-- chromatic ball trails
-- move stripes
-- cycle face colors
-- cycle hair colors
-- basic strobing
-- paint splashes
-- paint trails from eyes
-- background dropout to stripe tunnel, or starfield
-- face animation
-- hair animation
-- particles
-- silhouette mode
-- smoke trails on ball
-- smoke UV offset in bg
-- target banks get brighter as multiplier increases
-- e^-x glow outlines
+[ ] chromatic ball trails
+[ ] move stripes
+[ ] cycle face colors
+[ ] cycle hair colors
+[ ] basic strobing
+[ ] paint splashes
+[ ] paint trails from eyes
+[ ] background dropout to stripe tunnel, or starfield
+[ ] face animation
+[ ] hair animation
+[ ] particles
+[ ] silhouette mode
+[ ] smoke trails on ball
+[ ] smoke UV offset in bg
+[ ] target banks get brighter as multiplier increases
+[ ] e^-x glow outlines
+[ ] explode ball on drain
 
 ### Music sync (If Only)
 

@@ -19,6 +19,7 @@ uniform vec4 u_mouse;
 
 uniform sampler2D u_tex_rtk;
 uniform sampler2D u_tex_base;
+uniform sampler2D u_tex_wood;
 uniform sampler2D u_tex_face;
 uniform sampler2D u_tex_hair;
 uniform sampler2D u_tex_bump;
@@ -28,6 +29,7 @@ uniform sampler2D u_tex_drop;
 uniform sampler2D u_tex_text;
 uniform sampler2D u_tex_rings;
 uniform sampler2D u_tex_lanes;
+uniform sampler2D u_tex_skirts;
 uniform sampler2D u_tex_labels;
 uniform sampler2D u_tex_plastics;
 uniform sampler2D u_tex_noise;
@@ -35,11 +37,15 @@ uniform sampler2D u_tex_noise;
 // Game Data
 
 uniform vec2 u_ball_pos;
-uniform int white_bonus;
-uniform int red_bonus;
-uniform int active_lane;
-uniform int active_bumper;
-uniform int score_phase;
+uniform int u_white_bonus;
+uniform int u_red_bonus;
+uniform int u_active_lane;
+uniform int u_active_bumper;
+uniform int u_score_phase;
+
+uniform float u_beat;
+uniform float u_hyper;
+uniform float u_distort;
 
 
 // Config
@@ -85,6 +91,10 @@ vec4 layer (sampler2D source, vec2 uv, vec3 r, vec3 g, vec3 b) {
   return vec4(tex.r * r + tex.g * g + tex.b * b, tex.a);
 }
 
+float cl (float x) {
+  return clamp(x, 0.0, 1.0);
+}
+
 float only_r (sampler2D source, vec2 uv) { return texture2D(source, uv).r; }
 float only_g (sampler2D source, vec2 uv) { return texture2D(source, uv).g; }
 float only_b (sampler2D source, vec2 uv) { return texture2D(source, uv).b; }
@@ -99,9 +109,7 @@ vec3 gamma (in vec3 col) {
 
 // 2D Random
 float random (in vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))
-                 * 43758.5453123);
+  return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
 }
 
 // 2D Noise based on Morgan McGuire @morgan3d
@@ -116,16 +124,13 @@ float noise (in vec2 st) {
     float c = random(i + vec2(0.0, 1.0));
     float d = random(i + vec2(1.0, 1.0));
 
-    // Smooth Interpolation
-
     // Cubic Hermine Curve.  Same as SmoothStep()
     vec2 u = f*f*(3.0-2.0*f);
-     u = smoothstep(0.,1.,f);
 
     // Mix 4 coorners percentages
     return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
+      (c - a)* u.y * (1.0 - u.x) +
+      (d - b) * u.x * u.y;
 }
 
 vec4 starfield (in vec2 uv) {
@@ -143,8 +148,8 @@ vec4 starfield (in vec2 uv) {
 
 	for ( int i=0; i < 20; i++ ) {
 		float z = noise(pos.xy);
-		z = fract(z-offset);
-		float d = 50.0*z-pos.z;
+		z = fract(z - offset);
+		float d = 5.0*z - pos.z;
 		float w = pow(max(0.0,1.0-8.0*length(fract(pos.xy)-.5)),2.0);
 		vec3 c = max(
         vec3(0),
@@ -155,7 +160,7 @@ vec4 starfield (in vec2 uv) {
 		pos += stp;
 	}
 
-	return vec4(gamma(col), 1.0);
+	return vec4(uv.x > 0.5 ? col : gamma(col), 1.0);
 }
 
 
@@ -167,6 +172,12 @@ void main () {
   vec2 uv = gl_FragCoord.xy / u_resolution.xy;
   uv = vec2(uv.x, 1.0 - uv.y);
 
+  // Distort
+
+  uv.x += sin(100.0 * uv.y + u_time * 2.0) * 0.02 * u_distort;
+  uv.y += sin(100.0 * uv.x + u_time * 2.0) * 0.01 * u_distort;
+
+
   // Ball radius
 
   float ball = circle_at(gl_FragCoord.xy, u_ball_pos, BALL_RAD);
@@ -177,30 +188,27 @@ void main () {
   float lamp_alpha_upper_target_left = circle_at(gl_FragCoord.xy, vec2(56.0, 705.0), LAMP_RAD);
 
 
-
   // State calculations
 
-  float SCORE_PHASE_ALPHA = float(score_phase == 0);
-  float SCORE_PHASE_BETA  = float(score_phase == 1);
+  float SCORE_PHASE_ALPHA = float(u_score_phase == 0);
+  float SCORE_PHASE_BETA  = float(u_score_phase == 1);
 
 
   // Colorize layers
 
-  vec4 base     = layer(u_tex_base,   uv, BG_ORANGE, BG_GREEN, BG_WHITE);
-  vec4 face     = layer(u_tex_face,   uv, BG_RED, BG_GREEN, BG_BLUE);
-  vec4 hair     = layer(u_tex_hair,   uv, BG_WHITE, BG_ORANGE, BG_RED);
-  vec4 drop     = layer(u_tex_drop,   uv, BG_WHITE, BG_BROWN, BLACK);
-  vec4 bump     = layer(u_tex_bump,   uv, BUMPER_WHITE, BUMPER_GREEN, BUMPER_BLUE);
-  vec4 logo     = layer(u_tex_logo,   uv, BG_WHITE, BG_GREEN, BLACK);
-  vec4 rtk      = layer(u_tex_rtk,    uv, BG_BROWN, BG_BROWN, BG_BROWN);
-  vec4 rings    = layer(u_tex_rings,  uv, BG_ORANGE, BG_WHITE, BG_WHITE);
-  vec4 lanes    = layer(u_tex_lanes,  uv, BG_ORANGE, BG_GREEN, BG_BLUE);
+  vec4 wood     = texture2D(u_tex_wood, uv);
+  vec4 base     = layer(u_tex_base,     uv, BG_ORANGE, BG_GREEN, BG_WHITE);
+  vec4 face     = layer(u_tex_face,     uv, BG_RED, BG_GREEN, BG_BLUE);
+  vec4 hair     = layer(u_tex_hair,     uv, BG_WHITE, BG_ORANGE, BG_RED);
+  vec4 drop     = layer(u_tex_drop,     uv, BG_WHITE, BG_BROWN, BLACK);
+  vec4 bump     = layer(u_tex_bump,     uv, BUMPER_WHITE, BUMPER_GREEN, BUMPER_BLUE);
+  vec4 logo     = layer(u_tex_logo,     uv, BG_WHITE, BG_GREEN, BLACK);
+  vec4 rtk      = layer(u_tex_rtk,      uv, BG_BROWN, BG_BROWN, BG_BROWN);
+  vec4 misc     = layer(u_tex_misc,     uv, WHITE, WHITE, WHITE);
+  vec4 rings    = layer(u_tex_rings,    uv, BG_ORANGE, BG_WHITE, BG_WHITE);
+  vec4 lanes    = layer(u_tex_lanes,    uv, BG_ORANGE, BG_GREEN, BG_BLUE);
+  vec4 labels   = layer(u_tex_labels,   uv, BG_RED, BG_WHITE, uv.y < 0.5 ? BG_BLUE : BG_ORANGE);
   vec4 plastics = layer(u_tex_plastics, uv, PLASTIC_RED, PLASTIC_YELLOW, PLASTIC_BLUE);
-  vec4 labels   = layer(u_tex_labels, uv,
-                        uv.y < 0.3 ? BG_WHITE : BG_WHITE,
-                        BG_RED,
-                        uv.y < 0.3 ? BG_WHITE : BG_WHITE);
-  vec4 misc     = layer(u_tex_misc,   uv, WHITE, WHITE, WHITE);
 
 
   // Alphas
@@ -212,33 +220,33 @@ void main () {
   float plastic_white   = only_r(u_tex_misc, uv);
   float text_low        = only_b(u_tex_text, uv);
   float text_high       = only_r(u_tex_text, uv);
+  float skirts_alpha    = only_r(u_tex_skirts, uv);
+  float beat_alpha      = (1.0 - u_beat) * (1.0 - u_beat) * (1.0 - u_beat);
 
 
   // FX layers
 
-  vec4 plasma = vec4(nsin(uv.y * 2.0 * nsin(u_time) * PI + u_time),
+  vec4 rainbow    = vec4(nsin(uv.x + u_time * 2.5), nsin(uv.y + u_time * 3.0), 0.5, 1.0);
+  vec4 hyperspeed = vec4(u_hyper);
+  vec4 hypernull  = vec4(1.0) - hyperspeed;
+  vec4 stars      = starfield(uv);
+  vec4 pulse      = vec4(vec3(beat_alpha), 1.0);
+  vec4 plasma     = vec4(nsin(uv.y * 2.0 * nsin(u_time) * PI + u_time),
          nsin(uv.x * 2.0 * nsin(u_time) * PI + u_time), 0.5, 1.0);
-
-  vec4 rainbow = vec4(
-    nsin(uv.x + u_time * 2.5),
-    nsin(uv.y + u_time * 3.0),
-    0.5,
-    1.0);
-
-  vec4 hyperspeed = vec4(u_mouse.y);
-  vec4 hypernull = vec4(1.0) - hyperspeed;
-
-  vec4 stars = starfield(uv);
 
 
   // Dynamic Colors
 
-  vec3 ball_color = mix(BALL_COLOR, rainbow.rgb, hyperspeed.x);
+  vec3 ball_color  = mix(BALL_COLOR, rainbow.rgb, hyperspeed.x);
+  vec3 light_color = vec3(1.0, 0.95, 0.7);
+
+  plastics = mix(plastics, vec4(WHITE, 1.0), plastic_white);
 
 
   // Output
 
-  vec4 final = mix(vec4(BLACK, 1.0), stars, hyperspeed);
+  vec4 final = mix(wood, base, base.a);
+  final = mix(final, stars, hyperspeed);
 
   // Playfield layer
   final = mix(final, plasma, 0.0); //base.a);
@@ -249,21 +257,25 @@ void main () {
   final = mix(final, labels, labels.a * hypernull);
   final = mix(final, hyperspeed + drop, drop.a);
   final = mix(final, lanes, lanes.a * hypernull);
-  final = mix(final, vec4(BLACK, 1.0),       text_low  * clamp((-0.5 + 2.0 * nsin(u_time * 2.0)), 0.0, 1.0) * hypernull);
-  final = mix(final, vec4(PLASTIC_RED, 1.0), text_high * clamp((-0.5 + 2.0 * nsin(u_time * 2.0 + PI)), 0.0, 1.0) * hypernull);
+  final = mix(final, vec4(BLACK, 1.0), text_low  * cl(3.0 * sin(u_time * 2.0 + 0.)) * hypernull);
+  final = mix(final, vec4(BLACK, 1.0), text_high * cl(3.0 * sin(u_time * 2.0 + PI)) * hypernull);
 
   // Mid layer
   final = mix(final, rtk, rtk.a * hypernull);
   //final = mix(final, vec4(LAMP_ON, 1.0) * nsin(uv.y * 4.0 + u_time * 4.0), lamp_alpha);
   final = mix(final, vec4(ball_color, 1.0), ball);
 
-  // Top layer
-  final = mix(final, hyperspeed + bump, bump.a);
-  final = mix(final, hyperspeed + plastics, plastics.a);
-  final = mix(final, vec4(WHITE, 1.0), plastic_white * hypernull);
-  final = mix(final, mix(vec4(WHITE, 1.0), rainbow, hyperspeed), eyes_alpha);
+  // Lighting layer
+  final *= vec4(light_color * uv.y, 1.0);
 
-  gl_FragColor = vec4(final.rgb, 1.0)
-    + lamp_alpha_upper_target_left * (hyperspeed + vec4(LAMP_ON, 1.0)) * lamp_alpha * SCORE_PHASE_ALPHA;
+  // Top layer
+  final = mix(final, hyperspeed + bump, bump.a);  // bumper caps
+  final = mix(final, vec4(WHITE, 1.0), skirts_alpha * (0.4 + beat_alpha * 3.0)); // skirts
+  final = mix(final, hyperspeed + plastics, plastics.a); // plastics
+  final = mix(final, mix(vec4(WHITE, 1.0), rainbow, hyperspeed), eyes_alpha); // eyes
+
+  gl_FragColor = uv.y < 0.917
+    ? vec4(final.rgb, 1.0) + lamp_alpha_upper_target_left * (hyperspeed + vec4(LAMP_ON, 1.0)) * lamp_alpha * SCORE_PHASE_ALPHA
+    : vec4(BLACK, 1.0);
 }
 

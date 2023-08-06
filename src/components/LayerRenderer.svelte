@@ -22,15 +22,22 @@
   let u_tex_text:HTMLImageElement;
   let u_tex_misc:HTMLImageElement;
   let u_tex_rings:HTMLImageElement;
+  let u_tex_wood:HTMLImageElement;
   let u_tex_lanes:HTMLImageElement;
+  let u_tex_skirts:HTMLImageElement;
   let u_tex_labels:HTMLImageElement;
   let u_tex_plastics:HTMLImageElement;
 
   let u_tex_noise:HTMLImageElement;
 
+
+  let start = performance.now();
+  let t = performance.now();
+
   onMount(async () => {
 
     // Load layers
+    u_tex_wood     = await loadImage('/wood1.jpg');
     u_tex_rtk      = await loadImage('/layers/RolloversTargetsKickers.webp');
     u_tex_base     = await loadImage('/layers/Base.webp');
     u_tex_face     = await loadImage('/layers/Faces.webp');
@@ -42,18 +49,18 @@
     u_tex_rings    = await loadImage('/layers/Rings.webp');
     u_tex_lanes    = await loadImage('/layers/Lanes.webp');
     u_tex_labels   = await loadImage('/layers/ScoringLabels.webp');
+    u_tex_skirts   = await loadImage('/layers/PlasticSkirts.webp');
     u_tex_misc     = await loadImage('/layers/Combined.webp');
     u_tex_plastics = await loadImage('/layers/Plastics.webp');
 
     u_tex_noise    = await loadImage('/noise.png');
 
   });
-
 </script>
 
 
 <div class="LayerRenderer">
-  <Vader auto
+  <Vader auto {shader}
     {u_tex_rtk}
     {u_tex_misc}
     {u_tex_base}
@@ -61,18 +68,23 @@
     {u_tex_face}
     {u_tex_hair}
     {u_tex_bump}
+    {u_tex_wood}
     {u_tex_logo}
     {u_tex_drop}
     {u_tex_rings}
     {u_tex_lanes}
     {u_tex_labels}
+    {u_tex_skirts}
     {u_tex_plastics}
 
     {u_tex_noise}
 
     u_ball_pos={[ ballPos.x * width, height - ballPos.y * height ]}
+    u_beat={(t - start)/1000 % 1}
+    u_distort={0.0}
+    u_hyper={0.0}
 
-    {shader}
+    onFrame={() => t = performance.now()}
     label="test">
   </Vader>
 </div>

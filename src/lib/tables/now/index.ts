@@ -93,15 +93,6 @@ export default class Now extends Table {
       listeners.push([ thing.name, type, λ ]);
     }
 
-    const get = <T>(name:string):T => {
-      return this.things[name] as T;
-    }
-
-
-    //
-    // Setup
-    //
-
     const BUMPER_STRENGTH = 0.3;
     const SLINGS_STRENGTH = 0.3;
     const KICKER_STRENGTH = 0.5;
@@ -112,6 +103,11 @@ export default class Now extends Table {
     // const POINTS_BUMPER_UNLIT = 1; 
     // etc
 
+
+
+    //
+    // Setup
+    //
 
     // Vars
 
@@ -362,7 +358,7 @@ export default class Now extends Table {
     let flipperRestAngle = TAU/11;
     let flipperRange = TAU/6;
 
-    Flipper(`flipper_left`,
+    let leftFlipper = Flipper(`flipper_left`,
       M - 38 - flipperLength,
       178,
       flipperRad,
@@ -371,7 +367,7 @@ export default class Now extends Table {
       flipperRange,
       FLIPPER_SPEED);
 
-    Flipper(`flipper_right`,
+    let rightFlipper = Flipper(`flipper_right`,
       M + 38 + flipperLength,
       178,
       flipperRad,
@@ -397,30 +393,29 @@ export default class Now extends Table {
 
     // Game script
 
-    // TODO:
-    // - Red & White bonuses
-    //   - Gets awarded by Red and White rollovers (outlane, kicker and midfield)
-    //   - Bonus pays out when used by a rollover
-    //   - Resets when used
-    // - Bumpers don't award except when lit (10pts) (or award 1 pt? or 5?)
-    // - Slingshots dont award (?? probably)
-    // - Replay balls
-    //   - Score matching - random digit generated at start of game
-    //   - If final score matches last digit, get a free ball
-    // - Seed Roller
-    //   - Called at zero when new game starts
-    //   - Incremented when score increases and tens column doesn't match??
-    // - Alternationg Relay
-    //   - MIGHT only trigger when tens column of score changes (not sure)
-    // - Tilting doesn't lock the game
-    //   - But implement tilting for ball control
-    // - Max 15 balls
-    // - Extra ball awarded at score milestones
+    // [ ] Red & White bonuses
+    //   [ ] Gets awarded by Red and White rollovers (outlane, kicker and midfield)
+    //   [ ] Bonus pays out when used by a rollover
+    //   [ ] Resets when used
+    // [ ] Bumpers don't award except when lit (10pts) (or award 1 pt? or 5?)
+    // [ ] Slingshots dont award (?? probably)
+    // [ ] Replay balls
+    //   [ ] Score matching - random digit generated at start of game
+    //   [ ] If final score matches last digit, get a free ball
+    // [ ] Seed Roller
+    //   [ ] Called at zero when new game starts
+    //   [ ] Incremented when score increases and tens column doesn't match??
+    // [ ] Alternationg Relay
+    //   [ ] MIGHT only trigger when tens column of score changes (not sure)
+    // [ ] Tilting doesn't lock the game
+    //   [ ] But implement tilting for ball control
+    // [ ] Max 15 balls
+    // [ ] Extra ball awarded at score milestones
+    // [ ] Create score wrapper function to advance lane lamps
 
 
     //
     // Target and Bumper Lamp Logic
-    // TODO: Create score wrapper function to advance lane lamps
     //
 
     enum ScoreMode { MODE_A, MODE_B }
@@ -516,18 +511,18 @@ export default class Now extends Table {
 
     outLampL.do(Command.ACTIVATE);
 
-    scoreRolloverDependsOnLamp(midROL, midROLampL, lit => 100 + 100 * (lit ? redBank.multiplier   : 0));
-    scoreRolloverDependsOnLamp(midROR, midROLampR, lit => 100 + 100 * (lit ? whiteBank.multiplier : 0));
-    scoreRolloverDependsOnLamp(outROL, outLampL,   lit => 100 + 100 * (lit ? redBank.multiplier   : 0));
-    scoreRolloverDependsOnLamp(outROR, outLampR,   lit => 100 + 100 * (lit ? whiteBank.multiplier : 0));
-    scoreRolloverDependsOnLamp(kickROL,  outLampL,   lit => 100 + 100 * (lit ? redBank.multiplier   : 0));
+    scoreRolloverDependsOnLamp(midROL,   midROLampL, lit => 100 + 100 * (lit ?   redBank.multiplier : 0));
+    scoreRolloverDependsOnLamp(midROR,   midROLampR, lit => 100 + 100 * (lit ? whiteBank.multiplier : 0));
+    scoreRolloverDependsOnLamp(outROL,   outLampL,   lit => 100 + 100 * (lit ?   redBank.multiplier : 0));
+    scoreRolloverDependsOnLamp(outROR,   outLampR,   lit => 100 + 100 * (lit ? whiteBank.multiplier : 0));
+    scoreRolloverDependsOnLamp(kickROL,  outLampL,   lit => 100 + 100 * (lit ?   redBank.multiplier : 0));
     scoreRolloverDependsOnLamp(kickROR,  outLampR,   lit => 100 + 100 * (lit ? whiteBank.multiplier : 0));
 
-    on(midROL, EventType.ACTIVATED, () => { if (redBank.targets.every(v => v.state.dropped)) resetBank(redBank); });
-    on(midROR, EventType.ACTIVATED, () => { if (whiteBank.targets.every(v => v.state.dropped)) resetBank(whiteBank); });
-    on(outROL, EventType.ACTIVATED, () => { if (redBank.targets.every(v => v.state.dropped)) resetBank(redBank); });
-    on(outROR, EventType.ACTIVATED, () => { if (whiteBank.targets.every(v => v.state.dropped)) resetBank(whiteBank); });
-    on(kickROL, EventType.ACTIVATED, () => { if (redBank.targets.every(v => v.state.dropped)) resetBank(redBank); });
+    on(midROL,  EventType.ACTIVATED, () => { if (  redBank.targets.every(v => v.state.dropped)) resetBank(redBank); });
+    on(midROR,  EventType.ACTIVATED, () => { if (whiteBank.targets.every(v => v.state.dropped)) resetBank(whiteBank); });
+    on(outROL,  EventType.ACTIVATED, () => { if (  redBank.targets.every(v => v.state.dropped)) resetBank(redBank); });
+    on(outROR,  EventType.ACTIVATED, () => { if (whiteBank.targets.every(v => v.state.dropped)) resetBank(whiteBank); });
+    on(kickROL, EventType.ACTIVATED, () => { if (  redBank.targets.every(v => v.state.dropped)) resetBank(redBank); });
     on(kickROR, EventType.ACTIVATED, () => { if (whiteBank.targets.every(v => v.state.dropped)) resetBank(whiteBank); });
 
 
@@ -537,14 +532,6 @@ export default class Now extends Table {
     //
 
     function newRound () {
-
-      // TODO: How to communicate to the main game to spawn a new ball and
-      //  where to put it? Should probably put this control with the table.
-      //  In which case almost all the state moves inside to Table, and only
-      //  the physics loop lives outside.
-      //
-      // NOTE: Prioritise Table as consumer of the API
-
       state.awaitNewBall = true;
     }
 
@@ -574,8 +561,8 @@ export default class Now extends Table {
     }
 
     this.onProcess = (input:InputState) => {
-      get<Things.Flipper>(`flipper_left`).state.active  = input.left;
-      get<Things.Flipper>(`flipper_right`).state.active = input.right;
+      leftFlipper.state.active  = input.left;
+      rightFlipper.state.active = input.right;
 
       if (input.launch) {
         //if (T.gamemode === GameMode.WAITING && T.ballsInPlay > 0) {
@@ -583,6 +570,7 @@ export default class Now extends Table {
         //}
       }
 
+      // Process acuumulated events
       for (let name in this.things) {
         let thing = this.things[name];
 
@@ -602,14 +590,11 @@ export default class Now extends Table {
       if (this.gameState.awaitNewBall) {
         fn(BALL_DROP_POSITION);
         this.gameState.awaitNewBall = false;
-
-        // TEMP
-        advanceLaneSeed();
       }
     }
 
     // Done
-    console.log(`Loaded table '${this.name}': ${Object.values(this.things).length} things created.`);
+    console.info(`Loaded table '${this.name}': ${Object.values(this.things).length} things created.`);
   }
 
   process (input:InputState) {
