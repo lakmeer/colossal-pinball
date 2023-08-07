@@ -24,6 +24,7 @@
   let u_tex_rings:HTMLImageElement;
   let u_tex_wood:HTMLImageElement;
   let u_tex_lanes:HTMLImageElement;
+  let u_tex_indic:HTMLImageElement;
   let u_tex_skirts:HTMLImageElement;
   let u_tex_labels:HTMLImageElement;
   let u_tex_plastics:HTMLImageElement;
@@ -50,6 +51,7 @@
     u_tex_lanes    = await loadImage('/layers/Lanes.webp');
     u_tex_labels   = await loadImage('/layers/ScoringLabels.webp');
     u_tex_skirts   = await loadImage('/layers/PlasticSkirts.webp');
+    u_tex_indic    = await loadImage('/layers/Indicators.webp');
     u_tex_misc     = await loadImage('/layers/Combined.webp');
     u_tex_plastics = await loadImage('/layers/Plastics.webp');
 
@@ -74,15 +76,18 @@
     {u_tex_rings}
     {u_tex_lanes}
     {u_tex_labels}
+    {u_tex_indic}
     {u_tex_skirts}
     {u_tex_plastics}
 
     {u_tex_noise}
 
     u_ball_pos={[ ballPos.x * width, height - ballPos.y * height ]}
-    u_beat={(t - start)/1000 % 1}
-    u_distort={0.0}
-    u_hyper={0.0}
+    u_beat={1 + 0 * (t - start)/1000 % 1}
+    u_holo={0.9}
+    u_hypno={1.0}
+    u_distort={0.1}
+    u_hyper={0.5}
 
     onFrame={() => t = performance.now()}
     label="test">

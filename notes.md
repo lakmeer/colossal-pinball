@@ -8,20 +8,12 @@
 - Tilting
 - Graphics
   - Outer perimeter, drain ramps, great circle, etc
-  - Add left margin
-  - Rework label mask as - red: indicators, green: white, blue: blue/orange
   - Other walls
   - Proper launcher graphic
-  - '100' smaller
+  - Make '100' text smaller
   - Lane walls
   - All black outlines
-  - Lighting layer
   - Chrome ball
-  - Move indicators to lamp layer
-    - Frees up a channel on the label layer
-    - Lamps can keep thier indicators in hyper mode
-    - Add extra invisible indicators for rollover lamps
-  - Plastic color layer should include black cutouts from white layer
   - Midfield edge rails
   - Targets and droptargets
   - Targets don't seem to line up with plastics?
@@ -29,6 +21,11 @@
   - Layers with spare channels:
       - Lanes: green
       - LabelText: green
+  - Very slightly move central red spot to match generated rings
+    - Rings map no longer needed
+  - Split face mask for individual control
+    - A: 1, 2 and eyelids (R)
+    - B: 3, 4 and eyeballs (R)
 
 - Basic sound fx
 

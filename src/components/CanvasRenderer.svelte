@@ -176,7 +176,7 @@
   //@ts-ignore shut up
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
-    topImg = await loadImage('/alignment.png');
+    //topImg = await loadImage('/alignment.png');
 
   });
 
