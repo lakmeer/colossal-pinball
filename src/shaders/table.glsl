@@ -172,6 +172,9 @@ void main () {
   vec2 uv = gl_FragCoord.xy / u_resolution.xy;
   uv = vec2(uv.x, 1.0 - uv.y);
 
+  // UV but adjusted for aspect ratio
+  vec2 uvr = vec2(uv.x, uv.y * u_resolution.y/u_resolution.x);
+
   // Distort
 
   uv.x += sin(100.0 * uv.y + u_time * 2.0) * 0.02 * u_distort;
@@ -197,7 +200,7 @@ void main () {
   // Colorize layers
 
   vec4 wood     = texture2D(u_tex_wood, uv);
-  vec4 base     = layer(u_tex_base,     uv, BG_ORANGE, BG_GREEN, BG_WHITE);
+  vec4 base     = layer(u_tex_base,     uv, BG_RED, BG_GREEN, BG_WHITE);
   vec4 face     = layer(u_tex_face,     uv, BG_RED, BG_GREEN, BG_BLUE);
   vec4 hair     = layer(u_tex_hair,     uv, BG_WHITE, BG_ORANGE, BG_RED);
   vec4 drop     = layer(u_tex_drop,     uv, BG_WHITE, BG_BROWN, BLACK);
@@ -222,6 +225,7 @@ void main () {
   float text_high       = only_r(u_tex_text, uv);
   float skirts_alpha    = only_r(u_tex_skirts, uv);
   float beat_alpha      = (1.0 - u_beat) * (1.0 - u_beat) * (1.0 - u_beat);
+  float inner_rings     = only_b(u_tex_base, uv);
 
 
   // FX layers
@@ -235,10 +239,49 @@ void main () {
          nsin(uv.x * 2.0 * nsin(u_time) * PI + u_time), 0.5, 1.0);
 
 
+  // Lighting
+
+  vec4 LIGHT_COLOR = vec4(0.95, 0.85, 0.5, 1.0);
+  float LIGHT_FALLOFF = 10.0;
+  float LIGHT_INTENSITY = 0.4;
+
+  const int NUM_LIGHTS = 19;
+  vec2 lights[NUM_LIGHTS];
+  // Lanes
+  lights[ 0] = vec2(0.312, 0.33);
+  lights[ 1] = vec2(0.405, 0.33);
+  lights[ 2] = vec2(0.500, 0.33);
+  lights[ 3] = vec2(0.595, 0.33);
+  lights[ 4] = vec2(0.688, 0.33);
+  // Upper guards
+  lights[ 5] = vec2(0.148, 0.34);
+  lights[ 8] = vec2(0.852, 0.34);
+  lights[ 6] = vec2(0.133, 0.41);
+  lights[ 9] = vec2(0.867, 0.41);
+  lights[ 7] = vec2(0.133, 0.52);
+  lights[10] = vec2(0.867, 0.52);
+  // Droptarget banks
+  lights[11] = vec2(0.22, 0.72);
+  lights[12] = vec2(0.78, 0.72);
+  // Lower Guards
+  lights[13] = vec2(0.15, 0.92);
+  lights[14] = vec2(0.85, 0.92);
+  lights[15] = vec2(0.13, 1.01);
+  lights[16] = vec2(0.87, 1.01);
+  // Slingshots
+  lights[17] = vec2(0.27, 1.36);
+  lights[18] = vec2(0.73, 1.36);
+
+  vec4 lighting = vec4(0.7);
+  for (int i = 0; i < NUM_LIGHTS; i++) {
+    lighting += LIGHT_INTENSITY * LIGHT_COLOR * exp(-LIGHT_FALLOFF * length(uvr - lights[i]));
+    //lighting += (1.0 - smoothstep(0.03, 0.031, length(uvr - lights[i]))) * LIGHT;
+  }
+
+
   // Dynamic Colors
 
   vec3 ball_color  = mix(BALL_COLOR, rainbow.rgb, hyperspeed.x);
-  vec3 light_color = vec3(1.0, 0.95, 0.7);
 
   plastics = mix(plastics, vec4(WHITE, 1.0), plastic_white);
 
@@ -247,6 +290,7 @@ void main () {
 
   vec4 final = mix(wood, base, base.a);
   final = mix(final, stars, hyperspeed);
+  final = mix(final, rings, inner_rings);
 
   // Playfield layer
   final = mix(final, plasma, 0.0); //base.a);
@@ -266,7 +310,7 @@ void main () {
   final = mix(final, vec4(ball_color, 1.0), ball);
 
   // Lighting layer
-  final *= vec4(light_color * uv.y, 1.0);
+  final *= lighting;
 
   // Top layer
   final = mix(final, hyperspeed + bump, bump.a);  // bumper caps
@@ -274,7 +318,7 @@ void main () {
   final = mix(final, hyperspeed + plastics, plastics.a); // plastics
   final = mix(final, mix(vec4(WHITE, 1.0), rainbow, hyperspeed), eyes_alpha); // eyes
 
-  gl_FragColor = uv.y < 0.917
+  gl_FragColor = uv.y < 0.9075
     ? vec4(final.rgb, 1.0) + lamp_alpha_upper_target_left * (hyperspeed + vec4(LAMP_ON, 1.0)) * lamp_alpha * SCORE_PHASE_ALPHA
     : vec4(BLACK, 1.0);
 }

@@ -7,7 +7,6 @@
   - Remove string-indexing helper function, reference object by variable
 - Tilting
 - Graphics
-  - Ring mask - inner, outer, default - can probably fit on base layer
   - Outer perimeter, drain ramps, great circle, etc
   - Add left margin
   - Rework label mask as - red: indicators, green: white, blue: blue/orange
@@ -22,11 +21,15 @@
     - Frees up a channel on the label layer
     - Lamps can keep thier indicators in hyper mode
     - Add extra invisible indicators for rollover lamps
-  - Plastics white layer should include black outlines (or plastic color layer should include black cutouts)
+  - Plastic color layer should include black cutouts from white layer
   - Midfield edge rails
   - Targets and droptargets
   - Targets don't seem to line up with plastics?
   - Improve colorscheme
+  - Layers with spare channels:
+      - Lanes: green
+      - LabelText: green
+
 - Basic sound fx
 
 ## nnNOWww

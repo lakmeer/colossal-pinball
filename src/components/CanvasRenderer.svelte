@@ -8,7 +8,7 @@
   import Vec2   from '$lib/Vec2';
   import Color  from '$lib/Color';
 
-  import FluidBG from '$comp/FluidBG.svelte';
+  //import FluidBG from '$comp/FluidBG.svelte';
   import LayerRenderer from '$comp/LayerRenderer.svelte';
 
   import { Circle, Arc, Capsule, Fence, Box } from "$lib/Shape";
@@ -150,9 +150,11 @@
 
     // Top layer
     if (topImg) {
-      //ctx.globalAlpha = 1.5;
-      ctx.drawImage(topImg, 0, 0, width, height);
+      //ctx.globalAlpha = 0.5;
+      //ctx.globalCompositeOperation = 'color-burn';
+      //ctx.drawImage(topImg, 0, 0, width, height);
       //ctx.globalAlpha = 1.0;
+      //ctx.globalCompositeOperation = 'source-over';
     }
 
   }
@@ -174,7 +176,7 @@
   //@ts-ignore shut up
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
-    //topImg = await loadImage('/plastics.png');
+    topImg = await loadImage('/alignment.png');
 
   });
 
