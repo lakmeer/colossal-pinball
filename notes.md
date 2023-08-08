@@ -7,27 +7,22 @@
   - Remove string-indexing helper function, reference object by variable
 - Tilting
 - Graphics
-  - Outer perimeter, drain ramps, great circle, etc
-  - Other walls
   - Proper launcher graphic
-  - Make '100' text smaller
-  - Lane walls
   - All black outlines
   - Chrome ball
-  - Midfield edge rails
   - Targets and droptargets
   - Targets don't seem to line up with plastics?
+    - Adjust lft plastic
   - Improve colorscheme
   - Layers with spare channels:
       - Lanes: green
       - LabelText: green
-  - Very slightly move central red spot to match generated rings
-    - Rings map no longer needed
-  - Split face mask for individual control
-    - A: 1, 2 and eyelids (R)
-    - B: 3, 4 and eyeballs (R)
+  - Rings map no longer needed
+  - Separate face and hair masks?
+  - Consolidate sparse layers (maybe an additional mask for segregation)
 
 - Basic sound fx
+
 
 ## nnNOWww
 

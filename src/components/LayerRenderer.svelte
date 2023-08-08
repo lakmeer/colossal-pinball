@@ -9,6 +9,7 @@
   import shader from '$src/shaders/table.glsl?raw';
 
   export let ballPos:Vec2 = Vec2.zero; // In screen space
+  export let lamps:Record<string, boolean> = {};
   export let width:number;
   export let height:number;
 
@@ -32,9 +33,14 @@
 
   let u_tex_noise:HTMLImageElement;
 
-
   let start = performance.now();
   let t = performance.now();
+
+  $: lampState = Object.values(lamps).map(lamp => ([
+    lamp.shape.pos.x,
+    lamp.shape.pos.y,
+    lamp.state.active ? 1 : 0,
+  ]));
 
   onMount(async () => {
 
@@ -56,7 +62,6 @@
     u_tex_indic    = await loadImage('/layers/Indicators.webp');
     u_tex_misc     = await loadImage('/layers/Combined.webp');
     u_tex_plastics = await loadImage('/layers/Plastics.webp');
-
     u_tex_noise    = await loadImage('/noise.png');
 
   });
@@ -64,7 +69,7 @@
 
 
 <div class="LayerRenderer">
-  <Vader auto {shader}
+  <Vader auto scale={0.5} {shader}
     {u_tex_rtk}
     {u_tex_misc}
     {u_tex_base}
@@ -85,14 +90,22 @@
 
     {u_tex_noise}
 
-    u_ball_pos={[ ballPos.x * width, height - ballPos.y * height ]}
+    u_world_size={[width, height]}
+    u_ball_pos={[ ballPos.x, ballPos.y ]}
     u_beat={((t - start)/500 % 1) * 0 + 1}
     u_holo={0.0}
     u_hypno={0.0}
     u_distort={0.0}
     u_hyper={0.0}
 
-    onFrame={() => t = performance.now()}
+    u_num_lamps={lampState.length}
+    u_lamps={lampState}
+    u_score_phase={0}
+
+    onFrame={() => {
+      t = performance.now();
+      lamps = lamps;
+    }}
     label="test">
   </Vader>
 </div>

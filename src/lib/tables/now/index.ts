@@ -23,9 +23,9 @@ import { PI, TAU } from "$lib/utils";
 export default class Now extends Table {
 
   // TODO: Collect used colors under semantic names
-  // TODO: Lamp colors
   // TODO: There are slignshots in the upper vertical side guards
   // TODO: Ditch registering component names, just use variables
+  // Counterpoint: names are handy as labels when making adjustments
 
   onProcess: (input:InputState) => void;
   onNewBall: (fn:Function) => void;
@@ -40,7 +40,7 @@ export default class Now extends Table {
 
     this.config = {
       bounds: new Rect(-256, 898, 256, 0),
-      ballRad: 16,
+      ballRad: 13,
       gravity: 2000,
     };
 
@@ -49,6 +49,8 @@ export default class Now extends Table {
       ballStock: 5,
       awaitNewBall: true,
       ballsInPlay: 0,
+      lamps:{
+      },
     }
   
 
@@ -102,7 +104,6 @@ export default class Now extends Table {
     // TODO: Score config here as const
     // const POINTS_BUMPER_UNLIT = 1; 
     // etc
-
 
 
     //
@@ -192,6 +193,8 @@ export default class Now extends Table {
       laneRollovers[ix] = roll;
       laneLamps[ix]     = lamp;
 
+      this.gameState.lamps['lane' + ix] = lamp;
+
       scoreRolloverDependsOnLamp(roll, lamp, (lit) => lit ? 300 : 50);
     }
 
@@ -217,6 +220,10 @@ export default class Now extends Table {
     let lamp_bumperLeft  = Lamp(`bumper_lamp_left`,  Circle.at(M + 97, 638, 20), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
     let lamp_bumperMid   = Lamp(`bumper_lamp_mid`,   Circle.at(M     , 598, 20), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
     let lamp_bumperRight = Lamp(`bumper_lamp_right`, Circle.at(M - 97, 638, 20), Color.fromTw('yellow-700'), Color.fromTw('yellow-400'));
+
+    this.gameState.lamps.bumperLeft  = lamp_bumperLeft;
+    this.gameState.lamps.bumperMid   = lamp_bumperMid;
+    this.gameState.lamps.bumperRight = lamp_bumperRight;
 
     on(bumperLeft,  EventType.BOUNCED, () => state.score += lamp_bumperLeft.state.active  ? 10 : 1);
     on(bumperMid,   EventType.BOUNCED, () => state.score += lamp_bumperMid.state.active   ? 10 : 1);
@@ -270,6 +277,8 @@ export default class Now extends Table {
     let midROR = Rollover(`mid_rollover_right`,  Capsule.at(TR - 20, 538, rolloverRad, 43));
     let midROLampL = Lamp(`mid_rollover_lamp_left`,  Circle.at(TL + 44, 606, lampRad), Color.fromTw('rose-800'), Color.fromTw('rose-400'));
     let midROLampR = Lamp(`mid_rollover_lamp_right`, Circle.at(TR - 44, 606, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+    this.gameState.lamps.midRollLeft  = midROLampL;
+    this.gameState.lamps.midRollRight = midROLampR;
 
 
     // Midfield guards (vertical part is just main wall)
@@ -297,6 +306,13 @@ export default class Now extends Table {
     let lamp_tgtMidRight = Lamp(`tgt_lamp_mid_right`, Circle.at(TR - 67, 404, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
     let lamp_tgtBtmRight = Lamp(`tgt_lamp_btm_right`, Circle.at(TR - 62, 360, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
+    this.gameState.lamps.tgtTopLeft  = lamp_tgtTopLeft;
+    this.gameState.lamps.tgtMidLeft  = lamp_tgtMidLeft;
+    this.gameState.lamps.tgtBtmLeft  = lamp_tgtBtmLeft;
+    this.gameState.lamps.tgtTopRight = lamp_tgtTopRight;
+    this.gameState.lamps.tgtMidRight = lamp_tgtMidRight;
+    this.gameState.lamps.tgtBtmRight = lamp_tgtBtmRight;
+
     on(tgtTopLeft,  EventType.BOUNCED, () => state.score += lamp_tgtTopLeft.state.active  ? 300 : 50);
     on(tgtMidLeft,  EventType.BOUNCED, () => state.score += lamp_tgtMidLeft.state.active  ? 300 : 50);
     on(tgtBtmLeft,  EventType.BOUNCED, () => state.score += lamp_tgtBtmLeft.state.active  ? 300 : 50);
@@ -321,6 +337,8 @@ export default class Now extends Table {
     let outLampL = Lamp(`out_rollover_lamp_left`,  Circle.at(M - 117, 304, lampRad), Color.fromTw('rose-800'), Color.fromTw('rose-400'));
     let outLampR = Lamp(`out_rollover_lamp_right`, Circle.at(M + 117, 304, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
 
+    this.gameState.lamps.outLampL = outLampL;
+    this.gameState.lamps.outLampR = outLampR;
 
     // Outlane kickers and rails
 
@@ -526,7 +544,6 @@ export default class Now extends Table {
     on(kickROR, EventType.ACTIVATED, () => { if (whiteBank.targets.every(v => v.state.dropped)) resetBank(whiteBank); });
 
 
-
     //
     // Game Flow
     //
@@ -558,6 +575,7 @@ export default class Now extends Table {
 
     function launchBall () {
       launcher.do(Command.ACTIVATE);
+      advanceLaneSeed();
     }
 
     this.onProcess = (input:InputState) => {

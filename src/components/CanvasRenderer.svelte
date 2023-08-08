@@ -116,13 +116,15 @@
 
     // Things
     for (let t of Object.values(table.things)) {
-      // drawShape(t.shape, t.color);
+      ctx.globalAlpha = 0.0;
+      //drawShape(t.shape, t.color);
+      ctx.globalAlpha = 1.0;
     }
 
     // Balls
     for (let ball of balls) {
       //circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
-      //textAt(ctx, `${ball.id}`, ball.pos.x, ball.pos.y, '#000', 'center', '10px dseg7');
+      textAt(ctx, `${ball.id}`, ball.pos.x, ball.pos.y, '#000', 'center', '10px dseg7');
 
       if (SHOW_VELOCITY) {
         lineAt(ctx, ball.pos, ball.pos.add(ball.vel.scale(10/TIME_SCALE)), 'rgba(255, 63, 31, 0.7)', 2);
@@ -190,7 +192,7 @@
   <FluidBG src="/now_old.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
   <FluidBG src="/playfield.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
   -->
-  <LayerRenderer {ballPos} {width} {height} />
+  <LayerRenderer lamps={table.gameState.lamps} {ballPos} {width} {height} />
 </div>
 
 

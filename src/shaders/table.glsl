@@ -14,6 +14,7 @@ uniform vec4 u_mouse;
 #define EPS   0.0001
 #define GAMMA 2.2
 
+#define NUM_LAMPS VADER_STATIC(u_num_lamps)
 
 // Textures
 
@@ -38,12 +39,10 @@ uniform sampler2D u_tex_noise;
 
 // Game Data
 
+uniform vec2 u_world_size;
 uniform vec2 u_ball_pos;
-uniform int u_white_bonus;
-uniform int u_red_bonus;
-uniform int u_active_lane;
-uniform int u_active_bumper;
 uniform int u_score_phase;
+uniform vec3 u_lamps[NUM_LAMPS];
 
 uniform float u_beat;
 uniform float u_holo;
@@ -81,6 +80,7 @@ const vec3 PLASTIC_WHITE  = vec3(0.958, 0.958, 0.958);
 
 const vec3 BALL_COLOR = WHITE;
 const vec3 LAMP_ON    = vec3(0.99, 0.9, 0.5);
+const vec3 LAMP_OFF   = vec3(0.3, 0.2, 0.1);
 
 const vec4  LIGHT_COLOR = vec4(0.99, 0.9, 0.7, 1.0);
 const vec4  LIGHT_AMBIENT = LIGHT_COLOR * 0.8;
@@ -135,18 +135,14 @@ float noise (in vec2 st) {
     vec2 i = floor(st);
     vec2 f = fract(st);
 
-    // Four corners in 2D of a tile
     float a = random(i);
     float b = random(i + vec2(1.0, 0.0));
     float c = random(i + vec2(0.0, 1.0));
     float d = random(i + vec2(1.0, 1.0));
-
-    // Cubic Hermine Curve.  Same as SmoothStep()
     vec2 u = f*f*(3.0-2.0*f);
 
-    // Mix 4 coorners percentages
     return mix(a, b, u.x) +
-      (c - a)* u.y * (1.0 - u.x) +
+      (c - a) * u.y * (1.0 - u.x) +
       (d - b) * u.x * u.y;
 }
 
@@ -187,10 +183,14 @@ vec4 starfield (in vec2 uv) {
 
 void main () {
   vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-  uv = vec2(uv.x, 1.0 - uv.y);
+  uv.y = 1.0 - uv.y;
 
   // UV but adjusted for aspect ratio
   vec2 uvr = vec2(uv.x, uv.y * u_resolution.y/u_resolution.x);
+  // Table coords
+  vec2 uvt = vec2(
+      u_world_size.x * (uv.x - 0.5),
+      u_world_size.y * (1.0 - uv.y));
 
   // Distort
 
@@ -200,12 +200,12 @@ void main () {
 
   // Ball radius
 
-  float ball = circle_at(gl_FragCoord.xy, u_ball_pos, BALL_RAD);
+  float ball = circle_at(uvt, u_ball_pos, BALL_RAD);
 
 
   // Lamp locations
 
-  float lamp_alpha_upper_target_left = circle_at(gl_FragCoord.xy, vec2(56.0, 705.0), LAMP_RAD);
+  float lamp_alpha_upper_target_left = circle_at(uvt, vec2(56.0, 705.0), LAMP_RAD);
 
 
   // State calculations
@@ -345,7 +345,14 @@ void main () {
       layer(u_tex_face1, uv, BG_RED, face_color_a, face_color_b),
       only_a(u_tex_face1, uv));
 
-
+  // Lamp indicators
+  vec4 lamps = vec4(0.0, 0.0, 0.0, 0.0);
+  for (int i = 0; i < NUM_LAMPS; i++) {
+    lamps += vec4(
+        mix(LAMP_OFF, LAMP_ON, u_lamps[i].z) *
+          circle_at(uvt, u_lamps[i].xy, 10.0),
+          circle_at(uvt, u_lamps[i].xy, 10.0));
+  }
 
   // Plastics layer / Holographic effect
   float plasma_factor = u_holo;
@@ -410,10 +417,11 @@ void main () {
   // Hidden indicators
   // Eyes
   //final = mix(final, mix(col(BG_WHITE), rainbow, hyperspeed), eyes_alpha); // eyes
+  final = mix(final, lamps, lamps.a);
 
   gl_FragColor = uv.y < 0.9075
     ? vec4(final.rgb, 1.0) + lamp_alpha_upper_target_left * (hyperspeed + vec4(LAMP_ON, 1.0)) * lamp_alpha * SCORE_PHASE_ALPHA
     : vec4(BLACK, 1.0);
-
+//  gl_FragColor = lamps;
 }
 
