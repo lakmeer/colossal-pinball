@@ -24,6 +24,7 @@
   - Fill behind plastics with wall mask
     - different color? 
       - Move launcher color to it's own map (or extras map)
+  - Make outer wall fatter
 
 - Basic sound fx
 

@@ -410,21 +410,22 @@ void main () {
 
   // Top layer
   final = mix(final, hyperspeed + bump, bump.a);  // bumper caps
-  final = mix(final, walls, walls.a);
-  final = mix(final, extra, extra.a);
-  final = mix(final, rails, rails.a);
+  final = mix(final, walls, walls.a * hypernull);
+  final = mix(final, extra, extra.a * hypernull);
+  final = mix(final, hyperspeed + rails, rails.a);
   final = mix(final, col(PLASTIC_WHITE), skirts_alpha * (0.4 + beat_alpha * 3.0)); // skirts
   final = mix(final, hyperspeed + plastics, plastics.a); // plastics
 
   // Hyperskirts
   for (int i = 0; i < 10; i++) {
     float p = float(i) / 10.0;
+    float uvx = 0.50 - (0.01 * cos(u_time) * p + 0.50 - uv.x)*(1.0 - 0.04 * float(i));
+    float uvy = 0.44 - (0.01 * sin(u_time) * p + 0.44 - uv.y)*(1.0 - 0.04 * float(i));
     final += 0.4 * hyperspeed *
       (nsin(p * PI - u_time * 3.0) + 0.3 * nsin(u_time )) *
-      only_r(u_tex_skirts, vec2(
-            0.50 - (0.01 * cos(u_time) * p + 0.50 - uv.x)*(1.0 - 0.04 * float(i)),
-            0.44 - (0.01 * sin(u_time) * p + 0.44 - uv.y)*(1.0 - 0.04 * float(i))
-          ));
+      (only_r(u_tex_skirts, vec2(uvx, uvy)) +
+       0.3 * only_a(u_tex_rails, vec2(uvx, uvy))
+    );
   }
 
   // Special
