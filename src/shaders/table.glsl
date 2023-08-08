@@ -31,6 +31,9 @@ uniform sampler2D u_tex_face1;
 uniform sampler2D u_tex_face2;
 uniform sampler2D u_tex_rings;
 uniform sampler2D u_tex_lanes;
+uniform sampler2D u_tex_rails;
+uniform sampler2D u_tex_walls;
+uniform sampler2D u_tex_extra;
 uniform sampler2D u_tex_indic;
 uniform sampler2D u_tex_skirts;
 uniform sampler2D u_tex_labels;
@@ -77,15 +80,20 @@ const vec3 PLASTIC_RED    = vec3(0.892, 0.000, 0.000);
 const vec3 PLASTIC_YELLOW = vec3(0.958, 0.915, 0.139);
 const vec3 PLASTIC_BLUE   = vec3(0.398, 0.582, 0.833);
 const vec3 PLASTIC_WHITE  = vec3(0.958, 0.958, 0.958);
+const vec3 PLASTIC_LANE   = vec3(0.900, 0.920, 0.100);
+
+const vec3 WALL_METAL  = vec3(0.3, 0.3, 0.3);
+const vec3 RUBBER_RED  = vec3(0.5, 0.1, 0.2);
+const vec3 SCREW_METAL = vec3(0.5, 0.5, 0.5);
 
 const vec3 BALL_COLOR = WHITE;
 const vec3 LAMP_ON    = vec3(0.99, 0.9, 0.5);
 const vec3 LAMP_OFF   = vec3(0.3, 0.2, 0.1);
 
 const vec4  LIGHT_COLOR = vec4(0.99, 0.9, 0.7, 1.0);
-const vec4  LIGHT_AMBIENT = LIGHT_COLOR * 0.8;
+const vec4  LIGHT_AMBIENT = LIGHT_COLOR * 0.9;
 const float LIGHT_FALLOFF = 10.0;
-const float LIGHT_INTENSITY = 0.4;
+const float LIGHT_INTENSITY = 0.5;
 
 
 //
@@ -225,6 +233,9 @@ void main () {
   vec4 rtk      = layer(u_tex_rtk,      uv, BG_BROWN, BG_BROWN, BG_BROWN);
   vec4 misc     = layer(u_tex_misc,     uv, WHITE, WHITE, WHITE);
   vec4 lanes    = layer(u_tex_lanes,    uv, BG_ORANGE, BG_GREEN, BG_BLUE);
+  vec4 rails    = layer(u_tex_rails,    uv, WALL_METAL, PLASTIC_LANE, SCREW_METAL);
+  vec4 walls    = layer(u_tex_walls,    uv, WALL_METAL, WALL_METAL, WALL_METAL);
+  vec4 extra    = layer(u_tex_extra,    uv, RUBBER_RED, WALL_METAL, SCREW_METAL);
   vec4 labels   = layer(u_tex_labels,   uv, BG_ORANGE, BG_WHITE, uv.y < 0.5 ? BG_BLUE : BG_ORANGE);
 
 
@@ -399,6 +410,9 @@ void main () {
 
   // Top layer
   final = mix(final, hyperspeed + bump, bump.a);  // bumper caps
+  final = mix(final, walls, walls.a);
+  final = mix(final, extra, extra.a);
+  final = mix(final, rails, rails.a);
   final = mix(final, col(PLASTIC_WHITE), skirts_alpha * (0.4 + beat_alpha * 3.0)); // skirts
   final = mix(final, hyperspeed + plastics, plastics.a); // plastics
 
@@ -417,11 +431,11 @@ void main () {
   // Hidden indicators
   // Eyes
   //final = mix(final, mix(col(BG_WHITE), rainbow, hyperspeed), eyes_alpha); // eyes
-  final = mix(final, lamps, lamps.a);
+  //final = mix(final, lamps, lamps.a);
 
   gl_FragColor = uv.y < 0.9075
     ? vec4(final.rgb, 1.0) + lamp_alpha_upper_target_left * (hyperspeed + vec4(LAMP_ON, 1.0)) * lamp_alpha * SCORE_PHASE_ALPHA
     : vec4(BLACK, 1.0);
-//  gl_FragColor = lamps;
+
 }
 

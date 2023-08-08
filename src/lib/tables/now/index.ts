@@ -349,14 +349,12 @@ export default class Now extends Table {
     Bumper(`kicker_right`, Capsule.at(TR - 20, 194, 6, 25, TAU/4), KICKER_STRENGTH);
 
     Collider(`kicker_left_post`,       Circle.at(TL + 46, 278, postRad));
-    Collider(`kicker_left_rail_arc`,   Arc.at(TL + 240, 264, postRad, 240, TAU*4/64, TAU*28/64));
-    Collider(`kicker_left_rail_outer`, Capsule.from(TL, 193, TL, 283, postRad));
-    Collider(`kicker_left_rail_inner`, Capsule.from(TL + 36, 280, TL + 36, 190, 3));
+    Collider(`kicker_left_rail_arc`,   Arc.at(TL + 235, 264, 5, 240, TAU*4/64, TAU*28/64));
+    Collider(`kicker_left_rail_inner`, Capsule.from(TL + 36, 270, TL + 36, 190, 3));
 
     Collider(`kicker_right_post`,       Circle.at(TR - 46, 278, postRad));
-    Collider(`kicker_right_rail_arc`,   Arc.at(TR - 240, 264, postRad, 240, TAU*4/64, TAU*0/64));
-    Collider(`kicker_right_rail_outer`, Capsule.from(TR, 193, TR, 283, postRad));
-    Collider(`kicker_right_rail_inner`, Capsule.from(TR - 36, 280, TR - 36, 190, 3));
+    Collider(`kicker_right_rail_arc`,   Arc.at(TR - 235, 264, 5, 240, TAU*4/64, TAU*0/64));
+    Collider(`kicker_right_rail_inner`, Capsule.from(TR - 36, 270, TR - 36, 190, 3));
 
 
     // Lower slingshots

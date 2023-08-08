@@ -26,6 +26,9 @@
   let u_tex_rings:HTMLImageElement;
   let u_tex_wood:HTMLImageElement;
   let u_tex_lanes:HTMLImageElement;
+  let u_tex_walls:HTMLImageElement;
+  let u_tex_extra:HTMLImageElement;
+  let u_tex_rails:HTMLImageElement;
   let u_tex_indic:HTMLImageElement;
   let u_tex_skirts:HTMLImageElement;
   let u_tex_labels:HTMLImageElement;
@@ -62,6 +65,9 @@
     u_tex_indic    = await loadImage('/layers/Indicators.webp');
     u_tex_misc     = await loadImage('/layers/Combined.webp');
     u_tex_plastics = await loadImage('/layers/Plastics.webp');
+    u_tex_walls    = await loadImage('/layers/Walls.webp');
+    u_tex_rails    = await loadImage('/layers/LaneRails.webp');
+    u_tex_extra    = await loadImage('/layers/Extras.webp');
     u_tex_noise    = await loadImage('/noise.png');
 
   });
@@ -83,6 +89,9 @@
     {u_tex_drop}
     {u_tex_rings}
     {u_tex_lanes}
+    {u_tex_walls}
+    {u_tex_extra}
+    {u_tex_rails}
     {u_tex_labels}
     {u_tex_indic}
     {u_tex_skirts}

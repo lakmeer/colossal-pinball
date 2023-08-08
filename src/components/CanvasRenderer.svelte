@@ -116,14 +116,14 @@
 
     // Things
     for (let t of Object.values(table.things)) {
-      ctx.globalAlpha = 0.0;
+      ctx.globalAlpha = 0.6;
       //drawShape(t.shape, t.color);
       ctx.globalAlpha = 1.0;
     }
 
     // Balls
     for (let ball of balls) {
-      //circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
+      circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
       textAt(ctx, `${ball.id}`, ball.pos.x, ball.pos.y, '#000', 'center', '10px dseg7');
 
       if (SHOW_VELOCITY) {
@@ -135,12 +135,12 @@
 
     // Score
     currentScore = lerp(currentScore, table.gameState.score, 0.1);
-    textAt(ctx, `888888`, 140, 40, Color.fromTw('rose-950').toString(), 'right', '50px dseg7');
-    textAt(ctx, `${ceil(currentScore)}`, 140, 40, Color.fromTw('red-500').toString(), 'right', '50px dseg7');
+    textAt(ctx, `88888`, 230, 40, Color.fromTw('rose-950').toString(), 'right', '50px dseg7');
+    textAt(ctx, `${ceil(currentScore)}`, 230, 40, Color.fromTw('red-500').toString(), 'right', '50px dseg7');
 
     // Ball count
-    textAt(ctx, `8`, -190, 40, Color.fromTw('emerald-950').toString(), 'left', '50px dseg7');
-    textAt(ctx, `${table.gameState.ballStock}`, -190, 40, Color.fromTw('green-500').toString(),   'left', '50px dseg7');
+    textAt(ctx, `8`, -230, 40, Color.fromTw('emerald-950').toString(), 'left', '50px dseg7');
+    textAt(ctx, `${table.gameState.ballStock}`, -230, 40, Color.fromTw('green-500').toString(),   'left', '50px dseg7');
 
     // Spawning Arrow
     if (spawnArrow[0].dist(spawnArrow[1]) > 0.0) {

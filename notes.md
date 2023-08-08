@@ -20,6 +20,10 @@
   - Rings map no longer needed
   - Separate face and hair masks?
   - Consolidate sparse layers (maybe an additional mask for segregation)
+  - Lighting masks? 3 different groups block walls and create stencil shadows
+  - Fill behind plastics with wall mask
+    - different color? 
+      - Move launcher color to it's own map (or extras map)
 
 - Basic sound fx
 
