@@ -20,13 +20,14 @@ uniform vec4 u_mouse;
 uniform sampler2D u_tex_rtk;
 uniform sampler2D u_tex_base;
 uniform sampler2D u_tex_wood;
-uniform sampler2D u_tex_face;
 uniform sampler2D u_tex_hair;
 uniform sampler2D u_tex_bump;
 uniform sampler2D u_tex_logo;
 uniform sampler2D u_tex_misc;
 uniform sampler2D u_tex_drop;
 uniform sampler2D u_tex_text;
+uniform sampler2D u_tex_face1;
+uniform sampler2D u_tex_face2;
 uniform sampler2D u_tex_rings;
 uniform sampler2D u_tex_lanes;
 uniform sampler2D u_tex_indic;
@@ -217,16 +218,32 @@ void main () {
 
   vec4 wood     = texture2D(u_tex_wood, uv);
   vec4 base     = layer(u_tex_base,     uv, BG_RED, BG_GREEN, BG_WHITE);
-  //vec4 face     = layer(u_tex_face,     uv, BG_RED, BG_GREEN, BG_BLUE);
   vec4 hair     = layer(u_tex_hair,     uv, BG_WHITE, BG_ORANGE, BG_RED);
   vec4 drop     = layer(u_tex_drop,     uv, BG_WHITE, BG_BROWN, BLACK);
   vec4 bump     = layer(u_tex_bump,     uv, BUMPER_WHITE, BUMPER_GREEN, BUMPER_BLUE);
   vec4 logo     = layer(u_tex_logo,     uv, BG_WHITE, BG_GREEN, BLACK);
   vec4 rtk      = layer(u_tex_rtk,      uv, BG_BROWN, BG_BROWN, BG_BROWN);
   vec4 misc     = layer(u_tex_misc,     uv, WHITE, WHITE, WHITE);
-  //vec4 rings    = layer(u_tex_rings,    uv, BG_ORANGE, BG_WHITE, BG_WHITE);
   vec4 lanes    = layer(u_tex_lanes,    uv, BG_ORANGE, BG_GREEN, BG_BLUE);
   vec4 labels   = layer(u_tex_labels,   uv, BG_ORANGE, BG_WHITE, uv.y < 0.5 ? BG_BLUE : BG_ORANGE);
+
+
+  // Alphas
+
+  float playfield_alpha = base.a;
+  float plastics_alpha  = bump.a;
+  float eyes_alpha      = only_g(u_tex_misc, uv);
+  float lamp_alpha      = only_b(u_tex_misc, uv);
+  float plastic_white   = only_r(u_tex_misc, uv);
+  float text_low        = only_b(u_tex_text, uv);
+  float text_high       = only_r(u_tex_text, uv);
+  float skirts_alpha    = only_r(u_tex_skirts, uv);
+  float beat_alpha      = (1.0 - u_beat) * (1.0 - u_beat) * (1.0 - u_beat);
+  float inner_rings     = only_b(u_tex_base, uv) + only_r(u_tex_base, uv) + only_g(u_tex_base, uv);
+  float indic_normal    = only_g(u_tex_indic, uv);
+  float indic_normal_a  = only_a(u_tex_indic, uv);
+  float indic_hidden    = only_r(u_tex_indic, uv);
+  float indic_hidden_a  = only_b(u_tex_indic, uv);
 
 
   // Lighting
@@ -260,26 +277,11 @@ void main () {
 
   vec4 lighting = (1.0 - length(uv - vec2(0.5, 0.5))) * LIGHT_AMBIENT;
   for (int i = 0; i < NUM_LIGHTS; i++) {
-    lighting += LIGHT_INTENSITY * LIGHT_COLOR * exp(-LIGHT_FALLOFF * length(uvr - lights[i]));
+    lighting +=
+      (0.2 * beat_alpha + LIGHT_INTENSITY)
+        * LIGHT_COLOR
+        * exp(-(LIGHT_FALLOFF + LIGHT_FALLOFF/2.0 * u_beat) * length(uvr - lights[i]));
   }
-
-
-  // Alphas
-
-  float playfield_alpha = base.a;
-  float plastics_alpha  = bump.a;
-  float eyes_alpha      = only_g(u_tex_misc, uv);
-  float lamp_alpha      = only_b(u_tex_misc, uv);
-  float plastic_white   = only_r(u_tex_misc, uv);
-  float text_low        = only_b(u_tex_text, uv);
-  float text_high       = only_r(u_tex_text, uv);
-  float skirts_alpha    = only_r(u_tex_skirts, uv);
-  float beat_alpha      = (1.0 - u_beat) * (1.0 - u_beat) * (1.0 - u_beat);
-  float inner_rings     = only_b(u_tex_base, uv) + only_r(u_tex_base, uv) + only_g(u_tex_base, uv);
-  float indic_normal    = only_g(u_tex_indic, uv);
-  float indic_normal_a  = only_a(u_tex_indic, uv);
-  float indic_hidden    = only_r(u_tex_indic, uv);
-  float indic_hidden_a  = only_b(u_tex_indic, uv);
 
 
   // FX layers
@@ -326,9 +328,24 @@ void main () {
   playfield = mix(playfield, rings, inner_rings);
 
   // Faces
-  vec3 face_color_a = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 0.5));
-  vec3 face_color_b = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 0.5 + PI));
-  vec4 faces = layer(u_tex_face, uv, BG_RED, face_color_a, face_color_b);
+  float face_masks[4];
+  face_masks[0] = only_g(u_tex_face1, uv);
+  face_masks[1] = only_b(u_tex_face1, uv);
+  face_masks[2] = only_g(u_tex_face2, uv);
+  face_masks[3] = only_b(u_tex_face2, uv);
+
+  vec3 face_color_a = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 2.5 + PI * 0.0/4.0));
+  vec3 face_color_b = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 2.5 + PI * 1.0/4.0));
+  vec3 face_color_c = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 2.5 + PI * 2.0/4.0));
+  vec3 face_color_d = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 2.5 + PI * 3.0/4.0));
+
+  vec4 faces =
+    mix(
+      layer(u_tex_face2, uv, BG_RED, face_color_c, face_color_d),
+      layer(u_tex_face1, uv, BG_RED, face_color_a, face_color_b),
+      only_a(u_tex_face1, uv));
+
+
 
   // Plastics layer / Holographic effect
   float plasma_factor = u_holo;

@@ -14,13 +14,14 @@
 
   let u_tex_rtk:HTMLImageElement;
   let u_tex_base:HTMLImageElement;
-  let u_tex_face:HTMLImageElement;
   let u_tex_hair:HTMLImageElement;
   let u_tex_bump:HTMLImageElement;
   let u_tex_drop:HTMLImageElement;
   let u_tex_logo:HTMLImageElement;
   let u_tex_text:HTMLImageElement;
   let u_tex_misc:HTMLImageElement;
+  let u_tex_face1:HTMLImageElement;
+  let u_tex_face2:HTMLImageElement;
   let u_tex_rings:HTMLImageElement;
   let u_tex_wood:HTMLImageElement;
   let u_tex_lanes:HTMLImageElement;
@@ -41,7 +42,8 @@
     u_tex_wood     = await loadImage('/wood1.jpg');
     u_tex_rtk      = await loadImage('/layers/RolloversTargetsKickers.webp');
     u_tex_base     = await loadImage('/layers/Base.webp');
-    u_tex_face     = await loadImage('/layers/Faces.webp');
+    u_tex_face1    = await loadImage('/layers/Faces1.webp');
+    u_tex_face2    = await loadImage('/layers/Faces2.webp');
     u_tex_hair     = await loadImage('/layers/Hair.webp');
     u_tex_text     = await loadImage('/layers/LabelText.webp');
     u_tex_bump     = await loadImage('/layers/Bumpers.webp');
@@ -67,7 +69,8 @@
     {u_tex_misc}
     {u_tex_base}
     {u_tex_text}
-    {u_tex_face}
+    {u_tex_face1}
+    {u_tex_face2}
     {u_tex_hair}
     {u_tex_bump}
     {u_tex_wood}
@@ -83,11 +86,11 @@
     {u_tex_noise}
 
     u_ball_pos={[ ballPos.x * width, height - ballPos.y * height ]}
-    u_beat={1 + 0 * (t - start)/1000 % 1}
-    u_holo={0.9}
-    u_hypno={1.0}
-    u_distort={0.1}
-    u_hyper={0.5}
+    u_beat={((t - start)/500 % 1) * 0 + 1}
+    u_holo={0.0}
+    u_hypno={0.0}
+    u_distort={0.0}
+    u_hyper={0.0}
 
     onFrame={() => t = performance.now()}
     label="test">
