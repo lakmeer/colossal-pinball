@@ -27,6 +27,7 @@
   - Separate face and hair masks per-face?
   - Consolidate sparse layers (maybe an additional mask for segregation)
   - Make outer wall fatter
+  - Add blurring to light masks
 
 - Basic sound fx
 

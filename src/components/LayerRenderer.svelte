@@ -24,15 +24,14 @@
   let u_tex_misc:HTMLImageElement;
   let u_tex_face1:HTMLImageElement;
   let u_tex_face2:HTMLImageElement;
-  let u_tex_rings:HTMLImageElement;
   let u_tex_wood:HTMLImageElement;
   let u_tex_lanes:HTMLImageElement;
   let u_tex_walls:HTMLImageElement;
   let u_tex_extra:HTMLImageElement;
   let u_tex_rails:HTMLImageElement;
   let u_tex_indic:HTMLImageElement;
-  let u_tex_skirts:HTMLImageElement;
   let u_tex_labels:HTMLImageElement;
+  let u_tex_lights:HTMLImageElement;
   let u_tex_plastics:HTMLImageElement;
 
   let u_tex_noise:HTMLImageElement;
@@ -55,14 +54,13 @@
     u_tex_face1    = await loadImage('/layers/Faces1.webp');
     u_tex_face2    = await loadImage('/layers/Faces2.webp');
     u_tex_hair     = await loadImage('/layers/Hair.webp');
-    u_tex_text     = await loadImage('/layers/LabelText.webp');
+    u_tex_text     = await loadImage('/layers/LabelTextAndSkirts.webp');
     u_tex_bump     = await loadImage('/layers/Bumpers.webp');
     u_tex_drop     = await loadImage('/layers/DropTargetSlots.webp');
     u_tex_logo     = await loadImage('/layers/Logo.webp');
-    u_tex_rings    = await loadImage('/layers/Rings.webp');
     u_tex_lanes    = await loadImage('/layers/Lanes.webp');
+    u_tex_lights   = await loadImage('/layers/Lighting.webp');
     u_tex_labels   = await loadImage('/layers/ScoringLabels.webp');
-    u_tex_skirts   = await loadImage('/layers/PlasticSkirts.webp');
     u_tex_indic    = await loadImage('/layers/Indicators.webp');
     u_tex_misc     = await loadImage('/layers/Combined.webp');
     u_tex_plastics = await loadImage('/layers/Plastics.webp');
@@ -88,14 +86,13 @@
     {u_tex_wood}
     {u_tex_logo}
     {u_tex_drop}
-    {u_tex_rings}
     {u_tex_lanes}
     {u_tex_walls}
     {u_tex_extra}
     {u_tex_rails}
     {u_tex_labels}
     {u_tex_indic}
-    {u_tex_skirts}
+    {u_tex_lights}
     {u_tex_plastics}
 
     {u_tex_noise}
@@ -107,6 +104,7 @@
     u_hypno={0.0}
     u_distort={0.0}
     u_hyper={0.0}
+    u_light_rainbow={0.0}
 
     u_num_lamps={lampState.length}
     u_lamps={lampState}

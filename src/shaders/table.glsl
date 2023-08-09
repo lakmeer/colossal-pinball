@@ -29,13 +29,12 @@ uniform sampler2D u_tex_drop;
 uniform sampler2D u_tex_text;
 uniform sampler2D u_tex_face1;
 uniform sampler2D u_tex_face2;
-uniform sampler2D u_tex_rings;
 uniform sampler2D u_tex_lanes;
 uniform sampler2D u_tex_rails;
 uniform sampler2D u_tex_walls;
 uniform sampler2D u_tex_extra;
 uniform sampler2D u_tex_indic;
-uniform sampler2D u_tex_skirts;
+uniform sampler2D u_tex_lights;
 uniform sampler2D u_tex_labels;
 uniform sampler2D u_tex_plastics;
 uniform sampler2D u_tex_noise;
@@ -52,6 +51,7 @@ uniform float u_holo;
 uniform float u_hypno;
 uniform float u_hyper;
 uniform float u_distort;
+uniform float u_light_rainbow;
 
 
 // Config
@@ -93,7 +93,7 @@ const vec3 LAMP_OFF   = vec3(0.3, 0.2, 0.1);
 const vec4  LIGHT_COLOR = vec4(0.99, 0.9, 0.7, 1.0);
 const vec4  LIGHT_AMBIENT = LIGHT_COLOR * 0.9;
 const float LIGHT_FALLOFF = 10.0;
-const float LIGHT_INTENSITY = 0.5;
+const float LIGHT_INTENSITY = 0.6;
 
 
 //
@@ -128,6 +128,10 @@ vec3 gamma (in vec3 col) {
 
 float random (in vec2 st) {
   return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
+float random2 (in vec2 st) {
+  return random(st + vec2(random(st)));
 }
 
 vec4 plasma (in vec2 uv, float offset) {
@@ -248,51 +252,13 @@ void main () {
   float plastic_white   = only_r(u_tex_misc, uv);
   float text_low        = only_b(u_tex_text, uv);
   float text_high       = only_r(u_tex_text, uv);
-  float skirts_alpha    = only_r(u_tex_skirts, uv);
+  float skirts_alpha    = only_g(u_tex_text, uv);
   float beat_alpha      = (1.0 - u_beat) * (1.0 - u_beat) * (1.0 - u_beat);
-  float inner_rings     = only_b(u_tex_base, uv) + only_r(u_tex_base, uv) + only_g(u_tex_base, uv);
   float indic_normal    = only_g(u_tex_indic, uv);
   float indic_normal_a  = only_a(u_tex_indic, uv);
   float indic_hidden    = only_r(u_tex_indic, uv);
   float indic_hidden_a  = only_b(u_tex_indic, uv);
-
-
-  // Lighting
-
-  const int NUM_LIGHTS = 19;
-  vec2 lights[NUM_LIGHTS];
-  // Lanes
-  lights[ 0] = vec2(0.312, 0.33);
-  lights[ 1] = vec2(0.405, 0.33);
-  lights[ 2] = vec2(0.500, 0.33);
-  lights[ 3] = vec2(0.595, 0.33);
-  lights[ 4] = vec2(0.688, 0.33);
-  // Upper guards
-  lights[ 5] = vec2(0.148, 0.34);
-  lights[ 8] = vec2(0.852, 0.34);
-  lights[ 6] = vec2(0.133, 0.41);
-  lights[ 9] = vec2(0.867, 0.41);
-  lights[ 7] = vec2(0.133, 0.52);
-  lights[10] = vec2(0.867, 0.52);
-  // Droptarget banks
-  lights[11] = vec2(0.22, 0.72);
-  lights[12] = vec2(0.78, 0.72);
-  // Lower Guards
-  lights[13] = vec2(0.15, 0.92);
-  lights[14] = vec2(0.85, 0.92);
-  lights[15] = vec2(0.13, 1.01);
-  lights[16] = vec2(0.87, 1.01);
-  // Slingshots
-  lights[17] = vec2(0.27, 1.36);
-  lights[18] = vec2(0.73, 1.36);
-
-  vec4 lighting = (1.0 - length(uv - vec2(0.5, 0.5))) * LIGHT_AMBIENT;
-  for (int i = 0; i < NUM_LIGHTS; i++) {
-    lighting +=
-      (0.2 * beat_alpha + LIGHT_INTENSITY)
-        * LIGHT_COLOR
-        * exp(-(LIGHT_FALLOFF + LIGHT_FALLOFF/2.0 * u_beat) * length(uvr - lights[i]));
-  }
+  float inner_rings     = only_b(u_tex_base, uv) + only_r(u_tex_base, uv) + only_g(u_tex_base, uv);
 
 
   // FX layers
@@ -302,6 +268,53 @@ void main () {
   vec4 hypernull  = vec4(1.0) - hyperspeed;
   vec4 stars      = starfield(uv);
   vec4 pulse      = vec4(vec3(beat_alpha), 1.0);
+
+
+  // Lighting
+
+  const int NUM_LIGHTS = 19;
+  vec3 lights[NUM_LIGHTS];
+
+  float light_mask_r = only_r(u_tex_lights, uv);
+  float light_mask_g = only_g(u_tex_lights, uv);
+  float light_mask_b = only_b(u_tex_lights, uv);
+
+  // Lanes
+  lights[ 0] = vec3(0.312, 0.33, light_mask_g);
+  lights[ 1] = vec3(0.405, 0.33, light_mask_g);
+  lights[ 2] = vec3(0.500, 0.33, light_mask_g);
+  lights[ 3] = vec3(0.595, 0.33, light_mask_g);
+  lights[ 4] = vec3(0.688, 0.33, light_mask_g);
+  // Upper guards
+  lights[ 5] = vec3(0.148, 0.34, light_mask_r);
+  lights[ 8] = vec3(0.852, 0.34, light_mask_r);
+  lights[ 6] = vec3(0.133, 0.41, light_mask_r);
+  lights[ 9] = vec3(0.867, 0.41, light_mask_r);
+  lights[ 7] = vec3(0.133, 0.52, light_mask_r);
+  lights[10] = vec3(0.867, 0.52, light_mask_r);
+  // Droptarget banks
+  lights[11] = vec3(0.22,  0.72, light_mask_b);
+  lights[12] = vec3(0.78,  0.72, light_mask_b);
+  // Lower Guards
+  lights[13] = vec3(0.15,  0.92, light_mask_g);
+  lights[14] = vec3(0.85,  0.92, light_mask_g);
+  lights[15] = vec3(0.13,  1.01, light_mask_g);
+  lights[16] = vec3(0.87,  1.01, light_mask_g);
+  // Slingshots
+  lights[17] = vec3(0.27,  1.36, light_mask_b);
+  lights[18] = vec3(0.73,  1.36, light_mask_b);
+
+  vec4 lc = mix(LIGHT_COLOR, rainbow, u_light_rainbow);
+
+  vec4 lighting = (1.0 - length(uv - vec2(0.5, 0.5))) * LIGHT_AMBIENT;
+  for (int i = 0; i < NUM_LIGHTS; i++) {
+    lighting +=
+      (0.2 * beat_alpha + LIGHT_INTENSITY)
+        * lc
+        * lights[i].z
+        * exp(-(LIGHT_FALLOFF + LIGHT_FALLOFF/2.0 * u_beat) * length(uvr - lights[i].xy));
+  }
+
 
   // Dynamic Layers
 
@@ -423,7 +436,7 @@ void main () {
     float uvy = 0.44 - (0.01 * sin(u_time) * p + 0.44 - uv.y)*(1.0 - 0.04 * float(i));
     final += 0.4 * hyperspeed *
       (nsin(p * PI - u_time * 3.0) + 0.3 * nsin(u_time )) *
-      (only_r(u_tex_skirts, vec2(uvx, uvy)) +
+      (only_g(u_tex_text, vec2(uvx, uvy)) +
        0.3 * only_a(u_tex_rails, vec2(uvx, uvy))
     );
   }
