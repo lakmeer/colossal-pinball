@@ -11,7 +11,7 @@
 
   import { clamp, pow, floor, min, max, nsin, loadImage } from "$lib/utils";
 
-  import type { InputState, EventQueue } from "$types";
+  import type { InputState, EventQueue, FxConfig } from "$types";
 
 
   // Config
@@ -222,9 +222,9 @@
     running = true;
     render();
 
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mouseup',   onMouseUp);
-    document.addEventListener('mousemove', onMouseMove);
+    //document.addEventListener('mousedown', onMouseDown);
+    //document.addEventListener('mouseup',   onMouseUp);
+    //document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('keydown',   onKeydown);
     document.addEventListener('keyup',     onKeyup);
 
@@ -232,13 +232,21 @@
       running = false;
       cancelAnimationFrame(rafref);
 
-      document.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mouseup',   onMouseUp);
-      document.removeEventListener('mousemove', onMouseMove);
+      //document.removeEventListener('mousedown', onMouseDown);
+      //document.removeEventListener('mouseup',   onMouseUp);
+      //document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('keydown',   onKeydown);
       document.removeEventListener('keyup',     onKeyup);
     }
   });
+
+  let fx:FxConfig = {
+    hyper: 0,
+    holo: 0,
+    rainbow: 0,
+    distort: 0,
+    hypno: 0,
+  }
 </script>
 
 
@@ -252,19 +260,34 @@
       {table}
       {cameraY}
       {spawnArrow}
+      {fx}
       width={clientWidth}
       height={clientHeight}
     />
   </div>
 </div>
 
-<pre class="debug">
+<div class="debug">
+  <pre>
 Balls: {balls.length}
 Steps: {substeps}
  Time: {delta.toFixed(3)}
  BtnA: {input.left  ? '🟢' : '🔴'}
  BtnB: {input.right ? '🟢' : '🔴'}
-</pre>
+  </pre>
+  <div class="sliders">
+    <label>HYPER</label>
+    <input bind:value={fx.hyper} type="range" min="0" max="1" step="0.01" />
+    <label>HYPNO</label>
+    <input bind:value={fx.hypno} type="range" min="0" max="1" step="0.01" />
+    <label>MELT</label>
+    <input bind:value={fx.distort} type="range" min="0" max="1" step="0.01" />
+    <label>RGB</label>
+    <input bind:value={fx.rainbow} type="range" min="0" max="1" step="0.01" />
+    <label>HOLO</label>
+    <input bind:value={fx.holo} type="range" min="0" max="1" step="0.01" />
+  </div>
+</div>
 
 
 <style>
@@ -295,17 +318,31 @@ Steps: {substeps}
     max-height: 100vh;
   }
 
-  pre {
+  .debug {
     position: fixed;
     top: 0;
     left: 0;
     color: white;
     font-family: monospace;
-    pointer-events: none;
     z-index: 2;
     background: rgba(0,0,0,0.3);
     margin: 0;
-    padding: 1rem;
+    padding: 0 1rem;
+  }
+
+  .sliders {
+    max-width: 100px;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 1rem;
+  }
+
+  label {
+    display: block;
+    text-align: right;
+    margin-bottom: -0.7rem;
+  }
+  input {
+    width: 100%;
   }
 </style>
 

@@ -5,6 +5,8 @@
   import type Table from "$lib/tables";
   import type Shape from "$lib/Shape";
 
+  import type { FxConfig } from "$types";
+
   import Vec2   from '$lib/Vec2';
   import Color  from '$lib/Color';
 
@@ -27,6 +29,7 @@
 
   // Objects
 
+  export let fx:FxConfig;
   export let table:Table;
   export let balls:Ball[] = [];
   export let spawnArrow:[ Vec2, Vec2];
@@ -192,7 +195,7 @@
   <FluidBG src="/now_old.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
   <FluidBG src="/playfield.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
   -->
-  <LayerRenderer lamps={table.gameState.lamps} {ballPos} {width} {height} />
+  <LayerRenderer {fx} lamps={table.gameState.lamps} {ballPos} {width} {height} />
 </div>
 
 

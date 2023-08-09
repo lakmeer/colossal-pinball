@@ -1,6 +1,7 @@
 <script lang="ts">
   import Vec2 from '$lib/Vec2';
   import type { Lamp } from '$lib/Thing';
+  import type { FxConfig } from "$types";
 
   import { onMount } from 'svelte';
   import { lerp, loadImage } from "$lib/utils";
@@ -13,6 +14,7 @@
   export let lamps:Record<string, Lamp> = {};
   export let width:number;
   export let height:number;
+  export let fx:FxConfig;
 
   let u_tex_rtk:HTMLImageElement;
   let u_tex_base:HTMLImageElement;
@@ -100,11 +102,11 @@
     u_world_size={[width, height]}
     u_ball_pos={[ ballPos.x, ballPos.y ]}
     u_beat={((t - start)/500 % 1) * 0 + 1}
-    u_holo={0.0}
-    u_hypno={0.0}
-    u_distort={0.0}
-    u_hyper={0.0}
-    u_light_rainbow={0.0}
+    u_holo={fx.holo}
+    u_hypno={fx.hypno}
+    u_distort={fx.distort}
+    u_hyper={fx.hyper}
+    u_light_rainbow={fx.rainbow}
 
     u_num_lamps={lampState.length}
     u_lamps={lampState}
