@@ -1,5 +1,6 @@
 <script lang="ts">
   import Vec2 from '$lib/Vec2';
+  import type Rect from '$lib/Rect';
   import type { Lamp } from '$lib/Thing';
   import type { FxConfig } from "$types";
 
@@ -10,10 +11,9 @@
 
   import shader from '$src/shaders/table.glsl?raw';
 
-  export let ballPos:Vec2 = Vec2.zero; // In screen space
+  export let ballPos:Vec2 = Vec2.zero; // In world space
   export let lamps:Record<string, Lamp> = {};
-  export let width:number;
-  export let height:number;
+  export let world:Rect;
   export let fx:FxConfig;
 
   let u_tex_rtk:HTMLImageElement;
@@ -46,6 +46,8 @@
     lamp.shape.pos.y,
     lamp.state.active ? 1 : 0,
   ]));
+
+  $: u_ball_pos = [ ballPos.x, ballPos.y ];
 
   onMount(async () => {
 
@@ -99,8 +101,8 @@
 
     {u_tex_noise}
 
-    u_world_size={[width, height]}
-    u_ball_pos={[ ballPos.x, ballPos.y ]}
+    {u_ball_pos}
+    u_world={world.asTuple()}
     u_beat={((t - start)/500 % 1) * 0 + 1}
     u_holo={fx.holo}
     u_hypno={fx.hypno}
@@ -115,6 +117,8 @@
     onFrame={() => {
       t = performance.now();
       lamps = lamps;
+         ballPos = ballPos;
+
     }}
     label="test">
   </Vader>

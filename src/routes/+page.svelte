@@ -307,7 +307,7 @@ Steps: {substeps}
     height: 100vh;
     display: grid;
     background: #111111;
-    place-items: center;
+    place-items: end;
   }
 
   .inner {

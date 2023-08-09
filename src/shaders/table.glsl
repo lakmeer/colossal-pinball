@@ -41,7 +41,7 @@ uniform sampler2D u_tex_noise;
 
 // Game Data
 
-uniform vec2 u_world_size;
+uniform vec4 u_world; // left, top, w, h
 uniform vec2 u_ball_pos;
 uniform int u_score_phase;
 uniform vec3 u_lamps[NUM_LAMPS];
@@ -56,7 +56,7 @@ uniform float u_light_rainbow;
 
 // Config
 
-const float BALL_RAD = 12.0;
+const float BALL_RAD = 14.0;
 const float LAMP_RAD = 12.0;
 
 // Palette
@@ -201,8 +201,8 @@ void main () {
   vec2 uvr = vec2(uv.x, uv.y * u_resolution.y/u_resolution.x);
   // Table coords
   vec2 uvt = vec2(
-      u_world_size.x * (uv.x - 0.5),
-      u_world_size.y * (1.0 - uv.y));
+      u_world[0] + u_world[2] * uv.x,
+      u_world[1] - u_world[3] * uv.y);
 
   // Distort
 
@@ -319,7 +319,7 @@ void main () {
   // Dynamic Layers
 
   // Ball depends on state
-  vec3 ball_color  = mix(BALL_COLOR, rainbow.rgb, hyperspeed.x);
+  vec3 ball_color  = mix(BALL_COLOR, rainbow.rgb, u_hyper);
 
   // Build playfield surface
   vec4 playfield = mix(wood, base, base.a);
@@ -416,7 +416,7 @@ void main () {
   // Mid layer
   final = mix(final, rtk, rtk.a * hypernull);
   //final = mix(final, vec4(LAMP_ON, 1.0) * nsin(uv.y * 4.0 + u_time * 4.0), lamp_alpha);
-  final = mix(final, vec4(ball_color, 1.0), ball);
+  final = mix(final, col(ball_color), ball);
 
   // Lighting layer
   final *= lighting;

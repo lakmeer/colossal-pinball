@@ -78,8 +78,8 @@
     if (balls.length) {
       let pos = balls[0].pos;
       ballPos = Vec2.fromXY(
-        (pos.x - world.left) / world.w,
-        (world.top  - pos.y) / world.h
+        (pos.x),
+        (pos.y)
       );
     }
 
@@ -126,7 +126,7 @@
 
     // Balls
     for (let ball of balls) {
-      circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
+      //circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
       textAt(ctx, `${ball.id}`, ball.pos.x, ball.pos.y, '#000', 'center', '10px dseg7');
 
       if (SHOW_VELOCITY) {
@@ -195,7 +195,10 @@
   <FluidBG src="/now_old.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
   <FluidBG src="/playfield.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
   -->
-  <LayerRenderer {fx} lamps={table.gameState.lamps} {ballPos} {width} {height} />
+  <LayerRenderer {fx} {ballPos} 
+    lamps={table.gameState.lamps}
+    world={world}
+  />
 </div>
 
 
