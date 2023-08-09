@@ -1,5 +1,6 @@
 <script lang="ts">
   import Vec2 from '$lib/Vec2';
+  import type { Lamp } from '$lib/Thing';
 
   import { onMount } from 'svelte';
   import { lerp, loadImage } from "$lib/utils";
@@ -9,7 +10,7 @@
   import shader from '$src/shaders/table.glsl?raw';
 
   export let ballPos:Vec2 = Vec2.zero; // In screen space
-  export let lamps:Record<string, boolean> = {};
+  export let lamps:Record<string, Lamp> = {};
   export let width:number;
   export let height:number;
 

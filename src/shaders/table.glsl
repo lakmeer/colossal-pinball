@@ -235,7 +235,7 @@ void main () {
   vec4 lanes    = layer(u_tex_lanes,    uv, BG_ORANGE, BG_GREEN, BG_BLUE);
   vec4 rails    = layer(u_tex_rails,    uv, WALL_METAL, PLASTIC_LANE, SCREW_METAL);
   vec4 walls    = layer(u_tex_walls,    uv, WALL_METAL, WALL_METAL, WALL_METAL);
-  vec4 extra    = layer(u_tex_extra,    uv, RUBBER_RED, WALL_METAL, SCREW_METAL);
+  //vec4 extra    = layer(u_tex_extra,    uv, RUBBER_RED, WALL_METAL, SCREW_METAL);
   vec4 labels   = layer(u_tex_labels,   uv, BG_ORANGE, BG_WHITE, uv.y < 0.5 ? BG_BLUE : BG_ORANGE);
 
 
@@ -411,7 +411,7 @@ void main () {
   // Top layer
   final = mix(final, hyperspeed + bump, bump.a);  // bumper caps
   final = mix(final, walls, walls.a * hypernull);
-  final = mix(final, extra, extra.a * hypernull);
+  //final = mix(final, extra, extra.a * hypernull);
   final = mix(final, hyperspeed + rails, rails.a);
   final = mix(final, col(PLASTIC_WHITE), skirts_alpha * (0.4 + beat_alpha * 3.0)); // skirts
   final = mix(final, hyperspeed + plastics, plastics.a); // plastics

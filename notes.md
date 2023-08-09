@@ -8,22 +8,24 @@
 - Tilting
 - Graphics
   - Proper launcher graphic
+    - Move launcher color to it's own layer (or extras layer)
   - All black outlines
   - Chrome ball
   - Targets and droptargets
-  - Targets don't seem to line up with plastics?
-    - Adjust lft plastic
   - Improve colorscheme
   - Layers with spare channels:
       - Lanes: green
-      - LabelText: green
-  - Rings map no longer needed
-  - Separate face and hair masks?
+      - DroptargetSlots: blue
+  - Extras layer doesnt have spare channels but it does have a lot of space:
+    - Combine with another layer and segregate by y-value?
+    - Layers with non-intersecting features:
+      - Extras
+      - Bumpers
+      - DroptargetSlots
+      - Logo
+  - Outlane kickers probably not going to be drawn
+  - Separate face and hair masks per-face?
   - Consolidate sparse layers (maybe an additional mask for segregation)
-  - Lighting masks? 3 different groups block walls and create stencil shadows
-  - Fill behind plastics with wall mask
-    - different color? 
-      - Move launcher color to it's own map (or extras map)
   - Make outer wall fatter
 
 - Basic sound fx
