@@ -24,10 +24,9 @@
       - DroptargetSlots
       - Logo
   - Outlane kickers probably not going to be drawn
+    - Spare red channel?
   - Separate face and hair masks per-face?
-  - Consolidate sparse layers (maybe an additional mask for segregation)
   - Make outer wall fatter
-  - Add blurring to light masks
 
 - Basic sound fx
 
