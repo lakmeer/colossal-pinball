@@ -19,9 +19,6 @@
   let u_tex_rtk:HTMLImageElement;
   let u_tex_base:HTMLImageElement;
   let u_tex_hair:HTMLImageElement;
-  let u_tex_bump:HTMLImageElement;
-  let u_tex_drop:HTMLImageElement;
-  let u_tex_logo:HTMLImageElement;
   let u_tex_text:HTMLImageElement;
   let u_tex_misc:HTMLImageElement;
   let u_tex_face1:HTMLImageElement;
@@ -59,18 +56,15 @@
     u_tex_face2    = await loadImage('/layers/Faces2.webp');
     u_tex_hair     = await loadImage('/layers/Hair.webp');
     u_tex_text     = await loadImage('/layers/LabelTextAndSkirts.webp');
-    u_tex_bump     = await loadImage('/layers/Bumpers.webp');
-    u_tex_drop     = await loadImage('/layers/DropTargetSlots.webp');
-    u_tex_logo     = await loadImage('/layers/Logo.webp');
     u_tex_lanes    = await loadImage('/layers/Lanes.webp');
-    u_tex_lights   = await loadImage('/layers/Lighting.webp');
+    u_tex_lights   = await loadImage('/layers/LightingBlurred.webp');
     u_tex_labels   = await loadImage('/layers/ScoringLabels.webp');
     u_tex_indic    = await loadImage('/layers/Indicators.webp');
     u_tex_misc     = await loadImage('/layers/Combined.webp');
     u_tex_plastics = await loadImage('/layers/Plastics.webp');
     u_tex_walls    = await loadImage('/layers/Walls.webp');
     u_tex_rails    = await loadImage('/layers/LaneRails.webp');
-    u_tex_extra    = await loadImage('/layers/Extras.webp');
+    u_tex_extra    = await loadImage('/layers/ExtrasBumpersSlotsLogo.webp');
     u_tex_noise    = await loadImage('/noise.png');
 
   });
@@ -86,10 +80,7 @@
     {u_tex_face1}
     {u_tex_face2}
     {u_tex_hair}
-    {u_tex_bump}
     {u_tex_wood}
-    {u_tex_logo}
-    {u_tex_drop}
     {u_tex_lanes}
     {u_tex_walls}
     {u_tex_extra}
@@ -103,11 +94,12 @@
 
     {u_ball_pos}
     u_world={world.asTuple()}
-    u_beat={((t - start)/500 % 1) * 0 + 1}
+    u_beat_time={(t - start)/500 % 1}
     u_holo={fx.holo}
     u_hypno={fx.hypno}
     u_distort={fx.distort}
     u_hyper={fx.hyper}
+    u_beat={fx.beat}
     u_light_rainbow={fx.rainbow}
 
     u_num_lamps={lampState.length}

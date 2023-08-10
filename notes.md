@@ -27,6 +27,7 @@
     - Spare red channel?
   - Separate face and hair masks per-face?
   - Make outer wall fatter
+  - New combined extra/bumper/slot/logo layer has wrong dimensions
 
 - Basic sound fx
 

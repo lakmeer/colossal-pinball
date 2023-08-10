@@ -21,5 +21,6 @@ export type FxConfig = {
   rainbow: number;
   distort: number;
   hypno: number;
+  beat: number;
 }
 

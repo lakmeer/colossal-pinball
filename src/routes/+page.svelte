@@ -246,6 +246,7 @@
     rainbow: 0,
     distort: 0,
     hypno: 0,
+    beat: 0,
   }
 </script>
 
@@ -276,16 +277,18 @@ Steps: {substeps}
  BtnB: {input.right ? '🟢' : '🔴'}
   </pre>
   <div class="sliders">
-    <label>HYPER</label>
+    <span>HYPER</span>
     <input bind:value={fx.hyper} type="range" min="0" max="1" step="0.01" />
-    <label>HYPNO</label>
+    <span>HYPNO</span>
     <input bind:value={fx.hypno} type="range" min="0" max="1" step="0.01" />
-    <label>MELT</label>
+    <span>MELT</span>
     <input bind:value={fx.distort} type="range" min="0" max="1" step="0.01" />
-    <label>RGB</label>
+    <span>RGB</span>
     <input bind:value={fx.rainbow} type="range" min="0" max="1" step="0.01" />
-    <label>HOLO</label>
+    <span>HOLO</span>
     <input bind:value={fx.holo} type="range" min="0" max="1" step="0.01" />
+    <span>BEAT</span>
+    <input bind:value={fx.beat} type="range" min="0" max="1" step="0.01" />
   </div>
 </div>
 
@@ -336,7 +339,7 @@ Steps: {substeps}
     grid-gap: 1rem;
   }
 
-  label {
+  span {
     display: block;
     text-align: right;
     margin-bottom: -0.7rem;

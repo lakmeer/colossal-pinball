@@ -4,6 +4,7 @@ import type Rect  from "$lib/Rect";
 import type Thing from "$lib/Thing";
 
 import type { InputState } from "$types";
+import type { Lamp } from "$lib/Thing";
 
 
 
@@ -23,6 +24,7 @@ export default class Table {
     ballStock:   number;
     ballsInPlay: number;
     awaitNewBall: boolean;
+    lamps:      Record<string,Lamp>;
   };
 
   process (input: InputState) { }
