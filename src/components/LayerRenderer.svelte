@@ -100,7 +100,8 @@
     u_distort={fx.distort}
     u_hyper={fx.hyper}
     u_beat={fx.beat}
-    u_light_rainbow={fx.rainbow}
+    u_rgb={fx.rgb}
+    u_face={fx.face}
 
     u_num_lamps={lampState.length}
     u_lamps={lampState}

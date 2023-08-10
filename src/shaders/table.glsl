@@ -49,7 +49,8 @@ uniform float u_holo;
 uniform float u_hypno;
 uniform float u_hyper;
 uniform float u_distort;
-uniform float u_light_rainbow;
+uniform float u_rgb;
+uniform float u_face;
 
 
 // Config
@@ -323,7 +324,7 @@ void main () {
   for (int i = 0; i < NUM_LIGHTS; i++) {
     lighting +=
       (LIGHT_INTENSITY + LIGHT_INTENSITY/2.0 * easeOut3(u_beat_time) * u_beat)
-        * mix(LIGHT_COLOR, rainbow, u_light_rainbow)
+        * mix(LIGHT_COLOR, rainbow, u_rgb)
         * lights[i].z
         * exp(-(LIGHT_FALLOFF + LIGHT_FALLOFF/2.0 * u_beat_time * u_beat) * length(uvr - lights[i].xy));
   }
@@ -371,15 +372,19 @@ void main () {
   face_masks[2] = only_g(u_tex_face2, uv);
   face_masks[3] = only_b(u_tex_face2, uv);
 
-  vec3 face_color_a = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 2.5 + PI * 0.0/4.0));
-  vec3 face_color_b = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 2.5 + PI * 1.0/4.0));
-  vec3 face_color_c = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 2.5 + PI * 2.0/4.0));
-  vec3 face_color_d = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + u_time * 2.5 + PI * 3.0/4.0));
+  vec3 face_color_a = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + (u_face * 10.0 * u_time + u_time * 2.5) + PI * 0.0/4.0));
+  vec3 face_color_b = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + (u_face * 10.0 * u_time + u_time * 2.5) + PI * 1.0/4.0));
+  vec3 face_color_c = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + (u_face * 10.0 * u_time + u_time * 2.5) + PI * 2.0/4.0));
+  vec3 face_color_d = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + (u_face * 10.0 * u_time + u_time * 2.5) + PI * 3.0/4.0));
 
   vec4 faces =
     mix(
-      layer(u_tex_face2, uv, BG_RED, face_color_c, face_color_d),
-      layer(u_tex_face1, uv, BG_RED, face_color_a, face_color_b),
+      layer(u_tex_face2, uv, BG_RED,
+        mix(BG_GREEN, face_color_c, u_face),
+        mix(BG_BLUE,  face_color_d, u_face)),
+      layer(u_tex_face1, uv, BG_RED,
+        mix(BG_GREEN, face_color_a, u_face),
+        mix(BG_BLUE,  face_color_b, u_face)),
       only_a(u_tex_face1, uv));
 
   // Lamp indicators

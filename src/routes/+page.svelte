@@ -243,10 +243,11 @@
   let fx:FxConfig = {
     hyper: 0,
     holo: 0,
-    rainbow: 0,
+    rgb: 0,
     distort: 0,
     hypno: 0,
     beat: 0,
+    face: 0
   }
 </script>
 
@@ -284,11 +285,13 @@ Steps: {substeps}
     <span>MELT</span>
     <input bind:value={fx.distort} type="range" min="0" max="1" step="0.01" />
     <span>RGB</span>
-    <input bind:value={fx.rainbow} type="range" min="0" max="1" step="0.01" />
+    <input bind:value={fx.rgb} type="range" min="0" max="1" step="0.01" />
     <span>HOLO</span>
     <input bind:value={fx.holo} type="range" min="0" max="1" step="0.01" />
     <span>BEAT</span>
     <input bind:value={fx.beat} type="range" min="0" max="1" step="0.01" />
+    <span>FACE</span>
+    <input bind:value={fx.face} type="range" min="0" max="1" step="0.01" />
   </div>
 </div>
 
