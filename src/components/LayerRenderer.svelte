@@ -60,7 +60,7 @@
     u_tex_lights   = await loadImage('/layers/LightingBlurred.webp');
     u_tex_labels   = await loadImage('/layers/ScoringLabels.webp');
     u_tex_indic    = await loadImage('/layers/Indicators.webp');
-    u_tex_misc     = await loadImage('/layers/Combined.webp');
+    u_tex_misc     = await loadImage('/layers/LampsEyesPlasticWhite.webp');
     u_tex_plastics = await loadImage('/layers/Plastics.webp');
     u_tex_walls    = await loadImage('/layers/Walls.webp');
     u_tex_rails    = await loadImage('/layers/LaneRails.webp');
