@@ -10,6 +10,8 @@ export type Tuple4 = [ number, number, number, number ];
 export type InputState = {
   left: boolean;
   right: boolean;
+  tiltLeft: boolean;
+  tiltRight: boolean;
   launch: boolean;
 }
 

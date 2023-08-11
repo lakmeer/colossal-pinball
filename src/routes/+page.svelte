@@ -9,9 +9,9 @@
 
   import type Table from "$lib/tables/";
 
-  import { clamp, pow, floor, min, max, nsin, loadImage } from "$lib/utils";
+  import { clamp, pow, floor, min, max } from "$lib/utils";
 
-  import type { InputState, EventQueue, FxConfig } from "$types";
+  import type { InputState, FxConfig } from "$types";
 
 
   // Config
@@ -31,9 +31,11 @@
 
   let cameraY = 0;
   let input:InputState = {
-    left:   false,
-    right:  false,
-    launch: false,
+    left:      false,
+    right:     false,
+    tiltLeft:  false,
+    tiltRight: false,
+    launch:    false,
   };
 
   let clientWidth;
@@ -199,7 +201,8 @@
     switch (event.key) {
       case 'a': input.left  = true; break;
       case 's': input.right = true; break;
-      case ' ': input.launch = true; break;
+      case 'ArrowLeft':  input.tiltLeft  = true; break;
+      case 'ArrowRight': input.tiltRight = true; break;
     }
   }
 
@@ -207,6 +210,8 @@
     switch (event.key) {
       case 'a': input.left  = false; break;
       case 's': input.right = false; break;
+      case 'ArrowLeft':  input.tiltLeft  = false; break;
+      case 'ArrowRight': input.tiltRight = false; break;
     }
   }
 
@@ -256,42 +261,48 @@
 
 
 <div class="outer">
-  <div class="inner" style="--aspect: {table.config.bounds.aspect}" bind:clientWidth bind:clientHeight>
-    <CanvasRenderer
-      {balls}
-      {table}
-      {cameraY}
-      {spawnArrow}
-      {fx}
-      width={clientWidth}
-      height={clientHeight}
-    />
+  <div class="debug">
+    <h3>Status</h3>
+    <pre>
+  Balls: {balls.length}
+  Steps: {substeps}
+   Time: {delta.toFixed(3)}
+   BtnA: {input.left  ? '🟢' : '🔴'}
+   BtnB: {input.right ? '🟢' : '🔴'}
+  TiltL: {input.left  ? '🟢' : '🔴'}
+  TiltR: {input.right ? '🟢' : '🔴'}
+    </pre>
+    <h3>FX</h3>
+    <div class="sliders">
+      <span>HYPER</span>
+      <input bind:value={fx.hyper} type="range" min="0" max="1" step="0.01" />
+      <span>HYPNO</span>
+      <input bind:value={fx.hypno} type="range" min="0" max="1" step="0.01" />
+      <span>MELT</span>
+      <input bind:value={fx.distort} type="range" min="0" max="1" step="0.01" />
+      <span>RGB</span>
+      <input bind:value={fx.rgb} type="range" min="0" max="1" step="0.01" />
+      <span>HOLO</span>
+      <input bind:value={fx.holo} type="range" min="0" max="1" step="0.01" />
+      <span>BEAT</span>
+      <input bind:value={fx.beat} type="range" min="0" max="1" step="0.01" />
+      <span>FACE</span>
+      <input bind:value={fx.face} type="range" min="0" max="1" step="0.01" />
+    </div>
   </div>
-</div>
 
-<div class="debug">
-  <pre>
-Balls: {balls.length}
-Steps: {substeps}
- Time: {delta.toFixed(3)}
- BtnA: {input.left  ? '🟢' : '🔴'}
- BtnB: {input.right ? '🟢' : '🔴'}
-  </pre>
-  <div class="sliders">
-    <span>HYPER</span>
-    <input bind:value={fx.hyper} type="range" min="0" max="1" step="0.01" />
-    <span>HYPNO</span>
-    <input bind:value={fx.hypno} type="range" min="0" max="1" step="0.01" />
-    <span>MELT</span>
-    <input bind:value={fx.distort} type="range" min="0" max="1" step="0.01" />
-    <span>RGB</span>
-    <input bind:value={fx.rgb} type="range" min="0" max="1" step="0.01" />
-    <span>HOLO</span>
-    <input bind:value={fx.holo} type="range" min="0" max="1" step="0.01" />
-    <span>BEAT</span>
-    <input bind:value={fx.beat} type="range" min="0" max="1" step="0.01" />
-    <span>FACE</span>
-    <input bind:value={fx.face} type="range" min="0" max="1" step="0.01" />
+  <div class="frame">
+    <div class="inner" style="--aspect: {table.config.bounds.aspect}" bind:clientWidth bind:clientHeight>
+      <CanvasRenderer
+        {balls}
+        {table}
+        {cameraY}
+        {spawnArrow}
+        {fx}
+        width={clientWidth}
+        height={clientHeight}
+      />
+    </div>
   </div>
 </div>
 
@@ -312,41 +323,58 @@ Steps: {substeps}
     width: 100vw;
     height: 100vh;
     display: grid;
+    grid-template-columns: 150px 1fr;
     background: #111111;
-    place-items: end;
+    object-fit: contain;
+  }
+
+  .frame {
+    container-type: size;
+    display: grid;
+    background: black;
   }
 
   .inner {
-    position: relative;
-    width:      100vw; 
-    height:     calc(100vw/var(--aspect));
-    max-width:  calc(100vh*var(--aspect));
-    max-height: 100vh;
+    aspect-ratio: var(--aspect);
+    margin: auto;
+    width: auto;
+    height: 100ch;
+  }
+
+  /* Needs to squish vertically */
+  @container (max-aspect-ratio: 0.57) {
+    .inner {
+      height: auto;
+      width: 100%;
+    }
   }
 
   .debug {
-    position: fixed;
     top: 0;
     left: 0;
     color: white;
     font-family: monospace;
-    z-index: 2;
-    background: rgba(0,0,0,0.3);
     margin: 0;
     padding: 0 1rem;
+    width: 100%;
   }
 
   .sliders {
-    max-width: 100px;
+    max-width: 100%;
     grid-template-columns: repeat(2, 1fr);
     grid-gap: 1rem;
+  }
+
+  h3 {
+    text-align: center;
   }
 
   span {
     display: block;
     text-align: right;
-    margin-bottom: -0.7rem;
+    margin-bottom: -0.5rem;
   }
+
   input {
     width: 100%;
   }
