@@ -103,6 +103,7 @@
     u_beat={fx.beat}
     u_rgb={fx.rgb}
     u_face={fx.face}
+    u_light={fx.light}
 
     u_num_lamps={lampState.length}
     u_lamps={lampState}

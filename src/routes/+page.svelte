@@ -258,13 +258,14 @@
   let score = table.gameState.score;
 
   let fx:FxConfig = {
-    hyper: 0,
+    light: 1,
     holo: 0,
     rgb: 0,
     distort: 0,
     hypno: 0,
     beat: 0,
-    face: 0
+    face: 0,
+    hyper: 0,
   }
 
   let rose = Color.fromTw('rose-950').toString();
@@ -292,8 +293,8 @@
     </pre>
     <h3>FX</h3>
     <div class="sliders">
-      <span>HYPER</span>
-      <input bind:value={fx.hyper} type="range" min="0" max="1" step="0.01" />
+      <span>LIGHT</span>
+      <input bind:value={fx.light} type="range" min="0" max="1" step="0.01" />
       <span>HYPNO</span>
       <input bind:value={fx.hypno} type="range" min="0" max="1" step="0.01" />
       <span>MELT</span>
@@ -306,6 +307,8 @@
       <input bind:value={fx.beat} type="range" min="0" max="1" step="0.01" />
       <span>FACE</span>
       <input bind:value={fx.face} type="range" min="0" max="1" step="0.01" />
+      <span>HYPER</span>
+      <input bind:value={fx.hyper} type="range" min="0" max="1" step="0.01" />
     </div>
   </div>
 

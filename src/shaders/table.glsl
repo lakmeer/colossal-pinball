@@ -44,6 +44,8 @@ uniform float u_beat_time;
 uniform int u_score_phase;
 uniform vec3 u_lamps[NUM_LAMPS];
 
+// FX Values
+
 uniform float u_beat;
 uniform float u_holo;
 uniform float u_hypno;
@@ -51,6 +53,7 @@ uniform float u_hyper;
 uniform float u_distort;
 uniform float u_rgb;
 uniform float u_face;
+uniform float u_light;
 
 
 // Config
@@ -265,8 +268,8 @@ void main () {
   float eyes_alpha      = only_r(u_tex_misc, uv);
   float lamp_alpha      = only_b(u_tex_misc, uv);
   float plastic_white   = only_g(u_tex_misc, uv);
-  float text_low        = only_b(u_tex_text, uv);
   float text_high       = only_r(u_tex_text, uv);
+  float text_low        = only_b(u_tex_text, uv);
   float skirts_alpha    = only_g(u_tex_text, uv);
   float indic_normal    = only_g(u_tex_indic, uv);
   float indic_normal_a  = only_a(u_tex_indic, uv);
@@ -284,15 +287,30 @@ void main () {
   vec4 pulse      = vec4(vec3(beat_alpha), 1.0);
 
 
-  // Lighting
+  // Dynamic Layers
 
+  // Ball depends on state
+  vec3 ball_color  = mix(BALL_COLOR, rainbow.rgb, u_hyper);
+
+  // Build playfield surface
+  vec4 playfield = mix(wood, base, base.a);
+
+  // Plastics layer / Holographic effect
+  float plasma_factor = u_holo;
+  vec4 plastics =
+    layer(u_tex_plastics, uv, 
+        mix(PLASTIC_RED,    plasma(uv, u_time + 3.0).rgb, plasma_factor),
+        mix(PLASTIC_YELLOW, plasma(uv, u_time + 2.0).rgb, plasma_factor),
+        mix(PLASTIC_BLUE,   plasma(uv, u_time + 1.0).rgb, plasma_factor)); 
+  plastics = mix(plastics, col(mix(PLASTIC_WHITE, plasma(uv, u_time).rgb, plasma_factor)), plastic_white);
+  plastics.xyz *= LIGHT_AMBIENT.xyz; // start slightly unlit
+
+  // Lighting
   const int NUM_LIGHTS = 19;
   vec3 lights[NUM_LIGHTS];
-
   float light_mask_r = only_r(u_tex_lights, uv);
   float light_mask_g = only_g(u_tex_lights, uv);
   float light_mask_b = only_b(u_tex_lights, uv);
-
   // Lanes
   lights[ 0] = vec3(0.312, 0.33, light_mask_g);
   lights[ 1] = vec3(0.405, 0.33, light_mask_g);
@@ -318,23 +336,31 @@ void main () {
   lights[17] = vec3(0.27,  1.36, light_mask_b);
   lights[18] = vec3(0.73,  1.36, light_mask_b);
 
-  vec4 lighting = (1.0 - length(uv - vec2(0.5, 0.5))) * LIGHT_AMBIENT;
+  vec4 lighting =
+    mix((1.0 - length(uv - vec2(0.5, 0.5))) * LIGHT_AMBIENT,
+    vec4(1.0),
+    u_hyper);
+
   for (int i = 0; i < NUM_LIGHTS; i++) {
     lighting +=
-      (LIGHT_INTENSITY + LIGHT_INTENSITY/2.0 * easeOut3(u_beat_time) * u_beat)
-        * mix(LIGHT_COLOR, rainbow, u_rgb)
-        * lights[i].z
-        * exp(-(LIGHT_FALLOFF + LIGHT_FALLOFF/2.0 * u_beat_time * u_beat) * length(uvr - lights[i].xy));
+      u_light * 0.75 *
+      mix(
+        (LIGHT_INTENSITY + LIGHT_INTENSITY/2.0 * easeOut3(u_beat_time) * u_beat)
+          * mix(LIGHT_COLOR, rainbow, u_rgb)
+          * mix(lights[i].z, 0.0, u_hyper)
+          * exp(-(LIGHT_FALLOFF + LIGHT_FALLOFF/2.0 * u_beat_time * u_beat) * length(uvr - lights[i].xy)),
+
+        vec4(vec3(0.1/float(NUM_LIGHTS) + 0.003 * sin(uvr.y * 700.0 + uvr.x + u_time * 790.0)), 1.0) * LIGHT_INTENSITY,
+        u_hyper);
+
+    plastics.xyz += 
+      u_light * 0.3
+      * plastics.xyz
+      * mix(LIGHT_COLOR, rainbow, u_rgb).xyz
+      * exp(
+        -(LIGHT_FALLOFF + LIGHT_FALLOFF * easeOut3(u_beat_time) * u_beat)
+        * length(uvr - lights[i].xy));
   }
-
-
-  // Dynamic Layers
-
-  // Ball depends on state
-  vec3 ball_color  = mix(BALL_COLOR, rainbow.rgb, u_hyper);
-
-  // Build playfield surface
-  vec4 playfield = mix(wood, base, base.a);
 
   // HypnoRings
   float hypno = u_hypno * 0.3; // looks best
@@ -394,15 +420,6 @@ void main () {
           circle_at(uvt, u_lamps[i].xy, 10.0));
   }
 
-  // Plastics layer / Holographic effect
-  float plasma_factor = u_holo;
-  vec4 plastics = 
-    layer(u_tex_plastics, uv, 
-        mix(PLASTIC_RED,    plasma(uv, u_time + 3.0).rgb, plasma_factor),
-        mix(PLASTIC_YELLOW, plasma(uv, u_time + 2.0).rgb, plasma_factor),
-        mix(PLASTIC_BLUE,   plasma(uv, u_time + 1.0).rgb, plasma_factor)); 
-  plastics = mix(plastics, col(mix(PLASTIC_WHITE, plasma(uv, u_time).rgb, plasma_factor)), plastic_white);
-
   // Add indicators into labels layer
   labels = mix(labels, col(BLACK), indic_normal_a
       * smoothstep(-EPS, EPS, sin((uvr.y + 0.75) * PI * 2.7)));
@@ -425,7 +442,7 @@ void main () {
   final = mix(final, logo, logo.a * hypernull);
   final = mix(final, lanes, lanes.a * hypernull);
   final = mix(final, labels, labels.a * hypernull);
-  final = mix(final, hyperspeed + drop, drop.a);
+  final = mix(final, drop, drop.a * hypernull);
   final = mix(final, vec4(BLACK, 1.0), text_low  * cl(3.0 * sin(u_time * 2.0 + 0.)) * hypernull);
   final = mix(final, vec4(BLACK, 1.0), text_high * cl(3.0 * sin(u_time * 2.0 + PI)) * hypernull);
 
