@@ -111,10 +111,11 @@ float cl (float x) {
   return clamp(x, 0.0, 1.0);
 }
 
-float only_r (sampler2D source, vec2 uv) { return texture2D(source, uv).r; }
-float only_g (sampler2D source, vec2 uv) { return texture2D(source, uv).g; }
-float only_b (sampler2D source, vec2 uv) { return texture2D(source, uv).b; }
 float only_a (sampler2D source, vec2 uv) { return texture2D(source, uv).a; }
+float only_r (sampler2D source, vec2 uv) { return texture2D(source, uv).r * only_a(source, uv); }
+float only_g (sampler2D source, vec2 uv) { return texture2D(source, uv).g * only_a(source, uv); }
+float only_b (sampler2D source, vec2 uv) { return texture2D(source, uv).b * only_a(source, uv); }
+
 vec4 col(vec3 c) { return vec4(c, 1.0); }
 
 float circle_at (vec2 pos, vec2 center, float radius) {
@@ -239,10 +240,10 @@ void main () {
 
   // Colorize layers
 
-  float logo_mask   = slice_between(uvt.y, 250.0, 310.0);
-  float bump_mask   = slice_between(uvt.y, 550.0, 700.0);
-  float drop_mask   = slice_between(uvt.y, 470.0, 520.0);
-  float extras_mask = slice_between(uvt.y, 750.0, 830.0);
+  float logo_mask   = slice_between(uvt.y, 250.0, 300.0);
+  float bump_mask   = slice_between(uvt.y, 550.0, 680.0);
+  float drop_mask   = slice_between(uvt.y, 470.0, 510.0);
+  float extras_mask = slice_between(uvt.y, 760.0, 840.0);
 
   vec4 wood     = texture2D(u_tex_wood, uv);
   vec4 base     = layer(u_tex_base,     uv, BG_RED, BG_GREEN, BG_WHITE);
@@ -251,7 +252,6 @@ void main () {
   vec4 bump     = layer(u_tex_extra,    uv, BUMPER_WHITE, BUMPER_GREEN, BUMPER_BLUE) * bump_mask;
   vec4 logo     = layer(u_tex_extra,    uv, BG_WHITE, BG_GREEN, BLACK) * logo_mask;
   vec4 rtk      = layer(u_tex_rtk,      uv, BG_BROWN, BG_BROWN, BG_BROWN);
-  vec4 misc     = layer(u_tex_misc,     uv, WHITE, WHITE, WHITE);
   vec4 lanes    = layer(u_tex_lanes,    uv, BG_ORANGE, BG_GREEN, BG_BLUE);
   vec4 rails    = layer(u_tex_rails,    uv, WALL_METAL, PLASTIC_LANE, SCREW_METAL);
   vec4 walls    = layer(u_tex_walls,    uv, WALL_METAL, WALL_METAL, WALL_METAL);
@@ -261,15 +261,13 @@ void main () {
 
   // Alphas
 
-  float playfield_alpha = base.a;
-  float plastics_alpha  = bump.a;
-  float eyes_alpha      = only_g(u_tex_misc, uv);
+  float beat_alpha      = easeOut3(1.0 - u_beat_time) * u_beat;
+  float eyes_alpha      = only_r(u_tex_misc, uv);
   float lamp_alpha      = only_b(u_tex_misc, uv);
-  float plastic_white   = only_r(u_tex_misc, uv);
+  float plastic_white   = only_g(u_tex_misc, uv);
   float text_low        = only_b(u_tex_text, uv);
   float text_high       = only_r(u_tex_text, uv);
   float skirts_alpha    = only_g(u_tex_text, uv);
-  float beat_alpha      = easeOut3(1.0 - u_beat_time) * u_beat;
   float indic_normal    = only_g(u_tex_indic, uv);
   float indic_normal_a  = only_a(u_tex_indic, uv);
   float indic_hidden    = only_r(u_tex_indic, uv);

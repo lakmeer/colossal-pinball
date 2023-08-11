@@ -64,7 +64,7 @@
     u_tex_plastics = await loadImage('/layers/Plastics.webp');
     u_tex_walls    = await loadImage('/layers/Walls.webp');
     u_tex_rails    = await loadImage('/layers/LaneRails.webp');
-    u_tex_extra    = await loadImage('/layers/ExtrasBumpersSlotsLogo.webp');
+    u_tex_extra    = await loadImage('/layers/ExtraBumperSlotsLogo.webp');
     u_tex_noise    = await loadImage('/noise.png');
 
   });
@@ -73,6 +73,7 @@
 
 <div class="LayerRenderer">
   <Vader auto scale={0.5} {shader}
+
     {u_tex_rtk}
     {u_tex_misc}
     {u_tex_base}
@@ -92,7 +93,7 @@
 
     {u_tex_noise}
 
-    {u_ball_pos}
+    u_ball_pos={u_ball_pos}
     u_world={world.asTuple()}
     u_beat_time={(t - start)/500 % 1}
     u_holo={fx.holo}
@@ -120,20 +121,20 @@
 
 <style>
   .LayerRenderer {
+  }
+
+  .LayerRenderer :global(.Vader) {
+    height: 100%;
+    width: 100%;
+  }
+
+  .LayerRenderer :global(canvas) {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: 1;
-    background: grey;
-  }
-
-  .LayerRenderer :global(canvas) {
-    position: relative;
-    margin: auto;
-    width: auto;
-    height: 100vh;
   }
 
 </style>

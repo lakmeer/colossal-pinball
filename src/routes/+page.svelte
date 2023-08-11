@@ -4,8 +4,10 @@
 
   import Ball from "$lib/Ball";
   import Vec2 from "$lib/Vec2";
+  import Color from "$lib/Color";
 
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
+  import LayerRenderer from '$comp/LayerRenderer.svelte';
 
   import type Table from "$lib/tables/";
 
@@ -28,6 +30,7 @@
 
   let table:Table  = new Now();
   let balls:Ball[] = [];
+  let world = table.config.bounds;
 
   let cameraY = 0;
   let input:InputState = {
@@ -48,6 +51,8 @@
   //
 
   const update = (dt:number) => {
+    
+    score = table.gameState.score;
 
     // 'Fractional friction factor' - exponentially adjusted for number of steps
     const fff = pow(1 - (1 - STD_FRICTION), 1/substeps);
@@ -203,6 +208,7 @@
       case 's': input.right = true; break;
       case 'ArrowLeft':  input.tiltLeft  = true; break;
       case 'ArrowRight': input.tiltRight = true; break;
+      case ' ': input.launch = true; break;
     }
   }
 
@@ -245,6 +251,12 @@
     }
   });
 
+  $: ballPos = balls.length
+    ? Vec2.fromXY(balls[0].pos.x, balls[0].pos.y)
+    : Vec2.zero;
+
+  let score = table.gameState.score;
+
   let fx:FxConfig = {
     hyper: 0,
     holo: 0,
@@ -254,6 +266,12 @@
     beat: 0,
     face: 0
   }
+
+  let rose = Color.fromTw('rose-950').toString();
+  let red  = Color.fromTw('red-500').toString();
+  let emerald = Color.fromTw('emerald-500').toString();
+  let green = Color.fromTw('green-500').toString();
+
 </script>
 
 
@@ -293,29 +311,30 @@
 
   <div class="frame">
     <div class="inner" style="--aspect: {table.config.bounds.aspect}" bind:clientWidth bind:clientHeight>
-      <CanvasRenderer
-        {balls}
-        {table}
-        {cameraY}
-        {spawnArrow}
+      <LayerRenderer
         {fx}
+        {ballPos} 
+        lamps={table.gameState.lamps}
+        world={world}
         width={clientWidth}
         height={clientHeight}
       />
+
+      <div class="display">
+        <span class="balls" style="color: {green}">
+          {balls.length}
+        </span>
+
+        <span class="score" style="color: {red}">
+          {score}
+        </span>
+      </div>
     </div>
   </div>
 </div>
 
 
 <style>
-  :global(.Vader) {
-    z-index: 0;
-  }
-
-  :global(.TwoDee) {
-    z-index: 1;
-  }
-
   .outer {
     position: fixed;
     top: 0;
@@ -325,44 +344,88 @@
     display: grid;
     grid-template-columns: 150px 1fr;
     background: #111111;
-    object-fit: contain;
   }
 
   .frame {
     container-type: size;
     display: grid;
-    background: black;
+    box-shadow: 0 0 20px #000204 inset;
   }
 
   .inner {
+    display: grid;
+    position: relative;
     aspect-ratio: var(--aspect);
     margin: auto;
     width: auto;
-    height: 100ch;
+    height: 100cqh;
+    overflow: hidden;
   }
 
   /* Needs to squish vertically */
   @container (max-aspect-ratio: 0.57) {
     .inner {
       height: auto;
+      width: 100cqw;
+    }
+  }
+
+  .display {
+    font-family: 'dseg7', monospace;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    min-height: 1vw;
+    aspect-ratio: 6.16;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    container-type: size;
+  }
+
+  @container (min-width:1px) {
+    .score, .balls {
+      display: block;
+      font-size: 10cqi;
+      margin: 1cqi 2cqi;
+      text-shadow: 0 0 1cqi color-mix(in srgb, currentColor 90%, yellow);
+    }
+
+    .score {
+      min-width: 4cqi;
+      flex: 1;
+    }
+
+    .score:after, .balls:after {
+      display: block;
       width: 100%;
+      height: 0.5cqi;
+      background: black;
+      position: absolute;
+      top :0;
+      left: 0;
+      opacity: 1.2;
+      mix-blend-mode: screen;
+      text-shadow: none;
+      color: color-mix(in srgb, currentColor 20%, #000022);
+      z-index: 1;
+    }
+
+    .score:after {
+      content: '88888888';
+    }
+
+    .balls:after {
+      content: '8';
     }
   }
 
   .debug {
-    top: 0;
-    left: 0;
     color: white;
     font-family: monospace;
-    margin: 0;
     padding: 0 1rem;
-    width: 100%;
-  }
-
-  .sliders {
-    max-width: 100%;
-    grid-template-columns: repeat(2, 1fr);
-    grid-gap: 1rem;
   }
 
   h3 {
@@ -372,7 +435,7 @@
   span {
     display: block;
     text-align: right;
-    margin-bottom: -0.5rem;
+    transform: translateY(0.5rem);
   }
 
   input {
