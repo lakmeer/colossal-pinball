@@ -289,8 +289,8 @@
    Time: {delta.toFixed(3)}
    BtnA: {input.left  ? '🟢' : '🔴'}
    BtnB: {input.right ? '🟢' : '🔴'}
-  TiltL: {input.left  ? '🟢' : '🔴'}
-  TiltR: {input.right ? '🟢' : '🔴'}
+  TiltL: {input.tiltLeft  ? '🟢' : '🔴'}
+  TiltR: {input.tiltRight ? '🟢' : '🔴'}
     </pre>
     <h3>FX</h3>
     <div class="sliders">

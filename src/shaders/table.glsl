@@ -90,7 +90,7 @@ const vec3 SCREW_METAL = vec3(0.5, 0.5, 0.5);
 
 const vec3 BALL_COLOR = WHITE;
 const vec3 LAMP_ON    = vec3(0.99, 0.9, 0.5);
-const vec3 LAMP_OFF   = vec3(0.3, 0.2, 0.1);
+const vec3 LAMP_OFF   = LAMP_ON * vec3(0.3, 0.2, 0.1) * 0.2;
 
 const vec4  LIGHT_COLOR = vec4(0.99, 0.9, 0.7, 1.0);
 const vec4  LIGHT_AMBIENT = LIGHT_COLOR * 0.9;
@@ -416,8 +416,8 @@ void main () {
   for (int i = 0; i < NUM_LAMPS; i++) {
     lamps += vec4(
         mix(LAMP_OFF, LAMP_ON, u_lamps[i].z) *
-          circle_at(uvt, u_lamps[i].xy, 10.0),
-          circle_at(uvt, u_lamps[i].xy, 10.0));
+          circle_at(uvt, u_lamps[i].xy, 15.0),
+          circle_at(uvt, u_lamps[i].xy, 15.0));
   }
 
   // Add indicators into labels layer
@@ -443,16 +443,16 @@ void main () {
   final = mix(final, lanes, lanes.a * hypernull);
   final = mix(final, labels, labels.a * hypernull);
   final = mix(final, drop, drop.a * hypernull);
-  final = mix(final, vec4(BLACK, 1.0), text_low  * cl(3.0 * sin(u_time * 2.0 + 0.)) * hypernull);
-  final = mix(final, vec4(BLACK, 1.0), text_high * cl(3.0 * sin(u_time * 2.0 + PI)) * hypernull);
+  final = mix(final, col(BLACK), text_low * hypernull);
+  //final = mix(final, vec4(BLACK, 1.0), text_high * hypernull);
 
   // Mid layer
   final = mix(final, rtk, rtk.a * hypernull);
-  //final = mix(final, vec4(LAMP_ON, 1.0) * nsin(uv.y * 4.0 + u_time * 4.0), lamp_alpha);
   final = mix(final, col(ball_color), ball);
 
   // Lighting layer
   final *= lighting;
+  //final = mix(final, col(LAMP_ON) * nsin(uv.y * 4.0 + u_time * 4.0), lamp_alpha);
 
   // Top layer
   final = mix(final, hyperspeed + bump, bump.a);  // bumper caps
@@ -474,11 +474,11 @@ void main () {
     );
   }
 
-  // Special
   // Hidden indicators
   // Eyes
-  //final = mix(final, mix(col(BG_WHITE), rainbow, hyperspeed), eyes_alpha); // eyes
-  //final = mix(final, lamps, lamps.a);
+  final = mix(final, mix(col(BG_WHITE), rainbow, hyperspeed), eyes_alpha); 
+  // Lamps
+  final = mix(final, lamps, lamp_alpha);
 
   gl_FragColor = uv.y < 0.9075
     ? vec4(final.rgb, 1.0) + lamp_alpha_upper_target_left * (hyperspeed + vec4(LAMP_ON, 1.0)) * lamp_alpha * SCORE_PHASE_ALPHA
