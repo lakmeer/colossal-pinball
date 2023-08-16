@@ -8,6 +8,7 @@
 
   import CanvasRenderer from '../components/CanvasRenderer.svelte';
   import LayerRenderer from '$comp/LayerRenderer.svelte';
+  import Vader from '$src/vader';
 
   import type Table from "$lib/tables/";
 
@@ -51,7 +52,7 @@
   //
 
   const update = (dt:number) => {
-    
+
     score = table.gameState.score;
 
     // 'Fractional friction factor' - exponentially adjusted for number of steps
@@ -178,7 +179,7 @@
         spawnArrow[1].set(pos);
         clicked = true;
         break;
-      case 1: 
+      case 1:
         spawn(spawnArrow);
         break;
     }
@@ -314,14 +315,80 @@
 
   <div class="frame">
     <div class="inner" style="--aspect: {table.config.bounds.aspect}" bind:clientWidth bind:clientHeight>
+      <!--
       <LayerRenderer
         {fx}
-        {ballPos} 
+        {ballPos}
         lamps={table.gameState.lamps}
         world={world}
         width={clientWidth}
         height={clientHeight}
       />
+      -->
+      <Vader auto>
+        <script type="x-shader-x-fragment">
+          precision highp float;
+          uniform vec2 u_resolution;
+          uniform float u_time;
+
+          const float PI = 3.14159265;
+          const float PI2 = PI/2.0;
+          const float EPS = 0.001;
+
+          float line_sdf (vec3 ar, vec3 br, vec2 p) {
+
+            vec2 a = ar.xy;
+            vec2 b = br.xy;
+
+            float r1 = ar.z;
+            float r2 = br.z;
+
+            vec2 line = b - a;
+
+            float h = clamp(dot(p-a, line) / dot(line, line), 0.0, 1.0);
+
+            return length(p - (a + line * h)) - mix(r1, r2, h);
+          }
+
+          float nsin (float t) {
+            return sin(t) * 0.5 + 0.5;
+          }
+
+          float ss (float n) {
+            return smoothstep(-EPS, EPS, n);
+          }
+
+          float cl (float n) {
+            return clamp(n, 0.0, 1.0);
+          }
+
+          void main () {
+            vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+
+            vec3 b = vec3(0.75, 0.5, 0.05);
+            vec3 a = b - vec3(
+              0.5 * cos(PI/4.0 * pow(sin(u_time * 4.0), 32.0) - PI * 2.0),
+              -0.5 * sin(PI/4.0 * pow(sin(u_time * 4.0), 32.0) - PI * 2.0),
+              0.025);
+
+            vec3 white = vec3(1.0);
+            vec3 grey  = vec3(0.9);
+            vec3 black = vec3(0.0);
+            vec3 pink  = vec3(0.8, 0.3, 0.6);
+            vec3 bg    = vec3(0.7, 0.6, 0.2);
+
+            float dist = line_sdf(a, b, uv);
+
+            vec3 paddle = mix(white, grey, ss(dist));
+            paddle = mix(paddle, pink, ss(dist - 0.025));
+            paddle = mix(paddle, black, ss(dist - 0.034));
+            paddle = mix(paddle, bg, pow(cl((dist - 0.034)*32.0), 0.1));
+
+            gl_FragColor = vec4(paddle, 1.0);
+          }
+
+        </script>
+      </Vader>
 
       <div class="display">
         <span class="balls" style="color: {green}">
@@ -338,6 +405,13 @@
 
 
 <style>
+
+  /* TEMP */
+  :global(.Vader canvas) {
+    aspect-ratio: 1;
+  }
+  /* TEMP */
+
   .outer {
     position: fixed;
     top: 0;
