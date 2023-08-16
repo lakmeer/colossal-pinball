@@ -1,8 +1,11 @@
 <script lang="ts">
   import Vec2 from '$lib/Vec2';
   import type Rect from '$lib/Rect';
-  import type { Lamp } from '$lib/Thing';
+  import type { Lamp, Flipper } from '$lib/Thing';
   import type { FxConfig } from "$types";
+  import type Table from "$lib/tables";
+
+  type GameState = Table['gameState'];
 
   import { onMount } from 'svelte';
   import { lerp, loadImage } from "$lib/utils";
@@ -12,9 +15,9 @@
   import shader from '$src/shaders/table.glsl?raw';
 
   export let ballPos:Vec2 = Vec2.zero; // In world space
-  export let lamps:Record<string, Lamp> = {};
   export let world:Rect;
   export let fx:FxConfig;
+  export let gameState:GameState;
 
   let u_tex_rtk:HTMLImageElement;
   let u_tex_base:HTMLImageElement;
@@ -38,10 +41,14 @@
   let start = performance.now();
   let t = performance.now();
 
-  $: lampState = Object.values(lamps).map(lamp => ([
+  $: lampState = Object.values(gameState.lamps).map(lamp => ([
     lamp.shape.pos.x,
     lamp.shape.pos.y,
     lamp.state.active ? 1 : 0,
+  ]));
+
+  $: flipperState = Object.values(gameState.flippers).map(flip => ([
+    flip.shape.pos.x, flip.shape.pos.y, flip.shape.tip.x, flip.shape.tip.y,
   ]));
 
   $: u_ball_pos = [ ballPos.x, ballPos.y ];
@@ -103,17 +110,18 @@
     u_beat={fx.beat}
     u_rgb={fx.rgb}
     u_face={fx.face}
+    u_swim={fx.swim}
     u_light={fx.light}
 
+    u_flippers={flipperState}
     u_num_lamps={lampState.length}
     u_lamps={lampState}
     u_score_phase={0}
 
     onFrame={() => {
       t = performance.now();
-      lamps = lamps;
-         ballPos = ballPos;
-
+      gameState = gameState;
+      ballPos = ballPos;
     }}
     label="test">
   </Vader>
@@ -121,8 +129,6 @@
 
 
 <style>
-  .LayerRenderer {
-  }
 
   .LayerRenderer :global(.Vader) {
     height: 100%;

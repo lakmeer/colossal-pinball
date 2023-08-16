@@ -43,6 +43,7 @@ uniform vec2 u_ball_pos;
 uniform float u_beat_time;
 uniform int u_score_phase;
 uniform vec3 u_lamps[NUM_LAMPS];
+uniform vec4 u_flippers[2];
 
 // FX Values
 
@@ -54,6 +55,7 @@ uniform float u_distort;
 uniform float u_rgb;
 uniform float u_face;
 uniform float u_light;
+uniform float u_swim;
 
 
 // Config
@@ -87,6 +89,7 @@ const vec3 PLASTIC_LANE   = vec3(0.900, 0.920, 0.100);
 const vec3 WALL_METAL  = vec3(0.3, 0.3, 0.3);
 const vec3 RUBBER_RED  = vec3(0.5, 0.1, 0.2);
 const vec3 SCREW_METAL = vec3(0.5, 0.5, 0.5);
+const vec3 RUBBER_PINK = vec3(0.8, 0.2, 0.4);
 
 const vec3 BALL_COLOR = WHITE;
 const vec3 LAMP_ON    = vec3(0.99, 0.9, 0.5);
@@ -203,6 +206,42 @@ vec4 starfield (in vec2 uv) {
 	return vec4(uv.x > 0.5 ? col : gamma(col), 1.0);
 }
 
+// Flipper paddles
+
+float line_sdf (vec3 ar, vec3 br, vec2 p) {
+
+  vec2 a = ar.xy;
+  vec2 b = br.xy;
+
+  float r1 = ar.z;
+  float r2 = br.z;
+
+  vec2 line = b - a;
+
+  float h = clamp(dot(p-a, line) / dot(line, line), 0.0, 1.0);
+
+  return length(p - (a + line * h)) - mix(r1, r2, h);
+}
+
+float ss (float n) {
+  return smoothstep(-EPS, EPS, n);
+}
+
+vec4 flipper (vec2 base, vec2 tip, vec2 uv) {
+  vec3 white = vec3(1.0);
+  vec3 grey  = vec3(0.9, 0.4, 0.2);
+  vec3 black = vec3(0.0);
+  vec3 pink  = vec3(0.8, 0.3, 0.6);
+
+  float dist = line_sdf(vec3(base, 9.00), vec3(tip, 6.0), uv);
+
+  vec3 paddle = mix(PLASTIC_WHITE, 0.9 * PLASTIC_WHITE, ss(dist + 4.0));
+  paddle = mix(paddle, RUBBER_PINK, ss(dist + 2.0));
+  paddle = mix(paddle, black, ss(dist));
+
+  return vec4(paddle, cl(0.3 * exp(-dist*0.9)));
+}
+
 
 //
 // MAIN
@@ -250,7 +289,6 @@ void main () {
 
   vec4 wood     = texture2D(u_tex_wood, uv);
   vec4 base     = layer(u_tex_base,     uv, BG_RED, BG_GREEN, BG_WHITE);
-  vec4 hair     = layer(u_tex_hair,     uv, BG_WHITE, BG_ORANGE, BG_RED);
   vec4 drop     = layer(u_tex_extra,    uv, BG_WHITE, BG_BROWN, BLACK) * drop_mask;
   vec4 bump     = layer(u_tex_extra,    uv, BUMPER_WHITE, BUMPER_GREEN, BUMPER_BLUE) * bump_mask;
   vec4 logo     = layer(u_tex_extra,    uv, BG_WHITE, BG_GREEN, BLACK) * logo_mask;
@@ -280,7 +318,7 @@ void main () {
 
   // FX layers
 
-  vec4 rainbow    = vec4(nsin(uv.x + u_time * 2.5), nsin(uv.y + u_time * 3.0), 0.5, 1.0);
+  vec4 rainbow    = vec4(0.5 + 0.5 * nsin(uv.x + u_time * 2.5), 0.5 + 0.5 * nsin(uv.y + u_time * 3.0), 0.5 + 0.5 * nsin(uv.x + u_time * 4.7), 1.0);
   vec4 hyperspeed = vec4(u_hyper);
   vec4 hypernull  = vec4(1.0) - hyperspeed;
   vec4 stars      = starfield(uv);
@@ -362,6 +400,11 @@ void main () {
         * length(uvr - lights[i].xy));
   }
 
+  // Flippers
+  vec4 flippers =
+    (0.9 + 0.1 * col(lighting.rgb)) * flipper(u_flippers[0].xy, u_flippers[0].zw, uvt) +
+    (0.9 + 0.1 * col(lighting.rgb)) * flipper(u_flippers[1].xy, u_flippers[1].zw, uvt);
+
   // HypnoRings
   float hypno = u_hypno * 0.3; // looks best
   vec2  ring_center = vec2(0.355, 0.9215);
@@ -401,15 +444,29 @@ void main () {
   vec3 face_color_c = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + (u_face * 10.0 * u_time + u_time * 2.5) + PI * 2.0/4.0));
   vec3 face_color_d = mix(BG_GREEN, BG_BLUE, ncos(uvr.x * 0.25 + (u_face * 10.0 * u_time + u_time * 2.5) + PI * 3.0/4.0));
 
+  vec2 wiggle = u_swim * vec2(0.0, 0.005 * sin(u_time * 3.0 + uv.x*TAU));
+  eyes_alpha = only_r(u_tex_misc, uv + wiggle);
+
+  wiggle *= smoothstep(0.3, 0.78, uvr.y);
+  wiggle *= smoothstep(1.4, 1.16, uvr.y);
+
+
   vec4 faces =
     mix(
-      layer(u_tex_face2, uv, BG_RED,
+      layer(u_tex_face2, uv + wiggle, BG_RED,
         mix(BG_GREEN, face_color_c, u_face),
         mix(BG_BLUE,  face_color_d, u_face)),
-      layer(u_tex_face1, uv, BG_RED,
+      layer(u_tex_face1, uv + wiggle, BG_RED,
         mix(BG_GREEN, face_color_a, u_face),
         mix(BG_BLUE,  face_color_b, u_face)),
-      only_a(u_tex_face1, uv));
+      only_a(u_tex_face1, uv + wiggle));
+
+  vec4 hair = layer(u_tex_hair,
+      uv + wiggle,
+      BG_WHITE, BG_ORANGE, BG_RED);
+
+  faces.a *= 1.0 - 0.3 * u_hyper;
+  hair.a  *= 1.0 - 0.3 * u_hyper;
 
   // Lamp indicators
   vec4 lamps = vec4(0.0, 0.0, 0.0, 0.0);
@@ -448,6 +505,7 @@ void main () {
 
   // Mid layer
   final = mix(final, rtk, rtk.a * hypernull);
+  final = mix(final, mix(lamps, rainbow * lamps * 1.6, u_hyper), lamps.r * lamp_alpha);
   final = mix(final, col(ball_color), ball);
 
   // Lighting layer
@@ -455,6 +513,7 @@ void main () {
   //final = mix(final, col(LAMP_ON) * nsin(uv.y * 4.0 + u_time * 4.0), lamp_alpha);
 
   // Top layer
+  final = mix(final, hyperspeed + flippers, flippers.a);
   final = mix(final, hyperspeed + bump, bump.a);  // bumper caps
   final = mix(final, walls, walls.a * hypernull);
   final = mix(final, extra, extra.a * hypernull);
@@ -474,15 +533,12 @@ void main () {
     );
   }
 
-  // Hidden indicators
+  // TODO: Hidden indicators
   // Eyes
-  final = mix(final, mix(col(BG_WHITE), rainbow, hyperspeed), eyes_alpha); 
-  // Lamps
-  final = mix(final, lamps, lamp_alpha);
+  final = mix(final, mix(col(BG_WHITE), rainbow, hyperspeed), eyes_alpha * eyes_alpha);
 
   gl_FragColor = uv.y < 0.9075
     ? vec4(final.rgb, 1.0) + lamp_alpha_upper_target_left * (hyperspeed + vec4(LAMP_ON, 1.0)) * lamp_alpha * SCORE_PHASE_ALPHA
     : vec4(BLACK, 1.0);
-
 }
 

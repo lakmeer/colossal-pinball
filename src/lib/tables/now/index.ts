@@ -49,6 +49,7 @@ export default class Now extends Table {
       ballStock: 5,
       awaitNewBall: true,
       ballsInPlay: 0,
+      flippers: {},
       lamps:{
       },
     }
@@ -392,6 +393,8 @@ export default class Now extends Table {
       -flipperRange,
       FLIPPER_SPEED);
 
+    this.gameState.flippers.left = leftFlipper;
+    this.gameState.flippers.right = rightFlipper;
 
     // Central drain
 

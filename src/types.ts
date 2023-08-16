@@ -17,13 +17,4 @@ export type InputState = {
 
 export type EventQueue = Array<[ string, EventType ]>;
 
-export type FxConfig = {
-  light: number;
-  holo: number;
-  rainbow: number;
-  distort: number;
-  hypno: number;
-  beat: number;
-  hyper: number;
-}
-
+export type FxConfig = Record<string, number>;
