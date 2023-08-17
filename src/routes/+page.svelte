@@ -19,7 +19,7 @@
 
   // Config
 
-  const SIMPLE_RENDER = true;
+  const SIMPLE_RENDER = false;
 
   const TIME_SCALE    = 1.0;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
@@ -246,9 +246,20 @@
     document.addEventListener('keydown',   onKeydown);
     document.addEventListener('keyup',     onKeyup);
 
+    console.log(',,,');
+    await initAudio();
+
+    console.log(audio);
+
+    const play = () => { audio.start(); }
+
+    document.addEventListener('click', play);
+
     return () => {
       running = false;
       cancelAnimationFrame(rafref);
+
+      document.removeEventListener('click', play);
 
       if (SIMPLE_RENDER) {
         document.removeEventListener('mousedown', onMouseDown);
@@ -283,6 +294,29 @@
   let width:number;
   let height:number;
   let displayScore = 0;
+
+
+
+  // Audio
+
+  let audio;
+
+  const loadAudio = async (ctx:AudioContext, src:string):Promise<AudioBuffer> => {
+    let file = await fetch(src);
+    let arrayBuffer = await file.arrayBuffer();
+    let data = await ctx.decodeAudioData(arrayBuffer);
+    let source = ctx.createBufferSource();
+    source.buffer = data;
+    source.loop = false;
+    return source;
+  }
+
+  const initAudio = async () => {
+    const ctx = new AudioContext();
+    audio = await loadAudio(ctx, 'music/0.mp3');
+    audio.connect(ctx.destination);
+  }
+
 
 </script>
 
