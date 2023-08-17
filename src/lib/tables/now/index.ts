@@ -41,7 +41,7 @@ export default class Now extends Table {
     this.config = {
       bounds: new Rect(-256, 898, 256, 0),
       ballRad: 13,
-      gravity: 2000,
+      gravity: 700,
     };
 
     this.gameState = {
@@ -156,7 +156,7 @@ export default class Now extends Table {
     let greatRadius = (W - 48)/2
 
     Collider(`stopper`, Capsule.at(TL + 52, TT - 92, 15, 9, TAU*13/32), 2);
-    Gate(`launch_gate`, Capsule.at(TR - 28, TT - 88, 8, 35, TAU*23/63), Vec2.at(1, -1).norm());
+    Gate(`launch_gate`, Capsule.at(TR - 34, TT - 87, 8, 35, TAU*23/63), Vec2.at(1, -1).norm());
 
     Collider(`topwall`,             Arc.at(19, TT - greatRadius + 5, 5, greatRadius, TAU*8/16, TAU*0/16));
     Collider(`leftwall`,            Capsule.from(TL - 5, 0, TL - 5, TT - greatRadius + 5, 5));

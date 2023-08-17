@@ -21,7 +21,7 @@
 
   const SIMPLE_RENDER = true;
 
-  const TIME_SCALE    = 0.6;
+  const TIME_SCALE    = 1.0;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
   const MAX_BALLS     = 100;
   const STD_FRICTION  = 0.98;
@@ -44,7 +44,6 @@
   };
 
 
-
   //
   // Physics
   // TODO: Spatial binning
@@ -57,6 +56,10 @@
 
     for (let a of balls) {
       a.impart(Vec2.fromXY(0, -table.config.gravity));
+
+      if (input.tiltLeft)  a.impart(Vec2.fromXY(-500, 0));
+      if (input.tiltRight) a.impart(Vec2.fromXY( 500, 0));
+
       a.simulate(dt);
 
       for (let b of balls) {
@@ -231,13 +234,15 @@
 
   //@ts-ignore shut up
   onMount(async () => {
-
     running = true;
     render();
 
-    //document.addEventListener('mousedown', onMouseDown);
-    //document.addEventListener('mouseup',   onMouseUp);
-    //document.addEventListener('mousemove', onMouseMove);
+    if (SIMPLE_RENDER) {
+      document.addEventListener('mousedown', onMouseDown);
+      document.addEventListener('mouseup',   onMouseUp);
+      document.addEventListener('mousemove', onMouseMove);
+    }
+
     document.addEventListener('keydown',   onKeydown);
     document.addEventListener('keyup',     onKeyup);
 
@@ -245,9 +250,12 @@
       running = false;
       cancelAnimationFrame(rafref);
 
-      //document.removeEventListener('mousedown', onMouseDown);
-      //document.removeEventListener('mouseup',   onMouseUp);
-      //document.removeEventListener('mousemove', onMouseMove);
+      if (SIMPLE_RENDER) {
+        document.removeEventListener('mousedown', onMouseDown);
+        document.removeEventListener('mouseup',   onMouseUp);
+        document.removeEventListener('mousemove', onMouseMove);
+      }
+
       document.removeEventListener('keydown',   onKeydown);
       document.removeEventListener('keyup',     onKeyup);
     }
@@ -280,7 +288,6 @@
 
 
 <div class="frame">
-
   <div class="debug-panel">
     <h3>Status</h3>
     <pre>
@@ -297,29 +304,26 @@
     <FxPanel bind:fx={fx} />
   </div>
 
-  <AspectLayout aspect={table.config.bounds.aspect} bgColor="#112233" bind:width bind:height>
-
+  <AspectLayout aspect={table.config.bounds.aspect} bgColor="#111111" bind:width bind:height>
     {#if SIMPLE_RENDER}
       <CanvasRenderer
         {balls}
         {table}
-        gameState={table.gameState}
-        spawnArrow={spawnArrow}
         world={world}
         width={width}
         height={height}
+        spawnArrow={spawnArrow}
       />
     {:else}
       <LayerRenderer
         {fx}
         {ballPos}
-        gameState={table.gameState}
         world={world}
+        gameState={table.gameState}
       />
     {/if}
 
     <ScoreDisplay balls={balls.length} score={floor(displayScore)} />
-
   </AspectLayout>
 </div>
 
@@ -333,12 +337,12 @@
     height: 100vh;
     display: grid;
     grid-template-columns: 150px 1fr;
-    background: #111111;
   }
 
   .debug-panel {
     color: white;
     font-family: monospace;
+    background: #222222;
     padding: 0 1rem;
   }
 

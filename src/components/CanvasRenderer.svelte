@@ -7,13 +7,10 @@
   import type Shape from "$lib/Shape";
   import type Color from "$lib/Color";
 
-  type GameState = Table['gameState'];
-
   import Vec2   from '$lib/Vec2';
 
   import { Circle, Arc, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt, arrowAt } from "$lib/draw2d";
-  import { lerp } from "$lib/utils";
 
 
   // Config
@@ -28,7 +25,6 @@
 
   export let table:Table;
   export let balls:Ball[] = [];
-  export let gameState:GameState;
   export let spawnArrow:[Vec2, Vec2];
   export let world:Rect;
 
