@@ -2,22 +2,22 @@
   import { onMount } from 'svelte';
 
   import type Ball  from '$lib/Ball';
+  import type Rect  from "$lib/Rect";
   import type Table from "$lib/tables";
   import type Shape from "$lib/Shape";
+  import type Color from "$lib/Color";
+
+  type GameState = Table['gameState'];
 
   import Vec2   from '$lib/Vec2';
-  import Color  from '$lib/Color';
-
-  import FluidBG from '$comp/FluidBG.svelte';
 
   import { Circle, Arc, Capsule, Fence, Box } from "$lib/Shape";
   import { arcAt, capsuleAt, lineAt, circleAt, boxAt, textAt, arrowAt } from "$lib/draw2d";
-  import { ceil, lerp, loadImage } from "$lib/utils";
+  import { lerp } from "$lib/utils";
 
 
   // Config
 
-  const SHOW_VELOCITY  = false;
   const SHOW_GRIDLINES = false;
 
   const GRID_RES   = 10; // World space between gridlines
@@ -28,8 +28,11 @@
 
   export let table:Table;
   export let balls:Ball[] = [];
-  export let spawnArrow:[ Vec2, Vec2];
-  export let currentScore = table.gameState.score;
+  export let gameState:GameState;
+  export let spawnArrow:[Vec2, Vec2];
+  export let world:Rect;
+
+  let cameraY      = 0;
 
 
   // Canvas
@@ -39,14 +42,6 @@
 
   let canvas:HTMLCanvasElement;
   let ctx:CanvasRenderingContext2D;
-
-
-  // Other Props
-
-  export let TIME_SCALE = 1;
-  export let cameraY = 0;
-
-  let world = table.config.bounds;
 
 
   // Shape draw dispatch
@@ -68,16 +63,6 @@
 
   const render = () => {
     if (!canvas || !ctx) return;
-
-    // Update shader
-
-    if (balls.length) {
-      let pos = balls[0].pos;
-      ballPos = Vec2.fromXY(
-        (pos.x),
-        (pos.y)
-      );
-    }
 
     // Clear
     ctx.clearRect(0, 0, width, height);
@@ -115,31 +100,15 @@
 
     // Things
     for (let t of Object.values(table.things)) {
-      ctx.globalAlpha = 0.6;
-      //drawShape(t.shape, t.color);
-      ctx.globalAlpha = 1.0;
+      drawShape(t.shape, t.color);
     }
 
     // Balls
     for (let ball of balls) {
-      //circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
-      textAt(ctx, `${ball.id}`, ball.pos.x, ball.pos.y, '#000', 'center', '10px dseg7');
-
-      if (SHOW_VELOCITY) {
-        lineAt(ctx, ball.pos, ball.pos.add(ball.vel.scale(10/TIME_SCALE)), 'rgba(255, 63, 31, 0.7)', 2);
-      }
+      circleAt(ctx, ball.pos, ball.rad, ball.color.toString());
     }
 
     ctx.globalAlpha = 1;
-
-    // Score
-    currentScore = lerp(currentScore, table.gameState.score, 0.1);
-    textAt(ctx, `88888`, 230, 40, Color.fromTw('rose-950').toString(), 'right', '50px dseg7');
-    textAt(ctx, `${ceil(currentScore)}`, 230, 40, Color.fromTw('red-500').toString(), 'right', '50px dseg7');
-
-    // Ball count
-    textAt(ctx, `8`, -230, 40, Color.fromTw('emerald-950').toString(), 'left', '50px dseg7');
-    textAt(ctx, `${table.gameState.ballStock}`, -230, 40, Color.fromTw('green-500').toString(),   'left', '50px dseg7');
 
     // Spawning Arrow
     if (spawnArrow[0].dist(spawnArrow[1]) > 0.0) {
@@ -148,16 +117,6 @@
     }
 
     ctx.restore();
-
-    // Top layer
-    if (topImg) {
-      //ctx.globalAlpha = 0.5;
-      //ctx.globalCompositeOperation = 'color-burn';
-      //ctx.drawImage(topImg, 0, 0, width, height);
-      //ctx.globalAlpha = 1.0;
-      //ctx.globalCompositeOperation = 'source-over';
-    }
-
   }
 
 
@@ -171,23 +130,15 @@
     return [ ball.id, x, height - y ];
   }
 
-  // temp
-  let topImg:HTMLImageElement;
-
   //@ts-ignore shut up
   onMount(async () => {
     ctx = canvas.getContext('2d') as CanvasRenderingContext2D; // who cares
-    //topImg = await loadImage('/alignment.png');
-
   });
-
-  let ballPos = Vec2.zero;
 </script>
 
 
 <div class="CanvasRenderer">
   <canvas bind:this={canvas} {width} {height} />
-  <FluidBG src="/playfield.png" ballCoords={balls.map(toCanvasCoords)} {width} {height} />
 </div>
 
 
@@ -197,17 +148,7 @@
     max-width:  100vw;
     max-height: 100vh;
     background: #0004;
-    z-index: 2;
     position: relative;
     pointer-events: none;
-  }
-
-  .CanvasRenderer :global(.FluidBG) {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
   }
 </style>

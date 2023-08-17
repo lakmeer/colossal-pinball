@@ -7,7 +7,6 @@ import type { InputState } from "$types";
 import type { Lamp, Flipper } from "$lib/Thing";
 
 
-
 // Table Type
 
 export default class Table {
@@ -31,5 +30,6 @@ export default class Table {
   process (input: InputState) { }
 
   onRequestNewBall (fn) { }
+
 }
 

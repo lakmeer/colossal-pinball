@@ -300,6 +300,8 @@ interface FlipperState extends ThingState {
 
 export class Flipper extends Thing {
 
+  declare shape: Capsule; // override base type
+
   update (Δt) {
     const prevAngle = this.state.angle;
 
@@ -320,30 +322,6 @@ export class Flipper extends Thing {
     if (delta.len() === 0) return;
     ball.pos.addSelf(delta).scale(fff);
     this.emit(EventType.BOUNCED);
-
-    // Work this out later: probably just further displace the ball according
-    // to the imparted velolcity from the angular motion. It should get accounted for
-    // at the simulation step later.
-    return;
-
-    /*
-    let dir = delta.norm();
-
-    let shape = this.shape as Capsule;
-
-    let contactPoint = 
-      nearestPointOn(shape.pos, shape.tip, ball.pos)
-        .add(dir.scale(this.shape.rad))
-        .sub(ball.pos)
-        .sub(this.shape.pos);
-
-    let surfaceVel = contactPoint.perp().scale(this.state.angVel);
-
-    let v = ball.vel.dot(dir);
-    let vnew = surfaceVel.dot(dir);
-
-    ball.vel.addSelf(dir.scale(vnew - v));
-    */
   }
 
   setAngle (angle: number) {

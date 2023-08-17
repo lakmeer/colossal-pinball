@@ -2,16 +2,15 @@
   import Vec2 from '$lib/Vec2';
   import type Rect from '$lib/Rect';
   import type { Lamp, Flipper } from '$lib/Thing';
-  import type { FxConfig } from "$types";
+  import type { FxConfig } from "$src/types";
   import type Table from "$lib/tables";
 
   type GameState = Table['gameState'];
 
   import { onMount } from 'svelte';
-  import { lerp, loadImage } from "$lib/utils";
+  import { loadImage } from "$lib/utils";
 
   import Vader from '$src/vader';
-
   import shader from '$src/shaders/table.glsl?raw';
 
   export let ballPos:Vec2 = Vec2.zero; // In world space
@@ -41,13 +40,13 @@
   let start = performance.now();
   let t = performance.now();
 
-  $: lampState = Object.values(gameState.lamps).map(lamp => ([
+  $: lampState = Object.values(gameState.lamps).map((lamp:Lamp) => ([
     lamp.shape.pos.x,
     lamp.shape.pos.y,
     lamp.state.active ? 1 : 0,
   ]));
 
-  $: flipperState = Object.values(gameState.flippers).map(flip => ([
+  $: flipperState = Object.values(gameState.flippers).map((flip:Flipper) => ([
     flip.shape.pos.x, flip.shape.pos.y, flip.shape.tip.x, flip.shape.tip.y,
   ]));
 

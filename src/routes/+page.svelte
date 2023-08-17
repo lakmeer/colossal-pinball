@@ -2,21 +2,24 @@
 
   import { onMount } from 'svelte';
 
+  import type Table from "$lib/tables/";
+  import type { InputState, FxConfig } from "$types";
+
+  import { lerp, clamp, pow, floor, min, max } from "$lib/utils";
+
   import Ball from "$lib/Ball";
   import Vec2 from "$lib/Vec2";
-  import Color from "$lib/Color";
 
-  import CanvasRenderer from '../components/CanvasRenderer.svelte';
-  import LayerRenderer from '$comp/LayerRenderer.svelte';
-
-  import type Table from "$lib/tables/";
-
-  import { clamp, pow, floor, min, max } from "$lib/utils";
-
-  import type { InputState, FxConfig } from "$types";
+  import FxPanel        from '$comp/FxPanel.svelte';
+  import ScoreDisplay   from '$comp/ScoreDisplay.svelte';
+  import AspectLayout   from '$comp/AspectLayout.svelte';
+  import CanvasRenderer from '$comp/CanvasRenderer.svelte';
+  import LayerRenderer  from '$comp/LayerRenderer.svelte';
 
 
   // Config
+
+  const SIMPLE_RENDER = true;
 
   const TIME_SCALE    = 0.6;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
@@ -32,7 +35,6 @@
   let balls:Ball[] = [];
   let world = table.config.bounds;
 
-  let cameraY = 0;
   let input:InputState = {
     left:      false,
     right:     false,
@@ -41,8 +43,6 @@
     launch:    false,
   };
 
-  let clientWidth;
-  let clientHeight;
 
 
   //
@@ -51,8 +51,6 @@
   //
 
   const update = (dt:number) => {
-
-    score = table.gameState.score;
 
     // 'Fractional friction factor' - exponentially adjusted for number of steps
     const fff = pow(1 - (1 - STD_FRICTION), 1/substeps);
@@ -123,6 +121,9 @@
     // calculate how many substeps we can afford to pack into the next frame
     delta = performance.now() - start;
     substeps = max(8, min(100, floor(substeps * (1000/60)/delta * SUBSTEP_LIMIT)));
+
+    // Rollover score
+    displayScore = lerp(displayScore, table.gameState.score, 0.1);
   }
 
 
@@ -204,28 +205,29 @@
 
   const onKeydown = (event:KeyboardEvent) => {
     switch (event.key) {
-      case 'a': input.left  = true; break;
-      case 's': input.right = true; break;
-      case 'ArrowLeft':  input.tiltLeft  = true; break;
-      case 'ArrowRight': input.tiltRight = true; break;
+      case 'a':
+      case 'z': input.left  = true; break;
+      case 'x': input.tiltLeft  = true; break;
+      case ',': input.tiltRight = true; break;
+      case 's':
+      case '.': input.right = true; break;
       case ' ': input.launch = true; break;
     }
   }
 
   const onKeyup = (event:KeyboardEvent) => {
     switch (event.key) {
-      case 'a': input.left  = false; break;
-      case 's': input.right = false; break;
-      case 'ArrowLeft':  input.tiltLeft  = false; break;
-      case 'ArrowRight': input.tiltRight = false; break;
+      case 'a':
+      case 'z': input.left  = false; break;
+      case 'x': input.tiltLeft  = false; break;
+      case ',': input.tiltRight = false; break;
+      case 's':
+      case '.': input.right = false; break;
     }
   }
 
 
   // Init
-
-  let innerWidth = 0;
-  let innerHeight = 0;
 
   //@ts-ignore shut up
   onMount(async () => {
@@ -255,7 +257,8 @@
     ? Vec2.fromXY(balls[0].pos.x, balls[0].pos.y)
     : Vec2.zero;
 
-  let score = table.gameState.score;
+
+  // Score display ETC
 
   let fx:FxConfig = {
     light: 1,
@@ -269,84 +272,60 @@
     hyper: 0,
   }
 
-  let rose = Color.fromTw('rose-950').toString();
-  let red  = Color.fromTw('red-500').toString();
-  let emerald = Color.fromTw('emerald-500').toString();
-  let green = Color.fromTw('green-500').toString();
+  let width:number;
+  let height:number;
+  let displayScore = 0;
 
 </script>
 
 
-<svelte:window bind:innerWidth bind:innerHeight />
+<div class="frame">
 
-
-<div class="outer">
-  <div class="debug">
+  <div class="debug-panel">
     <h3>Status</h3>
     <pre>
   Balls: {balls.length}
   Steps: {substeps}
-   Time: {delta.toFixed(3)}
-   BtnA: {input.left  ? '🟢' : '🔴'}
-   BtnB: {input.right ? '🟢' : '🔴'}
+   Time: {delta.toFixed(2)}
+   BtnA: {input.left      ? '🟢' : '🔴'}
+   BtnB: {input.right     ? '🟢' : '🔴'}
   TiltL: {input.tiltLeft  ? '🟢' : '🔴'}
   TiltR: {input.tiltRight ? '🟢' : '🔴'}
     </pre>
+
     <h3>FX</h3>
-    <div class="sliders">
-      <span>LIGHT</span>
-      <input bind:value={fx.light} type="range" min="0" max="1" step="0.01" />
-      <span>HYPNO</span>
-      <input bind:value={fx.hypno} type="range" min="0" max="1" step="0.01" />
-      <span>MELT</span>
-      <input bind:value={fx.distort} type="range" min="0" max="1" step="0.01" />
-      <span>RGB</span>
-      <input bind:value={fx.rgb} type="range" min="0" max="1" step="0.01" />
-      <span>HOLO</span>
-      <input bind:value={fx.holo} type="range" min="0" max="1" step="0.01" />
-      <span>BEAT</span>
-      <input bind:value={fx.beat} type="range" min="0" max="1" step="0.01" />
-      <span>SWIM</span>
-      <input bind:value={fx.swim} type="range" min="0" max="1" step="0.01" />
-      <span>FACE</span>
-      <input bind:value={fx.face} type="range" min="0" max="1" step="0.01" />
-      <span>HYPER</span>
-      <input bind:value={fx.hyper} type="range" min="0" max="1" step="0.01" />
-    </div>
+    <FxPanel bind:fx={fx} />
   </div>
 
-  <div class="frame">
-    <div class="inner" style="--aspect: {table.config.bounds.aspect}" bind:clientWidth bind:clientHeight>
+  <AspectLayout aspect={table.config.bounds.aspect} bgColor="#112233" bind:width bind:height>
+
+    {#if SIMPLE_RENDER}
+      <CanvasRenderer
+        {balls}
+        {table}
+        gameState={table.gameState}
+        spawnArrow={spawnArrow}
+        world={world}
+        width={width}
+        height={height}
+      />
+    {:else}
       <LayerRenderer
         {fx}
         {ballPos}
         gameState={table.gameState}
         world={world}
       />
+    {/if}
 
-      <div class="display">
-        <span class="balls" style="color: {green}">
-          {balls.length}
-        </span>
+    <ScoreDisplay balls={balls.length} score={floor(displayScore)} />
 
-        <span class="score" style="color: {red}">
-          {score}
-        </span>
-      </div>
-    </div>
-  </div>
+  </AspectLayout>
 </div>
 
 
 <style>
-
-  /* TEMP */
-  :global(.Vader canvas) {
-    aspect-ratio: 1;
-  }
-  /* TEMP */
-
-  .outer {
+  .frame {
     position: fixed;
     top: 0;
     left: 0;
@@ -357,100 +336,14 @@
     background: #111111;
   }
 
-  .frame {
-    container-type: size;
-    display: grid;
-    box-shadow: 0 0 20px #000204 inset;
-  }
-
-  .inner {
-    display: grid;
-    position: relative;
-    aspect-ratio: var(--aspect);
-    margin: auto;
-    width: auto;
-    height: 100cqh;
-    overflow: hidden;
-  }
-
-  /* Needs to squish vertically */
-  @container (max-aspect-ratio: 0.57) {
-    .inner {
-      height: auto;
-      width: 100cqw;
-    }
-  }
-
-  .display {
-    font-family: 'dseg7', monospace;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    min-height: 1vw;
-    aspect-ratio: 6.16;
-    z-index: 1;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    container-type: size;
-  }
-
-  @container (min-width:1px) {
-    .score, .balls {
-      display: block;
-      font-size: 10cqi;
-      margin: 1cqi 2cqi;
-      text-shadow: 0 0 1cqi color-mix(in srgb, currentColor 90%, yellow);
-    }
-
-    .score {
-      min-width: 4cqi;
-      flex: 1;
-    }
-
-    .score:after, .balls:after {
-      display: block;
-      width: 100%;
-      height: 0.5cqi;
-      background: black;
-      position: absolute;
-      top :0;
-      left: 0;
-      opacity: 1.2;
-      mix-blend-mode: screen;
-      text-shadow: none;
-      color: color-mix(in srgb, currentColor 20%, #000022);
-      z-index: 1;
-    }
-
-    .score:after {
-      content: '88888888';
-    }
-
-    .balls:after {
-      content: '8';
-    }
-  }
-
-  .debug {
+  .debug-panel {
     color: white;
     font-family: monospace;
     padding: 0 1rem;
   }
 
-  h3 {
+  .debug-panel h3 {
     text-align: center;
-  }
-
-  span {
-    display: block;
-    text-align: right;
-    transform: translateY(0.5rem);
-  }
-
-  input {
-    width: 100%;
   }
 </style>
 
