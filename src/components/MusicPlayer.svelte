@@ -221,7 +221,7 @@
     background-color: color-mix(in srgb, white calc(var(--phase) * 100%), var(--bg));
   }
 
-  input, progress {
+  progress {
     display: block;
     width: 100%;
     accent-color: var(--green);
