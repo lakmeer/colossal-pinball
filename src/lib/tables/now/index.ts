@@ -235,7 +235,7 @@ export default class Now extends Table {
 
     type TargetBank = {
       targets: Things.DropTarget[],
-      lamp:    Things.Lamp | null,
+      lamps:   Things.Lamp[],
       multiplier: number;
     }
 
