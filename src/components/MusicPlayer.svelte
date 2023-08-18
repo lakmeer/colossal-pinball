@@ -4,12 +4,13 @@
 
   import { lerp, floor } from '$lib/utils';
 
+  import Track from '$lib/Track';
   import Color from '$lib/Color';
 
   const PHRASE_SAMPLES = 377704;
   const BEATS_PER_PHRASE = 16;
 
-  const DEBUG_START_AT_TRACK = 10;
+  const DEBUG_START_AT_TRACK = 0;
 
   export let globalFx;
 
@@ -19,94 +20,6 @@
   let ctx:AudioContext;
   let globalGain:GainNode;
   let globalLPF:BiquadFilterNode;
-
-  type FxSpec = {
-    key: string // TODO: keyof typeof globalFx
-    target: number
-    from?: number
-    type: 'set' | 'in' | 'out'
-  }
-
-  type TrackSpec = {
-    fx?: Array<FxSpec>
-  }
-
-  class Track {
-    name: string
-    buffer: AudioBuffer
-    source: AudioBufferSourceNode
-    gain: GainNode
-    detune: AudioParam
-    volume: AudioParam
-    length: number
-    spec: TrackSpec
-    loaded: boolean
-
-    constructor (label:string, src:string, spec:TrackSpec = {}) {
-      this.name = label;
-      this.gain = ctx.createGain();
-      this.gain.connect(globalLPF);
-      this.volume = this.gain.gain;
-      this.spec = spec;
-      this.length = 0;
-      this.loaded = false;
-
-      loadAudioBuffer(src).then((buffer) => {
-        this.buffer = buffer;
-        this.length = this.buffer.length/PHRASE_SAMPLES;
-        this.loaded = true;
-        this.refresh();
-        loadMonitor += 1;
-      });
-    }
-
-    refresh () {
-      if (this.source) this.source.disconnect();
-      this.source = ctx.createBufferSource();
-      this.source.buffer = this.buffer;
-      this.detune = this.source.detune;
-      this.source.connect(this.gain);
-    }
-
-    progress (p = 0) {
-      if (this.spec.fx) {
-        for (let fxSpec of this.spec.fx) {
-          let from = fxSpec.from ?? 0;
-          // TODO: Replace with p-function
-          switch (fxSpec.type) {
-            case 'set':
-              globalFx[fxSpec.key] = fxSpec.target;
-              break;
-            case 'in':
-              globalFx[fxSpec.key] = lerp(from, fxSpec.target, p);
-              break;
-            case 'out':
-              globalFx[fxSpec.key] = lerp(from, fxSpec.target, (1.0 - p));
-              break;
-            default:
-              console.warn("Unsupported fxSpec type:", fxSpec.type);
-          }
-        }
-      }
-    }
-
-    start (t = 0) {
-      this.refresh();
-      this.source.start(t);
-    }
-
-    haltAt (t = 0) {
-      console.log("Halting track", this.name);
-      this.detune.linearRampToValueAtTime(-2000, t);
-      this.source.stop(t + 0.1);
-    }
-  }
-
-  const loadAudioBuffer = async (src:string):Promise<AudioBuffer> => {
-    let file = await fetch(src);
-    let arrayBuffer = await file.arrayBuffer();
-    return await ctx.decodeAudioData(arrayBuffer);
-  }
 
   const toggle = () => {
     if (!track || !track.loaded) return;
@@ -143,7 +56,7 @@
     'F': { fx: [ { key: 'hyper',   target: 0, type: 'set' } ] },
   };
 
-  const tracks = { };
+  const tracks:Record<string, Track> = {};
 
 
   // State
@@ -157,6 +70,7 @@
   let nextLoopScheduled = false;
   let beat = 0;
 
+  let loaded = false;
   let track;
   let loadMonitor = 0; // filthy
 
@@ -220,6 +134,8 @@
   // Lifecycle
   //
 
+  // TODO: Audio engine object?
+
   // @ts-ignore shut up pls
   onMount(async () => {
     current = DEBUG_START_AT_TRACK;
@@ -235,7 +151,14 @@
 
     for (let i of order) {
       if (tracks[i]) continue;
-      tracks[i] = new Track(i, `music/${i}.mp3`, trackSpec[i]);
+      tracks[i] = new Track(
+          ctx,
+          globalLPF,
+          `Track ${i}`,
+          `music/${i}.mp3`,
+          trackSpec[i],
+          () => { loaded = ++loadMonitor >= order.length} // haaaaax
+        );
     }
 
     track = tracks[order[current]];
@@ -252,30 +175,30 @@
     }
   });
 
-
   const GREEN  = Color.fromTw('emerald-500').toString();
-  const YELLOW = Color.fromTw('gold-500').toString();
   const RED    = Color.fromTw('rose-500').toString();
 </script>
 
 
-<div style="--phase: {beatPhase}; --red: {RED}; --green:{GREEN}; --yellow:{YELLOW}">
-  {#if track}
+<div style="--phase: {beatPhase}; --red: {RED}; --green:{GREEN};">
+  {#if loaded}
     <div class="track">
       <span>{ track.name }</span>
       <progress max="100" value={ floor(loopProgress * 100) } />
     </div>
-
-    <div class="status">
-      {#each Object.values(tracks) as track, ix}
-        <span class="pulse" class:active={ix==current}
-          style="--bg: {(track.loaded ? GREEN : RED) || loadMonitor}"
-        >
-          {#if ix===current} {beat.toString(16)} {/if}
-        </span>
-      {/each}
-    </div>
+  {:else}
+    <h3>Load {loadMonitor}/{order.length}</h3>
   {/if}
+
+  <div class="status">
+    {#each Object.values(tracks) as track, ix}
+      <span class="pulse" class:active={ix==current}
+        style="--bg: {(track.loaded ? GREEN : RED) || loadMonitor}"
+      >
+        {#if ix===current} {beat.toString(16)} {/if}
+      </span>
+    {/each}
+  </div>
 </div>
 
 

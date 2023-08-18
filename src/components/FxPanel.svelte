@@ -18,6 +18,10 @@
 
 <style>
 
+  .FxPanel {
+    margin-top: -0.5rem;
+  }
+
   span {
     display: block;
     text-align: right;

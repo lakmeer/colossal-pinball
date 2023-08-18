@@ -58,10 +58,14 @@ uniform float u_light;
 uniform float u_swim;
 
 
+//
 // Config
+//
 
 const float BALL_RAD = 14.0;
 const float LAMP_RAD = 12.0;
+const float LIGHT_FALLOFF = 10.0;
+const float LIGHT_INTENSITY = 0.6;
 
 // Palette
 
@@ -95,11 +99,10 @@ const vec3 BALL_COLOR = WHITE;
 const vec3 LAMP_ON    = vec3(0.99, 0.9, 0.5);
 const vec3 LAMP_OFF   = LAMP_ON * vec3(0.3, 0.2, 0.1) * 0.2;
 
-const vec4  LIGHT_COLOR = vec4(0.99, 0.9, 0.7, 1.0);
-const vec4  LIGHT_AMBIENT = LIGHT_COLOR * 0.9;
-const float LIGHT_FALLOFF = 10.0;
-const float LIGHT_INTENSITY = 0.6;
+const vec3  LIGHT_COLOR = vec4(0.99, 0.9, 0.7);
+const vec3  LIGHT_AMBIENT = LIGHT_COLOR * 0.9;
 
+const vec3  LIGHT_COLOR3 = vec3(0.99, 0.9, 0.7);
 
 //
 // FUNCTIONS
@@ -341,7 +344,7 @@ void main () {
         mix(PLASTIC_YELLOW, plasma(uv, u_time + 2.0).rgb, plasma_factor),
         mix(PLASTIC_BLUE,   plasma(uv, u_time + 1.0).rgb, plasma_factor)); 
   plastics = mix(plastics, col(mix(PLASTIC_WHITE, plasma(uv, u_time).rgb, plasma_factor)), plastic_white);
-  plastics.xyz *= LIGHT_AMBIENT.xyz; // start slightly unlit
+  plastics.xyz *= LIGHT_AMBIENT; // start slightly unlit
 
   // Lighting
   const int NUM_LIGHTS = 19;
@@ -375,7 +378,7 @@ void main () {
   lights[18] = vec3(0.73,  1.36, light_mask_b);
 
   vec4 lighting =
-    mix((1.0 - length(uv - vec2(0.5, 0.5))) * LIGHT_AMBIENT,
+    mix((1.0 - length(uv - vec2(0.5, 0.5))) * col(LIGHT_AMBIENT),
     vec4(1.0),
     u_hyper);
 
@@ -384,7 +387,7 @@ void main () {
       u_light * 0.75 *
       mix(
         (LIGHT_INTENSITY + LIGHT_INTENSITY/2.0 * easeOut3(u_beat_time) * u_beat)
-          * mix(LIGHT_COLOR, rainbow, u_rgb)
+          * mix(col(LIGHT_COLOR), rainbow, u_rgb)
           * mix(lights[i].z, 0.0, u_hyper)
           * exp(-(LIGHT_FALLOFF + LIGHT_FALLOFF/2.0 * u_beat_time * u_beat) * length(uvr - lights[i].xy)),
 
@@ -394,7 +397,7 @@ void main () {
     plastics.xyz += 
       u_light * 0.3
       * plastics.xyz
-      * mix(LIGHT_COLOR, rainbow, u_rgb).xyz
+      * mix(col(LIGHT_COLOR), rainbow, u_rgb).xyz
       * exp(
         -(LIGHT_FALLOFF + LIGHT_FALLOFF * easeOut3(u_beat_time) * u_beat)
         * length(uvr - lights[i].xy));

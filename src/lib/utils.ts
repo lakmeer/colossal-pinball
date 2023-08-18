@@ -54,3 +54,9 @@ export const loadImage = (src:string):Promise<HTMLImageElement> =>
     i.onload = () => resolve(i);
   });
 
+export const loadAudio = async (ctx:AudioContext, src:string):Promise<AudioBuffer> => {
+  let file = await fetch(src);
+  let arrayBuffer = await file.arrayBuffer();
+  return await ctx.decodeAudioData(arrayBuffer);
+}
+
