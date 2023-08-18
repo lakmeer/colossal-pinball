@@ -21,6 +21,7 @@
   // Config
 
   const SIMPLE_RENDER = true;
+  const SPAWN_ARROW = false;
 
   const TIME_SCALE    = 1.0;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
@@ -122,13 +123,18 @@
     lastTime = now;
     balls = balls; // poke
 
+    if (balls.length < 1) {
+      musicStop();
+      table.gameState.score = displayScore;
+    }
+
     // If delta is the time taken to simulate this whole frame, then we can
     // calculate how many substeps we can afford to pack into the next frame
     delta = performance.now() - start;
     substeps = max(8, min(100, floor(substeps * (1000/60)/delta * SUBSTEP_LIMIT)));
 
     // Rollover score
-    displayScore = lerp(displayScore, table.gameState.score, 0.1);
+    if (displayScore < table.gameState.score) displayScore += 1;
 
     frameTime = dt;
   }
@@ -169,8 +175,6 @@
     let y = cy * table.config.bounds.h - table.config.bounds.top;
     return Vec2.fromXY(x, -y);
   }
-    //const aspectCorr = height/width;
-    //ctx.translate(world.right, cameraY/world.h * (aspectCorr * world.w - world.h) - aspectCorr * world.w);
 
   const eraseAt = (event:MouseEvent) => erase(mouse2world(event), 20);
 
@@ -218,7 +222,7 @@
       case ',': input.tiltRight = true; break;
       case 's':
       case '.': input.right = true; break;
-      case ' ': input.launch = true; break;
+      case ' ': input.launch = true; musicStart(); break;
     }
   }
 
@@ -241,7 +245,7 @@
     running = true;
     render();
 
-    if (SIMPLE_RENDER) {
+    if (SPAWN_ARROW) {
       document.addEventListener('mousedown', onMouseDown);
       document.addEventListener('mouseup',   onMouseUp);
       document.addEventListener('mousemove', onMouseMove);
@@ -254,7 +258,7 @@
       running = false;
       cancelAnimationFrame(rafref);
 
-      if (SIMPLE_RENDER) {
+      if (SPAWN_ARROW) {
         document.removeEventListener('mousedown', onMouseDown);
         document.removeEventListener('mouseup',   onMouseUp);
         document.removeEventListener('mousemove', onMouseMove);
@@ -295,6 +299,8 @@
   let height:number;
   let displayScore = 0;
 
+  let musicStart;
+  let musicStop;
   let beatPhase;
 </script>
 
@@ -314,6 +320,8 @@
 
     <h3>Audio</h3>
     <MusicPlayer
+      bind:start={musicStart}
+      bind:stop={musicStop}
       bind:beatPhase
       bind:globalFx={fx}
     />
@@ -339,7 +347,7 @@
       />
     {/if}
 
-    <ScoreDisplay balls={balls.length} score={floor(displayScore)} />
+    <ScoreDisplay balls={table.gameState.ballStock} score={floor(displayScore)} />
   </AspectLayout>
 </div>
 

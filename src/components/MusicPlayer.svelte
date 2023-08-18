@@ -1,40 +1,38 @@
 <script lang="ts">
+  import type { FxConfig } from "$types";
 
   import { onMount } from 'svelte';
-
-  import { lerp, floor } from '$lib/utils';
+  import { floor } from '$lib/utils';
 
   import Track from '$lib/Track';
   import Color from '$lib/Color';
 
   const PHRASE_SAMPLES = 377704;
   const BEATS_PER_PHRASE = 16;
-
   const DEBUG_START_AT_TRACK = 0;
 
-  export let globalFx;
+  export let globalFx:FxConfig;
 
 
-  // Audio
+  // Audio Graph
 
   let ctx:AudioContext;
   let globalGain:GainNode;
   let globalLPF:BiquadFilterNode;
 
-  const toggle = () => {
-    if (!track || !track.loaded) return;
-    if (!playing) {
-      track.start(ctx.currentTime);
-      startTime = ctx.currentTime;
-      globalGain.gain.cancelScheduledValues(ctx.currentTime);
-      globalGain.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.1);
-      playing = true;
-      scheduler();
-    } else {
-      track.haltAt(ctx.currentTime + 0.5);
-      //globalGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
-      playing = false;
-    }
+  export const start = () => {
+    if (!loaded || !track || !track.loaded) return;
+    if (playing) return;
+    track.start(ctx.currentTime);
+    startTime = ctx.currentTime;
+    playing = true;
+    scheduler();
+  }
+
+  export const stop = () => {
+    if (!playing) return;
+    track.haltAt(ctx.currentTime + 0.5);
+    playing = false;
   }
 
 
@@ -64,21 +62,18 @@
   let startTime = 0;
   let playing = false;
   let current = 0;
-
   let loopTime = 0;
   let loopProgress = 0;
   let nextLoopScheduled = false;
   let beat = 0;
 
   let loaded = false;
-  let track;
-  let loadMonitor = 0; // filthy
+  let track:Track;
+  let loadMonitor = 0; // keeps loaders updated even though they're not reactive
 
   export let beatPhase = 0;
 
   const SCHEDULE_THRESHOLD = 0.05;
-
-  let filter:number;
 
 
   //
@@ -95,6 +90,7 @@
 
     const timeLeft = loopLength - loopTime;
 
+    // Beat sync
     beat = floor(loopTime * BEATS_PER_PHRASE / phraseLength);
     beatPhase = 1.0 - (loopTime % (phraseLength / BEATS_PER_PHRASE)) / (phraseLength / BEATS_PER_PHRASE);
 
@@ -105,8 +101,8 @@
       track = tracks[order[current]];
     }
 
-    track.progress(loopProgress);
-
+    // Update FX lerps
+    track.progress(loopProgress, globalFx);
 
     // End of current loop
     if (!nextLoopScheduled && (timeLeft) < SCHEDULE_THRESHOLD) {
@@ -121,7 +117,7 @@
       // Next track
       tracks[order[current + 1]].start(ctx.currentTime + timeLeft);
       nextLoopScheduled = true;
-      startTime -= loopLength;
+      startTime -= loopLength; // Dont start part way thru next one if length is different
     }
 
     if (playing) {
@@ -163,15 +159,12 @@
 
     track = tracks[order[current]];
 
-    document.addEventListener('click', toggle);
-
     return () => {
-      track.stop();
+      track?.stop();
       playing = false;
       globalGain.disconnect();
       ctx.close();
       ctx = null;
-      document.removeEventListener('click', toggle);
     }
   });
 

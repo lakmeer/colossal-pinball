@@ -1,10 +1,10 @@
 
-import { lerp, floor, loadAudio } from '$lib/utils';
-
 import type { FxConfig } from "$types";
 
+import { lerp, floor, loadAudio } from '$lib/utils';
+
 type FxSpec = {
-  key: string // TODO: keyof typeof globalFx
+  key: keyof FxConfig
   target: number
   from?: number
   type: 'set' | 'in' | 'out'
@@ -32,6 +32,7 @@ export default class Track {
   length: number
   spec: TrackSpec
   loaded: boolean
+  output: AudioNode
 
   static PHRASE_SAMPLES = 377704;
   static BEATS_PER_PHRASE = 16;
@@ -39,12 +40,10 @@ export default class Track {
   constructor (ctx: AudioContext, dest: AudioNode, label:string, src:string, spec:TrackSpec = {}, callback = () => {}) {
     this.ctx = ctx;
     this.name = label;
-    this.gain = ctx.createGain();
-    this.gain.connect(dest);
-    this.volume = this.gain.gain;
     this.spec = spec;
     this.length = 0;
     this.loaded = false;
+    this.output = dest;
 
     loadAudio(ctx, src).then((buffer) => {
       this.buffer = buffer;
@@ -57,6 +56,14 @@ export default class Track {
 
   refresh () {
     if (this.source) this.source.disconnect();
+    if (this.gain) this.gain.disconnect();
+
+    // Weird issues with gain node, so we recreate it
+    this.gain = this.ctx.createGain();
+    this.gain.connect(this.output);
+    this.volume = this.gain.gain;
+
+    // Buffer must be recreated regardless
     this.source = this.ctx.createBufferSource();
     this.source.buffer = this.buffer;
     this.detune = this.source.detune;
@@ -83,9 +90,13 @@ export default class Track {
   }
 
   haltAt (t = 0) {
-    console.log("Halting track", this.name);
     this.detune.linearRampToValueAtTime(-2000, t);
-    this.source.stop(t + 0.1);
+    this.volume.linearRampToValueAtTime(0, t);
+    this.source.stop(t);
+  }
+
+  stop (t = 0) {
+    this.source.stop(t);
   }
 
 }

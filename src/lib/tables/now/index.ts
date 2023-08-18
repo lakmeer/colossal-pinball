@@ -241,13 +241,13 @@ export default class Now extends Table {
 
     let redBank:TargetBank = {
       targets: [],
-      lamp: null,
+      lamps: [],
       multiplier: 0,
     }
 
     let whiteBank:TargetBank = {
       targets: [],
-      lamp: null,
+      lamps: [],
       multiplier: 0,
     }
 
@@ -263,8 +263,8 @@ export default class Now extends Table {
       whiteBank.targets[ix] = DropTarget(`dt_right_bank_${i+1.5}`, Capsule.from(xr + dt_width/2, 499, xr - dt_width/2, 499, 3));
     }
 
-    redBank.lamp   = Lamp(`dt_lamp_red`,   Circle.at(M - 140, 533, 25), Color.fromTw('red-900'),   Color.fromTw('red-500'))
-    whiteBank.lamp = Lamp(`dt_lamp_white`, Circle.at(M + 140, 533, 25), Color.fromTw('gray-600'), Color.fromTw('gray-100'))
+    redBank.lamps.push(   Lamp(`dt_lamp_red`,   Circle.at(M - 140, 533, 25), Color.fromTw('red-900'),   Color.fromTw('red-500')) );
+    whiteBank.lamps.push( Lamp(`dt_lamp_white`, Circle.at(M + 140, 533, 25), Color.fromTw('gray-600'), Color.fromTw('gray-100')) );
 
     Bumper(`dt_ss_left`,   Capsule.at(M - 112, 541, 5, 100,  TAU*22/125), SLINGS_STRENGTH);
     Bumper(`dt_ss_right`,  Capsule.at(M + 112, 541, 5, 100, -TAU*22/125), SLINGS_STRENGTH);
@@ -280,6 +280,8 @@ export default class Now extends Table {
     let midROLampR = Lamp(`mid_rollover_lamp_right`, Circle.at(TR - 44, 606, lampRad), Color.fromTw('sky-900'), Color.fromTw('sky-200'));
     this.gameState.lamps.midRollLeft  = midROLampL;
     this.gameState.lamps.midRollRight = midROLampR;
+    redBank.lamps.push(midROLampL);
+    whiteBank.lamps.push(midROLampR);
 
 
     // Midfield guards (vertical part is just main wall)
@@ -338,8 +340,12 @@ export default class Now extends Table {
     let outLampL = Lamp(`out_rollover_lamp_left`,  Circle.at(M - 117, 304, lampRad), Color.fromTw('rose-800'), Color.fromTw('rose-400'));
     let outLampR = Lamp(`out_rollover_lamp_right`, Circle.at(M + 117, 304, lampRad), Color.fromTw('sky-900'), Color.fromTw('sky-200'));
 
+    redBank.lamps.push(outLampL);
+    whiteBank.lamps.push(outLampR);
+
     this.gameState.lamps.outLampL = outLampL;
     this.gameState.lamps.outLampR = outLampR;
+
 
     // Outlane kickers and rails
 
@@ -503,13 +509,14 @@ export default class Now extends Table {
       bank.multiplier = bank.targets.map(v => v.state.dropped).filter(v => v).length;
 
       if (bank.targets.every(v => v.state.dropped)) {
-        bank.lamp.do(Command.ACTIVATE);
+        bank.lamps.map(l => l.do(Command.ACTIVATE));
       } else {
-        bank.lamp.do(Command.DEACTIVATE);
+        bank.lamps.map(l => l.do(Command.DEACTIVATE));
       }
     }
 
     const resetBank = (bank:TargetBank) => {
+      state.score += 100 * bank.multiplier;
       bank.targets.forEach(tgt => tgt.do(Command.DEACTIVATE));
       updateBank(bank);
     }
@@ -553,13 +560,12 @@ export default class Now extends Table {
 
     function newGame () {
       clearState();
-
       state.ballStock = 5;
     }
 
     function drainedLastBall () {
       if (state.ballStock > 0) {
-        newRound();
+        setTimeout(newRound, 100);
       } else {
         console.log("GAME OVER");
         clearState();
