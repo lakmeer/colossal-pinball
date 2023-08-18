@@ -277,7 +277,7 @@ export default class Now extends Table {
     let midROL = Rollover(`mid_rollover_left`,   Capsule.at(TL + 20, 538, rolloverRad, 43));
     let midROR = Rollover(`mid_rollover_right`,  Capsule.at(TR - 20, 538, rolloverRad, 43));
     let midROLampL = Lamp(`mid_rollover_lamp_left`,  Circle.at(TL + 44, 606, lampRad), Color.fromTw('rose-800'), Color.fromTw('rose-400'));
-    let midROLampR = Lamp(`mid_rollover_lamp_right`, Circle.at(TR - 44, 606, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+    let midROLampR = Lamp(`mid_rollover_lamp_right`, Circle.at(TR - 44, 606, lampRad), Color.fromTw('sky-900'), Color.fromTw('sky-200'));
     this.gameState.lamps.midRollLeft  = midROLampL;
     this.gameState.lamps.midRollRight = midROLampR;
 
@@ -336,7 +336,7 @@ export default class Now extends Table {
     let outROL = Rollover(`out_rollover_left`,  Capsule.from(M - 153, 196, M - 153, 228, rolloverRad));
     let outROR = Rollover(`out_rollover_right`, Capsule.from(M + 153, 196, M + 153, 228, rolloverRad));
     let outLampL = Lamp(`out_rollover_lamp_left`,  Circle.at(M - 117, 304, lampRad), Color.fromTw('rose-800'), Color.fromTw('rose-400'));
-    let outLampR = Lamp(`out_rollover_lamp_right`, Circle.at(M + 117, 304, lampRad), Color.fromTw('lime-800'), Color.fromTw('lime-400'));
+    let outLampR = Lamp(`out_rollover_lamp_right`, Circle.at(M + 117, 304, lampRad), Color.fromTw('sky-900'), Color.fromTw('sky-200'));
 
     this.gameState.lamps.outLampL = outLampL;
     this.gameState.lamps.outLampR = outLampR;
@@ -527,8 +527,6 @@ export default class Now extends Table {
         state.score += 100;
       });
     })
-
-    outLampL.do(Command.ACTIVATE);
 
     scoreRolloverDependsOnLamp(midROL,   midROLampL, lit => 100 + 100 * (lit ?   redBank.multiplier : 0));
     scoreRolloverDependsOnLamp(midROR,   midROLampR, lit => 100 + 100 * (lit ? whiteBank.multiplier : 0));

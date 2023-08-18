@@ -51,7 +51,7 @@ uniform float u_beat;
 uniform float u_holo;
 uniform float u_hypno;
 uniform float u_hyper;
-uniform float u_distort;
+uniform float u_melt;
 uniform float u_rgb;
 uniform float u_face;
 uniform float u_light;
@@ -258,10 +258,10 @@ void main () {
       u_world[0] + u_world[2] * uv.x,
       u_world[1] - u_world[3] * uv.y);
 
-  // Distort
+  // Melty
 
-  uv.x += sin(100.0 * uv.y + u_time * 2.0) * 0.01 * u_distort;
-  uv.y += cos(50.0 * uv.x + u_time * 2.0) * 0.01 * u_distort;
+  uv.x += sin(100.0 * uv.y + u_time * 2.0) * 0.01 * u_melt;
+  uv.y += cos(50.0 * uv.x + u_time * 2.0) * 0.01 * u_melt;
 
 
   // Ball radius

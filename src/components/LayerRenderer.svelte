@@ -104,7 +104,7 @@
     u_beat_time={(t - start)/500 % 1}
     u_holo={fx.holo}
     u_hypno={fx.hypno}
-    u_distort={fx.distort}
+    u_melt={fx.melt}
     u_hyper={fx.hyper}
     u_beat={fx.beat}
     u_rgb={fx.rgb}

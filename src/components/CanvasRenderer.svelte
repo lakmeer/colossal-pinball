@@ -27,8 +27,9 @@
   export let balls:Ball[] = [];
   export let spawnArrow:[Vec2, Vec2];
   export let world:Rect;
+  export let beatPhase = 0;
 
-  let cameraY      = 0;
+  let cameraY = 0;
 
 
   // Canvas
@@ -62,6 +63,10 @@
 
     // Clear
     ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#FFF';
+    ctx.globalAlpha = beatPhase * 0.2;
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalAlpha = 1;
 
     // Transform to world space
     const aspectCorr = height/width;

@@ -15,11 +15,12 @@
   import AspectLayout   from '$comp/AspectLayout.svelte';
   import CanvasRenderer from '$comp/CanvasRenderer.svelte';
   import LayerRenderer  from '$comp/LayerRenderer.svelte';
+  import MusicPlayer    from '$comp/MusicPlayer.svelte';
 
 
   // Config
 
-  const SIMPLE_RENDER = false;
+  const SIMPLE_RENDER = true;
 
   const TIME_SCALE    = 1.0;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
@@ -102,6 +103,7 @@
   let substeps = 8;
   let delta    = 0;
   let running = false;
+  let frameTime = 0;
 
   const render = () => {
     if (running) rafref = requestAnimationFrame(render);
@@ -127,6 +129,8 @@
 
     // Rollover score
     displayScore = lerp(displayScore, table.gameState.score, 0.1);
+
+    frameTime = dt;
   }
 
 
@@ -246,20 +250,9 @@
     document.addEventListener('keydown',   onKeydown);
     document.addEventListener('keyup',     onKeyup);
 
-    console.log(',,,');
-    await initAudio();
-
-    console.log(audio);
-
-    const play = () => { audio.start(); }
-
-    document.addEventListener('click', play);
-
     return () => {
       running = false;
       cancelAnimationFrame(rafref);
-
-      document.removeEventListener('click', play);
 
       if (SIMPLE_RENDER) {
         document.removeEventListener('mousedown', onMouseDown);
@@ -283,11 +276,18 @@
     light: 1,
     holo: 0,
     rgb: 0,
-    distort: 0,
+    melt: 0,
     hypno: 0,
+    smoke: 0,
     beat: 0,
     face: 0,
     swim: 0,
+    paint: 0,
+    tears: 0,
+    puff: 0,
+    perlin: 0,
+    invert: 0,
+    prelude: 0,
     hyper: 0,
   }
 
@@ -295,29 +295,7 @@
   let height:number;
   let displayScore = 0;
 
-
-
-  // Audio
-
-  let audio;
-
-  const loadAudio = async (ctx:AudioContext, src:string):Promise<AudioBufferSourceNode> => {
-    let file = await fetch(src);
-    let arrayBuffer = await file.arrayBuffer();
-    let data = await ctx.decodeAudioData(arrayBuffer);
-    let source = ctx.createBufferSource();
-    source.buffer = data;
-    source.loop = false;
-    return source;
-  }
-
-  const initAudio = async () => {
-    const ctx = new AudioContext();
-    audio = await loadAudio(ctx, 'music/0.mp3');
-    audio.connect(ctx.destination);
-  }
-
-
+  let beatPhase;
 </script>
 
 
@@ -328,14 +306,17 @@
   Balls: {balls.length}
   Steps: {substeps}
    Time: {delta.toFixed(2)}
-   BtnA: {input.left      ? '🟢' : '🔴'}
-   BtnB: {input.right     ? '🟢' : '🔴'}
-  TiltL: {input.tiltLeft  ? '🟢' : '🔴'}
-  TiltR: {input.tiltRight ? '🟢' : '🔴'}
+    FPS: {floor(1/frameTime)}
     </pre>
 
     <h3>FX</h3>
     <FxPanel bind:fx={fx} />
+
+    <h3>Audio</h3>
+    <MusicPlayer
+      bind:beatPhase
+      bind:globalFx={fx}
+    />
   </div>
 
   <AspectLayout aspect={table.config.bounds.aspect} bgColor="#111111" bind:width bind:height>
@@ -343,6 +324,7 @@
       <CanvasRenderer
         {balls}
         {table}
+        beatPhase={beatPhase * fx.beat}
         world={world}
         width={width}
         height={height}
@@ -382,6 +364,7 @@
 
   .debug-panel h3 {
     text-align: center;
+    margin: 1rem 0 0.5rem;
   }
 </style>
 
