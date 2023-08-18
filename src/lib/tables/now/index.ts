@@ -278,8 +278,10 @@ export default class Now extends Table {
     let midROR = Rollover(`mid_rollover_right`,  Capsule.at(TR - 20, 538, rolloverRad, 43));
     let midROLampL = Lamp(`mid_rollover_lamp_left`,  Circle.at(TL + 44, 606, lampRad), Color.fromTw('rose-800'), Color.fromTw('rose-400'));
     let midROLampR = Lamp(`mid_rollover_lamp_right`, Circle.at(TR - 44, 606, lampRad), Color.fromTw('sky-900'), Color.fromTw('sky-200'));
+
     this.gameState.lamps.midRollLeft  = midROLampL;
     this.gameState.lamps.midRollRight = midROLampR;
+
     redBank.lamps.push(midROLampL);
     whiteBank.lamps.push(midROLampR);
 
