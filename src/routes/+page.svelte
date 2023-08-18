@@ -301,7 +301,7 @@
 
   let audio;
 
-  const loadAudio = async (ctx:AudioContext, src:string):Promise<AudioBuffer> => {
+  const loadAudio = async (ctx:AudioContext, src:string):Promise<AudioBufferSourceNode> => {
     let file = await fetch(src);
     let arrayBuffer = await file.arrayBuffer();
     let data = await ctx.decodeAudioData(arrayBuffer);
