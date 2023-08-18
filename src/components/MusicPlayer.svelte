@@ -147,14 +147,9 @@
 
     for (let i of order) {
       if (tracks[i]) continue;
-      tracks[i] = new Track(
-          ctx,
-          globalLPF,
-          `Track ${i}`,
-          `music/${i}.mp3`,
-          trackSpec[i],
-          () => { loaded = ++loadMonitor >= order.length} // haaaaax
-        );
+      tracks[i] = new Track(ctx, globalLPF, `Track ${i}`, `music/${i}.mp3`, trackSpec[i],
+        () => { loaded = ++loadMonitor >= order.length } // haaaaax
+      );
     }
 
     track = tracks[order[current]];
