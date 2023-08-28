@@ -68,7 +68,7 @@
       mix-blend-mode: screen;
       text-shadow: none;
       color: color-mix(in srgb, var(--color) 20%, #000022);
-      z-index: 1;
+      z-index: 2;
     }
   }
 </style>

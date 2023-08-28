@@ -1,7 +1,6 @@
 <script lang="ts">
 
   /*
-
   Derived from: github.com/PavelDoGreat/WebGL-Fluid-Simulation
 
   MIT License
@@ -27,12 +26,19 @@
     SOFTWARE.
   */
 
+  import type { Lamp, Flipper } from '$lib/Thing';
+  import type { FxConfig } from "$src/types";
+  import type Rect from '$lib/Rect';
+  import type Table from "$lib/tables";
+  import type Ball from "$lib/Ball";
+
+  type GameState = Table['gameState'];
+
   import { onMount } from 'svelte';
 
   import {
     getResolution,
     createTextureAsync,
-    scaleByPixelRatio,
     getWebGLContext,
     isMobile,
   } from "$lib/fluid/functions";
@@ -42,18 +48,87 @@
   import Program from "$lib/fluid/program";
   import Pointer from "$lib/fluid/pointer";
 
+  import type { Texture, FBO, DoubleFBO } from "$lib/fluid/types";
+
+  import tabletShaderSrc from '$src/shaders/table.glsl?raw';
+
 
   // State
 
-  let canvas;
+  let canvas:HTMLCanvasElement;
   let rafref = 0;
 
-  export let src;
   export let width = 512;
   export let height = 512;
-  export let ballCoords = [];
+  export let balls:Ball[] = [];
 
   let pointers = [];
+
+  export let world:Rect;
+  export let fx:FxConfig;
+  export let gameState:GameState;
+
+  $: lampState = Object.values(gameState.lamps).map((lamp:Lamp) => ([
+    lamp.shape.pos.x,
+    lamp.shape.pos.y,
+    lamp.state.active ? 1 : 0,
+  ]));
+
+  $: console.log('lampState', lampState.length);
+
+  $: flipperState = Object.values(gameState.flippers).map((flip:Flipper) => ([
+    flip.shape.pos.x, flip.shape.pos.y, flip.shape.tip.x, flip.shape.tip.y,
+  ]));
+
+  $: u_ball_pos = [ 0, 0 ]
+
+  let u_world;
+  let u_holo;
+  let u_hypno;
+  let u_melt;
+  let u_hyper;
+  let u_beat;
+  let u_rgb;
+  let u_face;
+  let u_swim;
+  let u_light;
+
+  let u_flippers;
+  let u_num_lamps;
+  let u_lamps;
+
+  let u_score_phase = 0
+
+  let tex_rtk:Texture;
+  let tex_base:Texture;
+  let tex_hair:Texture;
+  let tex_text:Texture;
+  let tex_misc:Texture;
+  let tex_face1:Texture;
+  let tex_face2:Texture;
+  let tex_wood:Texture;
+  let tex_lanes:Texture;
+  let tex_walls:Texture;
+  let tex_extra:Texture;
+  let tex_rails:Texture;
+  let tex_indic:Texture;
+  let tex_labels:Texture;
+  let tex_lights:Texture;
+  let tex_plastics:Texture;
+
+  let tex_noise:Texture;
+
+  let start = performance.now();
+  let t = performance.now();
+
+  let playfieldTexLower:Texture;
+  let playfieldTexUpper:Texture;
+
+  function toCanvasCoords(ball: Ball): [ number, number, number ] {
+    let x = (ball.pos.x - world.left)   / world.w * width;
+    let y = (ball.pos.y - world.bottom) / world.h * height;
+    return [ ball.id, x, height - y ];
+  }
 
 
   // Simulation section
@@ -123,9 +198,12 @@
       divergence = createFBO      (simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
       curl       = createFBO      (simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
       pressure   = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+
+      upper = createFBO(canvas.width, canvas.height, r.internalFormat, r.format, texType, filtering);
+      lower = createFBO(canvas.width, canvas.height, r.internalFormat, r.format, texType, filtering);
     }
 
-    function createFBO (w, h, internalFormat, format, type, param) {
+    function createFBO (w:number, h:number, internalFormat, format, type, param):FBO {
       gl.activeTexture(gl.TEXTURE0);
       let texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -159,7 +237,7 @@
       };
     }
 
-    function createDoubleFBO (w, h, internalFormat, format, type, param) {
+    function createDoubleFBO (w, h, internalFormat, format, type, param):DoubleFBO {
       let fbo1 = createFBO(w, h, internalFormat, format, type, param);
       let fbo2 = createFBO(w, h, internalFormat, format, type, param);
 
@@ -308,7 +386,7 @@
 
       splatTexProgram.bind();
       gl.uniform1i(splatTexProgram.uniforms.uTarget, dye.read.attach(0));
-      gl.uniform1i(splatTexProgram.uniforms.uTexture, bgTexture.attach(1));
+      gl.uniform1i(splatTexProgram.uniforms.uTexture, lower.attach(1));
       gl.uniform1f(splatTexProgram.uniforms.aspectRatio, canvas.width / canvas.height);
       gl.uniform2f(splatTexProgram.uniforms.point, x, y);
       gl.uniform3f(splatTexProgram.uniforms.color, dx, dy, 0.0);
@@ -331,6 +409,7 @@
 
     function update () {
 
+      // TODO: inject playfield rendering in between
       // TODO: provide render loop externally
       // TODO: scale splat radius by velocity
 
@@ -339,7 +418,7 @@
 
       // Update pointer locations from ball coords
       if (canvas) {
-        ballCoords.map(([ id, x, y ]) => {
+        balls.map(toCanvasCoords).map(([ id, x, y ]) => {
           let pointer = pointers.find(p => p.id === id);
           if (!pointer) {
             pointer = new Pointer(id);
@@ -361,11 +440,55 @@
       step(dt);
 
       // Render
-      displayMaterial.bind();
-      gl.uniform1i(displayMaterial.uniforms.uTexture,  dye.read.attach(0));
-      gl.uniform1i(displayMaterial.uniforms.uVelocity, velocity.read.attach(1));
-      gl.uniform1i(displayMaterial.uniforms.bgTexture, bgTexture.attach(2));
-      blit(null);
+      if (false) {
+        displayMaterial.bind();
+        gl.uniform1i(displayMaterial.uniforms.uTexture,  dye.read.attach(0));
+        gl.uniform1i(displayMaterial.uniforms.uVelocity, velocity.read.attach(1));
+        gl.uniform1i(displayMaterial.uniforms.bgTexture, lower.attach(2));
+        blit(null);
+      } else {
+        lowerTableProgram.bind();
+        gl.uniform2f(lowerTableProgram.uniforms.u_resolution, canvas.width, canvas.height);
+        gl.uniform4f(lowerTableProgram.uniforms.u_world, ...world.asTuple());
+        gl.uniform1f(lowerTableProgram.uniforms.u_time, lastUpdateTime/1000);
+
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_wood,     tex_wood.attach(0));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_wood,     tex_wood.attach(1));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_rtk,      tex_rtk .attach(2));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_base,     tex_base.attach(3));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_face1,    tex_face1.attach(4));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_face2,    tex_face2.attach(5));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_hair,     tex_hair.attach(6));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_text,     tex_text.attach(7));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_lanes,    tex_lanes.attach(8));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_lights,   tex_lights.attach(9));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_labels,   tex_labels.attach(10));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_indic,    tex_indic.attach(11));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_misc,     tex_misc.attach(12));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_plastics, tex_plastics.attach(13));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_walls,    tex_walls.attach(14));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_rails,    tex_rails.attach(15));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_extra,    tex_extra.attach(16));
+        gl.uniform1i(lowerTableProgram.uniforms.u_tex_noise,    tex_noise.attach(17));
+
+        gl.uniform1f(lowerTableProgram.uniforms.u_holo,  fx.holo);
+        gl.uniform1f(lowerTableProgram.uniforms.u_hypno, fx.hypno);
+        gl.uniform1f(lowerTableProgram.uniforms.u_melt,  fx.melt);
+        gl.uniform1f(lowerTableProgram.uniforms.u_hyper, fx.hyper);
+        gl.uniform1f(lowerTableProgram.uniforms.u_beat,  fx.beat);
+        gl.uniform1f(lowerTableProgram.uniforms.u_rgb,   fx.rgb);
+        gl.uniform1f(lowerTableProgram.uniforms.u_face,  fx.face);
+        gl.uniform1f(lowerTableProgram.uniforms.u_swim,  fx.swim);
+        gl.uniform1f(lowerTableProgram.uniforms.u_light, fx.light);
+
+        u_flippers  = flipperState
+        u_num_lamps = lampState.length
+        u_lamps     = lampState
+        u_score_phase = 0
+
+        gl.uniform1f(lowerTableProgram.uniforms.u_light, fx.light);
+        blit(null);
+      }
 
       // Loop
       rafref = requestAnimationFrame(update);
@@ -408,14 +531,14 @@
     if (isMobile() || !ext.supportLinearFiltering) config.DYE_RESOLUTION = 512;
 
     // Framebuffers to be constructed
-    let dye;
-    let velocity;
-    let divergence;
-    let curl;
-    let pressure;
+    let dye:        DoubleFBO | null;
+    let velocity:   DoubleFBO | null;
+    let divergence: FBO | null;
+    let curl:       FBO | null;
+    let pressure:   DoubleFBO | null;
 
-    // Load textures
-    let bgTexture = createTextureAsync(gl, src);
+    let upper:      FBO | null;
+    let lower:      FBO | null;
 
     // Compile shaders
     const baseVertexShader       = compileShader(gl.VERTEX_SHADER,   SHADER_SRC.baseVertex);
@@ -429,6 +552,9 @@
     const pressureShader         = compileShader(gl.FRAGMENT_SHADER, SHADER_SRC.pressure);
     const gradientSubtractShader = compileShader(gl.FRAGMENT_SHADER, SHADER_SRC.gradientSubtract);
     const splatTexShader         = compileShader(gl.FRAGMENT_SHADER, SHADER_SRC.splatTex);
+    const debugShader            = compileShader(gl.FRAGMENT_SHADER, SHADER_SRC.debug);
+
+    const lowerTableShader       = compileShader(gl.FRAGMENT_SHADER, tabletShaderSrc);
 
     // Build shader programs
     const copyProgram            = new Program(gl, baseVertexShader, copyShader);
@@ -441,10 +567,32 @@
     const pressureProgram        = new Program(gl, baseVertexShader, pressureShader);
     const gradienSubtractProgram = new Program(gl, baseVertexShader, gradientSubtractShader);
     const splatTexProgram        = new Program(gl, baseVertexShader, splatTexShader);
+    const debugProgram           = new Program(gl, baseVertexShader, debugShader);
+
+    const lowerTableProgram      = new Program(gl, baseVertexShader, lowerTableShader);
 
     // Main display material
     const displayShader = compileShader(gl.FRAGMENT_SHADER, SHADER_SRC.display);
     const displayMaterial = new Program(gl, baseVertexShader, displayShader);
+
+    // Playfield step begin
+    tex_wood     = createTextureAsync(gl, '/wood1.jpg');
+    tex_rtk      = createTextureAsync(gl, '/layers/RolloversTargetsKickers.webp');
+    tex_base     = createTextureAsync(gl, '/layers/Base.webp');
+    tex_face1    = createTextureAsync(gl, '/layers/Faces1.webp');
+    tex_face2    = createTextureAsync(gl, '/layers/Faces2.webp');
+    tex_hair     = createTextureAsync(gl, '/layers/Hair.webp');
+    tex_text     = createTextureAsync(gl, '/layers/LabelTextAndSkirts.webp');
+    tex_lanes    = createTextureAsync(gl, '/layers/Lanes.webp');
+    tex_lights   = createTextureAsync(gl, '/layers/LightingBlurred.webp');
+    tex_labels   = createTextureAsync(gl, '/layers/ScoringLabels.webp');
+    tex_indic    = createTextureAsync(gl, '/layers/Indicators.webp');
+    tex_misc     = createTextureAsync(gl, '/layers/LampsEyesPlasticWhite.webp');
+    tex_plastics = createTextureAsync(gl, '/layers/Plastics.webp');
+    tex_walls    = createTextureAsync(gl, '/layers/Walls.webp');
+    tex_rails    = createTextureAsync(gl, '/layers/LaneRails.webp');
+    tex_extra    = createTextureAsync(gl, '/layers/ExtraBumperSlotsLogo.webp');
+    tex_noise    = createTextureAsync(gl, '/noise.png');
 
     // Begin
     initFramebuffers();

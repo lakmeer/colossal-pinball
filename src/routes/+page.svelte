@@ -5,7 +5,7 @@
   import type Table from "$lib/tables/";
   import type { InputState, FxConfig } from "$types";
 
-  import { lerp, clamp, pow, floor, min, max } from "$lib/utils";
+  import { clamp, pow, floor, min, max } from "$lib/utils";
 
   import Ball from "$lib/Ball";
   import Vec2 from "$lib/Vec2";
@@ -16,6 +16,8 @@
   import CanvasRenderer from '$comp/CanvasRenderer.svelte';
   import LayerRenderer  from '$comp/LayerRenderer.svelte';
   import MusicPlayer    from '$comp/MusicPlayer.svelte';
+
+  import FluidBG  from '$comp/FluidBG.svelte';
 
 
   // Config
@@ -302,6 +304,7 @@
   let musicStart;
   let musicStop;
   let beatPhase;
+
 </script>
 
 
@@ -329,6 +332,7 @@
 
   <AspectLayout aspect={table.config.bounds.aspect} bgColor="#111111" bind:width bind:height>
     {#if SIMPLE_RENDER}
+
       <CanvasRenderer
         {balls}
         {table}
@@ -338,6 +342,16 @@
         height={height}
         spawnArrow={spawnArrow}
       />
+
+      <FluidBG
+        {fx}
+        {balls}
+        {width}
+        {height}
+        {world}
+        gameState={table.gameState}
+      />
+
     {:else}
       <LayerRenderer
         {fx}

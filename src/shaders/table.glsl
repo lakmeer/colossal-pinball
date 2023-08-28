@@ -14,7 +14,7 @@ uniform vec4 u_mouse;
 #define EPS   0.0001
 #define GAMMA 2.2
 
-#define NUM_LAMPS VADER_STATIC(u_num_lamps)
+#define NUM_LAMPS 17
 
 // Textures
 
@@ -99,7 +99,7 @@ const vec3 BALL_COLOR = WHITE;
 const vec3 LAMP_ON    = vec3(0.99, 0.9, 0.5);
 const vec3 LAMP_OFF   = LAMP_ON * vec3(0.3, 0.2, 0.1) * 0.2;
 
-const vec3  LIGHT_COLOR = vec4(0.99, 0.9, 0.7);
+const vec3  LIGHT_COLOR = vec3(0.99, 0.9, 0.7);
 const vec3  LIGHT_AMBIENT = LIGHT_COLOR * 0.9;
 
 const vec3  LIGHT_COLOR3 = vec3(0.99, 0.9, 0.7);

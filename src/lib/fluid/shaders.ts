@@ -1,3 +1,12 @@
+export const debug = `
+    precision highp float;
+
+    uniform vec3 u_color;
+
+    void main () {
+        gl_FragColor = vec4(u_color, 1.0);
+    }
+`;
 
 export const baseVertex = `
     precision highp float;

@@ -1,4 +1,6 @@
 
+import type { Texture } from './types';
+
 export function getResolution (gl, resolution) {
   let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
   if (aspectRatio < 1)
@@ -113,7 +115,7 @@ export function isMobile () {
   return /Mobi|Android/i.test(navigator.userAgent);
 }
 
-export function createTextureAsync (gl, url) {
+export function createTextureAsync (gl, url):Texture {
   let texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);

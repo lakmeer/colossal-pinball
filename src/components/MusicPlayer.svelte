@@ -7,7 +7,7 @@
   import Track from '$lib/Track';
   import Color from '$lib/Color';
 
-  const PHRASE_SAMPLES = 377704;
+  const PHRASE_SAMPLES = 377704; // 122bpm
   const BEATS_PER_PHRASE = 16;
   const DEBUG_START_AT_TRACK = 0;
 

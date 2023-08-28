@@ -148,8 +148,8 @@
     image-rendering: pixelated;
     max-width:  100vw;
     max-height: 100vh;
-    background: #0004;
-    position: relative;
+    position: absolute;
     pointer-events: none;
+    z-index: 1;
   }
 </style>
