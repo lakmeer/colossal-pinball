@@ -15,6 +15,7 @@ uniform vec4 u_mouse;
 #define GAMMA 2.2
 
 #define NUM_LAMPS 17
+#define MAX_BALLS 4
 
 // Textures
 
@@ -39,7 +40,7 @@ uniform sampler2D u_tex_noise;
 // Game Data
 
 uniform vec4 u_world; // left, top, w, h
-uniform vec2 u_ball_pos;
+uniform vec3 u_ball_pos [MAX_BALLS]; // x, y, whether ball is present or not
 uniform float u_beat_time;
 uniform int u_score_phase;
 uniform vec3 u_lamps[NUM_LAMPS];
@@ -103,6 +104,7 @@ const vec3  LIGHT_COLOR = vec3(0.99, 0.9, 0.7);
 const vec3  LIGHT_AMBIENT = LIGHT_COLOR * 0.9;
 
 const vec3  LIGHT_COLOR3 = vec3(0.99, 0.9, 0.7);
+
 
 //
 // FUNCTIONS
@@ -269,8 +271,13 @@ void main () {
 
   // Ball radius
 
-  float ball = circle_at(uvt, u_ball_pos, BALL_RAD);
+  // TODO: Metaball SDF mixing
+  float ball = 0.0;
+  //for (int i = 0; i < MAX_BALLS; i++) {
+    //ball += circle_at(uvt, u_ball_pos[i].xy, BALL_RAD) * u_ball_pos[i].z;
+  //}
 
+  ball += circle_at(uvt, u_ball_pos[0].xy, BALL_RAD);
 
   // Lamp locations
 
@@ -504,15 +511,16 @@ void main () {
   final = mix(final, labels, labels.a * hypernull);
   final = mix(final, drop, drop.a * hypernull);
   final = mix(final, col(BLACK), text_low * hypernull);
-  //final = mix(final, vec4(BLACK, 1.0), text_high * hypernull);
+  ////final = mix(final, vec4(BLACK, 1.0), text_high * hypernull);
 
   // Mid layer
   final = mix(final, rtk, rtk.a * hypernull);
-  final = mix(final, mix(lamps, rainbow * lamps * 1.6, u_hyper), lamps.r * lamp_alpha);
+  //final = mix(final, mix(lamps, rainbow * lamps * 1.6, u_hyper), lamps.r * lamp_alpha);
   final = mix(final, col(ball_color), ball);
 
   // Lighting layer
   final *= lighting;
+  // Individual lamps
   //final = mix(final, col(LAMP_ON) * nsin(uv.y * 4.0 + u_time * 4.0), lamp_alpha);
 
   // Top layer

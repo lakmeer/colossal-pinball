@@ -39,6 +39,7 @@
   import {
     getResolution,
     createTextureAsync,
+    createTextureRGBA,
     getWebGLContext,
     isMobile,
   } from "$lib/fluid/functions";
@@ -74,25 +75,11 @@
     lamp.state.active ? 1 : 0,
   ]));
 
-  $: console.log('lampState', lampState.length);
-
   $: flipperState = Object.values(gameState.flippers).map((flip:Flipper) => ([
     flip.shape.pos.x, flip.shape.pos.y, flip.shape.tip.x, flip.shape.tip.y,
   ]));
 
-  $: u_ball_pos = [ 0, 0 ]
-
-  let u_world;
-  let u_holo;
-  let u_hypno;
-  let u_melt;
-  let u_hyper;
-  let u_beat;
-  let u_rgb;
-  let u_face;
-  let u_swim;
-  let u_light;
-
+  // TODO
   let u_flippers;
   let u_num_lamps;
   let u_lamps;
@@ -136,7 +123,7 @@
   //@ts-ignore shut up
   onMount(async () => {
 
-    let lastUpdateTime = Date.now();
+    let lastUpdateTime = performance.now();
 
     let config = {
       SIM_RESOLUTION: 128,
@@ -199,8 +186,11 @@
       curl       = createFBO      (simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
       pressure   = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
 
-      upper = createFBO(canvas.width, canvas.height, r.internalFormat, r.format, texType, filtering);
-      lower = createFBO(canvas.width, canvas.height, r.internalFormat, r.format, texType, filtering);
+      gl.enable(gl.BLEND);
+
+      const z = 0.1;
+      upper = createFBO(canvas.width * z, canvas.height * z, r.internalFormat, r.format, texType, filtering);
+      lower = createFBO(canvas.width * z, canvas.height * z, r.internalFormat, r.format, texType, filtering);
     }
 
     function createFBO (w:number, h:number, internalFormat, format, type, param):FBO {
@@ -280,8 +270,8 @@
     }
 
     function calcDeltaTime () {
-      let now = Date.now();
-      let dt = (now - lastUpdateTime) / 1000;
+      let now = performance.now();
+      let dt = (now - lastUpdateTime)/1000;
       dt = Math.min(dt, 0.016666);
       lastUpdateTime = now;
       return dt;
@@ -416,9 +406,18 @@
       const dt = calcDeltaTime();
       if (resizeCanvas()) initFramebuffers();
 
+      // Always supply 4 balls to the shader even if we're not using em all
+      let ballCoords = [
+        [ 0, 0, 0 ],
+        [ 0, 0, 0 ],
+        [ 0, 0, 0 ],
+        [ 0, 0, 0 ],
+      ];
+
       // Update pointer locations from ball coords
       if (canvas) {
         balls.map(toCanvasCoords).map(([ id, x, y ]) => {
+          ballCoords[id] = [ x, y, 1 ];
           let pointer = pointers.find(p => p.id === id);
           if (!pointer) {
             pointer = new Pointer(id);
@@ -448,7 +447,7 @@
         blit(null);
       } else {
         lowerTableProgram.bind();
-        gl.uniform2f(lowerTableProgram.uniforms.u_resolution, canvas.width, canvas.height);
+        gl.uniform2f(lowerTableProgram.uniforms.u_resolution, canvas?.width, canvas?.height);
         gl.uniform4f(lowerTableProgram.uniforms.u_world, ...world.asTuple());
         gl.uniform1f(lowerTableProgram.uniforms.u_time, lastUpdateTime/1000);
 
@@ -480,6 +479,8 @@
         gl.uniform1f(lowerTableProgram.uniforms.u_face,  fx.face);
         gl.uniform1f(lowerTableProgram.uniforms.u_swim,  fx.swim);
         gl.uniform1f(lowerTableProgram.uniforms.u_light, fx.light);
+
+        gl.uniform3fv(lowerTableProgram.uniforms.u_ball_pos, ballCoords);
 
         u_flippers  = flipperState
         u_num_lamps = lampState.length
@@ -576,23 +577,23 @@
     const displayMaterial = new Program(gl, baseVertexShader, displayShader);
 
     // Playfield step begin
-    tex_wood     = createTextureAsync(gl, '/wood1.jpg');
-    tex_rtk      = createTextureAsync(gl, '/layers/RolloversTargetsKickers.webp');
-    tex_base     = createTextureAsync(gl, '/layers/Base.webp');
-    tex_face1    = createTextureAsync(gl, '/layers/Faces1.webp');
-    tex_face2    = createTextureAsync(gl, '/layers/Faces2.webp');
-    tex_hair     = createTextureAsync(gl, '/layers/Hair.webp');
-    tex_text     = createTextureAsync(gl, '/layers/LabelTextAndSkirts.webp');
-    tex_lanes    = createTextureAsync(gl, '/layers/Lanes.webp');
-    tex_lights   = createTextureAsync(gl, '/layers/LightingBlurred.webp');
-    tex_labels   = createTextureAsync(gl, '/layers/ScoringLabels.webp');
-    tex_indic    = createTextureAsync(gl, '/layers/Indicators.webp');
-    tex_misc     = createTextureAsync(gl, '/layers/LampsEyesPlasticWhite.webp');
-    tex_plastics = createTextureAsync(gl, '/layers/Plastics.webp');
-    tex_walls    = createTextureAsync(gl, '/layers/Walls.webp');
-    tex_rails    = createTextureAsync(gl, '/layers/LaneRails.webp');
-    tex_extra    = createTextureAsync(gl, '/layers/ExtraBumperSlotsLogo.webp');
-    tex_noise    = createTextureAsync(gl, '/noise.png');
+    tex_wood     = createTextureRGBA(gl, '/wood1.jpg');
+    tex_rtk      = createTextureRGBA(gl, '/layers/RolloversTargetsKickers.webp');
+    tex_base     = createTextureRGBA(gl, '/layers/Base.webp');
+    tex_face1    = createTextureRGBA(gl, '/layers/Faces1.webp');
+    tex_face2    = createTextureRGBA(gl, '/layers/Faces2.webp');
+    tex_hair     = createTextureRGBA(gl, '/layers/Hair.webp');
+    tex_text     = createTextureRGBA(gl, '/layers/LabelTextAndSkirts.webp');
+    tex_lanes    = createTextureRGBA(gl, '/layers/Lanes.webp');
+    tex_lights   = createTextureRGBA(gl, '/layers/LightingBlurred.webp');
+    tex_labels   = createTextureRGBA(gl, '/layers/ScoringLabels.webp');
+    tex_indic    = createTextureRGBA(gl, '/layers/Indicators.webp');
+    tex_misc     = createTextureRGBA(gl, '/layers/LampsEyesPlasticWhite.webp');
+    tex_plastics = createTextureRGBA(gl, '/layers/Plastics.webp');
+    tex_walls    = createTextureRGBA(gl, '/layers/Walls.webp');
+    tex_rails    = createTextureRGBA(gl, '/layers/LaneRails.webp');
+    tex_extra    = createTextureRGBA(gl, '/layers/ExtraBumperSlotsLogo.webp');
+    tex_noise    = createTextureRGBA(gl, '/noise.png');
 
     // Begin
     initFramebuffers();

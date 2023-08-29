@@ -14,7 +14,7 @@
   import ScoreDisplay   from '$comp/ScoreDisplay.svelte';
   import AspectLayout   from '$comp/AspectLayout.svelte';
   import CanvasRenderer from '$comp/CanvasRenderer.svelte';
-  import LayerRenderer  from '$comp/LayerRenderer.svelte';
+  //import LayerRenderer  from '$comp/LayerRenderer.svelte';
   import MusicPlayer    from '$comp/MusicPlayer.svelte';
 
   import FluidBG  from '$comp/FluidBG.svelte';
@@ -22,8 +22,8 @@
 
   // Config
 
-  const SIMPLE_RENDER = true;
-  const SPAWN_ARROW = false;
+  const SIMPLE_RENDER = false;
+  const SPAWN_ARROW   = false;
 
   const TIME_SCALE    = 1.0;
   const SUBSTEP_LIMIT = 0.8; // Limit fraction of frame time the physics can use
@@ -343,6 +343,8 @@
         spawnArrow={spawnArrow}
       />
 
+    {:else}
+
       <FluidBG
         {fx}
         {balls}
@@ -352,13 +354,6 @@
         gameState={table.gameState}
       />
 
-    {:else}
-      <LayerRenderer
-        {fx}
-        {ballPos}
-        world={world}
-        gameState={table.gameState}
-      />
     {/if}
 
     <ScoreDisplay balls={table.gameState.ballStock} score={floor(displayScore)} />

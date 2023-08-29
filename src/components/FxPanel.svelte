@@ -19,6 +19,7 @@
 <style>
 
   .FxPanel {
+    user-select: none;
     margin-top: -0.5rem;
   }
 
