@@ -57,6 +57,12 @@ uniform float u_rgb;
 uniform float u_face;
 uniform float u_light;
 uniform float u_swim;
+uniform float u_tears;
+uniform float u_paint;
+uniform float u_perlin;
+uniform float u_invert;
+uniform float u_prelude;
+uniform float u_scroll;
 
 
 //
@@ -214,17 +220,13 @@ vec4 starfield (in vec2 uv) {
 // Flipper paddles
 
 float line_sdf (vec3 ar, vec3 br, vec2 p) {
-
   vec2 a = ar.xy;
   vec2 b = br.xy;
-
   float r1 = ar.z;
   float r2 = br.z;
-
   vec2 line = b - a;
 
   float h = clamp(dot(p-a, line) / dot(line, line), 0.0, 1.0);
-
   return length(p - (a + line * h)) - mix(r1, r2, h);
 }
 
@@ -258,13 +260,13 @@ void main () {
 
   // UV but adjusted for aspect ratio
   vec2 uvr = vec2(uv.x, uv.y * u_resolution.y/u_resolution.x);
+
   // Table coords
   vec2 uvt = vec2(
       u_world[0] + u_world[2] * uv.x,
       u_world[1] - u_world[3] * uv.y);
 
-  // Melty
-
+  // Melt effect
   uv.x += sin(100.0 * uv.y + u_time * 2.0) * 0.01 * u_melt;
   uv.y += cos(50.0 * uv.x + u_time * 2.0) * 0.01 * u_melt;
 
@@ -272,12 +274,13 @@ void main () {
   // Ball radius
 
   // TODO: Metaball SDF mixing
+  // TODO: Why doesn't this draw?!
   float ball = 0.0;
   //for (int i = 0; i < MAX_BALLS; i++) {
     //ball += circle_at(uvt, u_ball_pos[i].xy, BALL_RAD) * u_ball_pos[i].z;
   //}
-
   ball += circle_at(uvt, u_ball_pos[0].xy, BALL_RAD);
+
 
   // Lamp locations
 
@@ -297,7 +300,7 @@ void main () {
   float drop_mask   = slice_between(uvt.y, 470.0, 510.0);
   float extras_mask = slice_between(uvt.y, 760.0, 840.0);
 
-  vec4 wood     = texture2D(u_tex_wood, uv);
+  vec4 wood     = texture2D(u_tex_wood, uv + u_scroll * 0.01 * vec2(0.0, u_time));
   vec4 base     = layer(u_tex_base,     uv, BG_RED, BG_GREEN, BG_WHITE);
   vec4 drop     = layer(u_tex_extra,    uv, BG_WHITE, BG_BROWN, BLACK) * drop_mask;
   vec4 bump     = layer(u_tex_extra,    uv, BUMPER_WHITE, BUMPER_GREEN, BUMPER_BLUE) * bump_mask;
@@ -316,6 +319,7 @@ void main () {
   float eyes_alpha      = only_r(u_tex_misc, uv);
   float lamp_alpha      = only_b(u_tex_misc, uv);
   float plastic_white   = only_g(u_tex_misc, uv);
+  float misc_alpha      = only_a(u_tex_misc, uv);
   float text_high       = only_r(u_tex_text, uv);
   float text_low        = only_b(u_tex_text, uv);
   float skirts_alpha    = only_g(u_tex_text, uv);
@@ -409,6 +413,20 @@ void main () {
         -(LIGHT_FALLOFF + LIGHT_FALLOFF * easeOut3(u_beat_time) * u_beat)
         * length(uvr - lights[i].xy));
   }
+
+  // WIP: Tears
+  /*
+  vec4 tears =
+    vec4(vec3(1.0, 0.0, 0.5),
+       eyes_alpha
+        * slice_between(uvt.y, 340.0, 470.0)
+        * slice_between(uvt.x, -100.0, 100.0));
+
+  tears.a += smoothstep(0.5, 0.55,
+    noise(uv * 200.0 + vec2(u_time * 40.0)) *
+    nsin((uvt.y / 500.0 - uvt.x / 500.0) * PI - PI * 0.3)  // temp until I get an alpha
+  );
+  */
 
   // Flippers
   vec4 flippers =
@@ -546,7 +564,8 @@ void main () {
 
   // TODO: Hidden indicators
   // Eyes
-  final = mix(final, mix(col(BG_WHITE), rainbow, hyperspeed), eyes_alpha * eyes_alpha);
+  final = mix(final, vec4(1.0), u_hyper * eyes_alpha * eyes_alpha);
+  //final = mix(final, tears, u_tears * tears.a);
 
   gl_FragColor = uv.y < 0.9075
     ? vec4(final.rgb, 1.0) + lamp_alpha_upper_target_left * (hyperspeed + vec4(LAMP_ON, 1.0)) * lamp_alpha * SCORE_PHASE_ALPHA

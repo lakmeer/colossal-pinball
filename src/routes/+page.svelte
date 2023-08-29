@@ -292,6 +292,7 @@
     tears: 0,
     puff: 0,
     perlin: 0,
+    scroll: 0,
     invert: 0,
     prelude: 0,
     hyper: 0,

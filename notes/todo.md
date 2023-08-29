@@ -28,18 +28,22 @@
     - Shader-only? Fake reflections from playfield graphic
   - Improved colorscheme?
   - Targets and droptargets
-  - Layers with spare channels:
-      - Lanes: green
-      - DroptargetSlots: blue
-      - TargetRolloverKicker: red
-        - Outlane kickers probably not going to be drawn
-        - Potential spare red channel
   - See if removing Vader helps with performance on laptop
 - Get some basic sound fx
 - Music in layers instead of clips
   - Second mode maybe
 
+# Notes
+
+- Layers with spare channels:
+  - Lanes: green
+  - DroptargetSlots: blue
+  - TargetRolloverKicker: red
+    - Outlane kickers probably not going to be drawn
+    - Potential spare red channel
+
 # In progress
 
 - Chrome ball
-- Tilting
+- Integrate FBO and Vader render pipelines
+

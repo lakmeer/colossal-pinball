@@ -470,15 +470,19 @@
         gl.uniform1i(lowerTableProgram.uniforms.u_tex_extra,    tex_extra.attach(16));
         gl.uniform1i(lowerTableProgram.uniforms.u_tex_noise,    tex_noise.attach(17));
 
-        gl.uniform1f(lowerTableProgram.uniforms.u_holo,  fx.holo);
-        gl.uniform1f(lowerTableProgram.uniforms.u_hypno, fx.hypno);
-        gl.uniform1f(lowerTableProgram.uniforms.u_melt,  fx.melt);
-        gl.uniform1f(lowerTableProgram.uniforms.u_hyper, fx.hyper);
-        gl.uniform1f(lowerTableProgram.uniforms.u_beat,  fx.beat);
-        gl.uniform1f(lowerTableProgram.uniforms.u_rgb,   fx.rgb);
-        gl.uniform1f(lowerTableProgram.uniforms.u_face,  fx.face);
-        gl.uniform1f(lowerTableProgram.uniforms.u_swim,  fx.swim);
-        gl.uniform1f(lowerTableProgram.uniforms.u_light, fx.light);
+        gl.uniform1f(lowerTableProgram.uniforms.u_holo,    fx.holo);
+        gl.uniform1f(lowerTableProgram.uniforms.u_hypno,   fx.hypno);
+        gl.uniform1f(lowerTableProgram.uniforms.u_melt,    fx.melt);
+        gl.uniform1f(lowerTableProgram.uniforms.u_hyper,   fx.hyper);
+        gl.uniform1f(lowerTableProgram.uniforms.u_beat,    fx.beat);
+        gl.uniform1f(lowerTableProgram.uniforms.u_rgb,     fx.rgb);
+        gl.uniform1f(lowerTableProgram.uniforms.u_face,    fx.face);
+        gl.uniform1f(lowerTableProgram.uniforms.u_swim,    fx.swim);
+        gl.uniform1f(lowerTableProgram.uniforms.u_light,   fx.light);
+        gl.uniform1f(lowerTableProgram.uniforms.u_paint,   fx.paint);
+        gl.uniform1f(lowerTableProgram.uniforms.u_scroll,  fx.scroll);
+        gl.uniform1f(lowerTableProgram.uniforms.u_invert,  fx.invert);
+        gl.uniform1f(lowerTableProgram.uniforms.u_prelude, fx.prelude);
 
         gl.uniform3fv(lowerTableProgram.uniforms.u_ball_pos, ballCoords);
 

@@ -28,13 +28,17 @@
     text-align: right;
     transform: translateY(0.5rem);
     text-transform: uppercase;
+    position: relative;
+    z-index: 0;
   }
 
   input {
     display: block;
     width: 100%;
-    margin-bottom: -0.4em;
+    margin-bottom: -0.5em;
     accent-color: var(--green);
+    position: relative;
+    z-index: 1;
   }
 
 </style>
