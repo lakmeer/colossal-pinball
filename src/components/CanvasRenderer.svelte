@@ -144,6 +144,13 @@
 
 
 <style>
+  .CanvasRenderer {
+    position: absolute;
+    width:  100%;
+    height: 100%;
+    background: pink;
+  }
+
   canvas {
     image-rendering: pixelated;
     max-width:  100vw;

@@ -37,6 +37,7 @@
     align-items: center;
     justify-content: space-between;
     container-type: size;
+    z-index: 2;
   }
 
   @container (min-width:1px) {
