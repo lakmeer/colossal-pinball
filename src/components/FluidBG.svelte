@@ -69,7 +69,6 @@
   export let fx:FxConfig;
   export let gameState:GameState;
 
-
   $: lampState = Object.values(gameState.lamps).map((lamp:Lamp) => ([
     lamp.shape.pos.x,
     lamp.shape.pos.y,
@@ -417,15 +416,20 @@
 
       // Update pointer locations from ball coords
       if (canvas) {
-        balls.map(toCanvasCoords).map(([ id, x, y ]) => {
-          ballCoords[id] = [ x, y, 1 ];
-          let pointer = pointers.find(p => p.id === id);
-          if (!pointer) {
-            pointer = new Pointer(id);
-            pointers.push(pointer);
-          }
-          pointer.onMove(canvas, x, y);
-        });
+        balls
+          .map((ball, id) => {
+            ballCoords[id] = [ ball.pos.x, ball.pos.y, 1 ];
+
+            const coords = toCanvasCoords(ball);
+
+            let pointer = pointers.find(p => p.id === id);
+
+            if (!pointer) {
+              pointer = new Pointer(id);
+              pointers.push(pointer);
+            }
+            pointer.onMove(canvas, coords[1], coords[2]);
+          });
       }
 
       // Splat from pointers
@@ -485,9 +489,11 @@
         gl.uniform1f(lowerTableProgram.uniforms.u_invert,  fx.invert);
         gl.uniform1f(lowerTableProgram.uniforms.u_prelude, fx.prelude);
 
-        gl.uniform3fv(lowerTableProgram.uniforms.u_ball_pos, ballCoords);
         gl.uniform4f(lowerTableProgram.uniforms.u_flipper_left,  ...flipperState[0]);
         gl.uniform4f(lowerTableProgram.uniforms.u_flipper_right, ...flipperState[1]);
+
+        //gl.uniform3fv(lowerTableProgram.uniforms.u_ball_pos, ballCoords);
+        gl.uniform3f(lowerTableProgram.uniforms.u_ball_main, ...ballCoords[0]);
 
         gl.uniform1f(lowerTableProgram.uniforms.u_light, fx.light);
         blit(null);

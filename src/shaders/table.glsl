@@ -40,7 +40,8 @@ uniform sampler2D u_tex_noise;
 // Game Data
 
 uniform vec4 u_world; // left, top, w, h
-uniform vec3 u_ball_pos [MAX_BALLS]; // x, y, whether ball is present or not
+//uniform vec3 u_ball_pos [MAX_BALLS]; // x, y, whether ball is present or not
+uniform vec3 u_ball_main; // uniform3fv not working?
 uniform float u_beat_time;
 uniform int u_score_phase;
 uniform vec3 u_lamps[NUM_LAMPS];
@@ -280,8 +281,7 @@ void main () {
   //for (int i = 0; i < MAX_BALLS; i++) {
     //ball += circle_at(uvt, u_ball_pos[i].xy, BALL_RAD) * u_ball_pos[i].z;
   //}
-  ball += circle_at(uvt, u_ball_pos[0].xy, BALL_RAD);
-
+  ball += circle_at(uvt, u_ball_main.xy, BALL_RAD);
 
   // Lamp locations
 
@@ -571,5 +571,6 @@ void main () {
   gl_FragColor = uv.y < 0.9075
     ? vec4(final.rgb, 1.0) + lamp_alpha_upper_target_left * (hyperspeed + vec4(LAMP_ON, 1.0)) * lamp_alpha * SCORE_PHASE_ALPHA
     : vec4(BLACK, 1.0);
+
 }
 
