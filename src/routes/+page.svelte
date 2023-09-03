@@ -14,10 +14,8 @@
   import ScoreDisplay   from '$comp/ScoreDisplay.svelte';
   import AspectLayout   from '$comp/AspectLayout.svelte';
   import CanvasRenderer from '$comp/CanvasRenderer.svelte';
-  //import LayerRenderer  from '$comp/LayerRenderer.svelte';
   import MusicPlayer    from '$comp/MusicPlayer.svelte';
-
-  import FluidBG  from '$comp/FluidBG.svelte';
+  import FluidBG        from '$comp/FluidBG.svelte';
 
 
   // Config
@@ -139,6 +137,9 @@
     if (displayScore < table.gameState.score) displayScore += 1;
 
     frameTime = dt;
+
+    // Poke
+    table = table;
   }
 
 

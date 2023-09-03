@@ -69,6 +69,7 @@
   export let fx:FxConfig;
   export let gameState:GameState;
 
+
   $: lampState = Object.values(gameState.lamps).map((lamp:Lamp) => ([
     lamp.shape.pos.x,
     lamp.shape.pos.y,
@@ -485,11 +486,8 @@
         gl.uniform1f(lowerTableProgram.uniforms.u_prelude, fx.prelude);
 
         gl.uniform3fv(lowerTableProgram.uniforms.u_ball_pos, ballCoords);
-
-        u_flippers  = flipperState
-        u_num_lamps = lampState.length
-        u_lamps     = lampState
-        u_score_phase = 0
+        gl.uniform4f(lowerTableProgram.uniforms.u_flipper_left,  ...flipperState[0]);
+        gl.uniform4f(lowerTableProgram.uniforms.u_flipper_right, ...flipperState[1]);
 
         gl.uniform1f(lowerTableProgram.uniforms.u_light, fx.light);
         blit(null);

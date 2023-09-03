@@ -44,7 +44,8 @@ uniform vec3 u_ball_pos [MAX_BALLS]; // x, y, whether ball is present or not
 uniform float u_beat_time;
 uniform int u_score_phase;
 uniform vec3 u_lamps[NUM_LAMPS];
-uniform vec4 u_flippers[2];
+uniform vec4 u_flipper_left;
+uniform vec4 u_flipper_right;
 
 // FX Values
 
@@ -430,8 +431,8 @@ void main () {
 
   // Flippers
   vec4 flippers =
-    (0.9 + 0.1 * col(lighting.rgb)) * flipper(u_flippers[0].xy, u_flippers[0].zw, uvt) +
-    (0.9 + 0.1 * col(lighting.rgb)) * flipper(u_flippers[1].xy, u_flippers[1].zw, uvt);
+    (0.9 + 0.1 * col(lighting.rgb)) * flipper(u_flipper_left.xy,  u_flipper_left.zw,  uvt) +
+    (0.9 + 0.1 * col(lighting.rgb)) * flipper(u_flipper_right.xy, u_flipper_right.zw, uvt);
 
   // HypnoRings
   float hypno = u_hypno * 0.3; // looks best
