@@ -272,10 +272,6 @@
     }
   });
 
-  $: ballPos = balls.length
-    ? Vec2.fromXY(balls[0].pos.x, balls[0].pos.y)
-    : Vec2.zero;
-
 
   // Score display ETC
 
